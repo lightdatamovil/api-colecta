@@ -18,6 +18,7 @@ import { checkIfExistLogisticAsDriverInExternalCompany } from "../../functions/c
 export async function handleExternalNoFlex(dbConnection, dataQr, companyId, userId, profile, autoAssign) {
     try {
         const shipmentIdFromDataQr = dataQr.did;
+        const clientIdFromDataQr = dataQr.cliente;
 
         /// Busco la empresa externa
         const externalCompany = await getCompanyById(dataQr.empresa);
@@ -36,7 +37,7 @@ export async function handleExternalNoFlex(dbConnection, dataQr, companyId, user
         }
 
         const companyClientList = await getClientsByCompany(externalDbConnection, externalCompany);
-        const client = companyClientList[dataQr.cliente];
+        const client = companyClientList[clientIdFromDataQr];
 
         const internalCompany = await getCompanyById(companyId);
 
@@ -77,7 +78,7 @@ export async function handleExternalNoFlex(dbConnection, dataQr, companyId, user
             const dqr = {
                 interno: dataQr.interno,
                 did: didinterno,
-                cliente: dataQr.cliente,
+                cliente: clientIdFromDataQr,
                 empresa: companyId,
             };
 
@@ -91,9 +92,10 @@ export async function handleExternalNoFlex(dbConnection, dataQr, companyId, user
         await updateLastShipmentState(externalDbConnection, shipmentIdFromDataQr);
         await sendToShipmentStateMicroService(dataQr.empresa, driver, shipmentIdFromDataQr);
 
+        const body = await informe(externalDbConnection, companyId, clientIdFromDataQr, userId, didinterno);
+
         externalDbConnection.end();
 
-        const body = await informe(dbConnection, userId);
         return { estadoRespuesta: true, mensaje: "Paquete colectado con exito", body: body };
     } catch (error) {
         console.error("Error en handleExternalNoFlex:", error);
