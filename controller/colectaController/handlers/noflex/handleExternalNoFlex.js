@@ -41,7 +41,7 @@ export async function handleExternalNoFlex(dbConnection, dataQr, companyId, user
         const internalCompany = await getCompanyById(companyId);
 
         /// Busco el chofer que se crea en la vinculacion de logisticas
-        const driver = await checkIfExistLogisticAsDriverInExternalCompany(externalDbConnection, internalCompany);
+        const driver = await checkIfExistLogisticAsDriverInExternalCompany(externalDbConnection, internalCompany.codigo);
         if (!driver) {
             externalDbConnection.end();
 
@@ -91,10 +91,9 @@ export async function handleExternalNoFlex(dbConnection, dataQr, companyId, user
         await updateLastShipmentState(externalDbConnection, shipmentIdFromDataQr);
         await sendToShipmentStateMicroService(dataQr.empresa, driver, shipmentIdFromDataQr);
 
-
         externalDbConnection.end();
 
-        const body = informe(dbConnection, userId);
+        const body = await informe(dbConnection, userId);
         return { estadoRespuesta: true, mensaje: "Paquete colectado con exito", body: body };
     } catch (error) {
         console.error("Error en handleExternalNoFlex:", error);
