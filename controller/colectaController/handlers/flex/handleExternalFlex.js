@@ -53,7 +53,6 @@ export async function handleExternalFlex(dbConnection, company, userId, profile,
                         LIMIT 1
                     `;
         let rowsEnvios = await executeQuery(externalDbConnection, sqlEnvios, [shipmentId, senderid]);
-        console.log(rowsEnvios, "row");
 
         let externalShipmentId;
         let clienteExt;
@@ -100,9 +99,6 @@ export async function handleExternalFlex(dbConnection, company, userId, profile,
 
         /// Busco si el chofer está asignado
         const driver = await checkIfExistLogisticAsDriverInExternalCompany(externalDbConnection, codLocal);
-        console.log(driver, "aaa");
-        console.log(syncCode, "codigo");
-
 
         if (!driver) {
             externalDbConnection.end();
