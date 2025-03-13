@@ -1,3 +1,6 @@
+import { executeQuery } from "../../../db.js";
+import { logRed } from "../../../src/funciones/logsCustom.js";
+
 export async function checkIfExistLogisticAsDriverInExternalCompany(dbConnection, syncCode) {
     try {
         const querySelectSistemUsuariosAccesos = 'SELECT usuario FROM sistema_usuarios_accesos WHERE codvinculacion = ?';
@@ -9,7 +12,7 @@ export async function checkIfExistLogisticAsDriverInExternalCompany(dbConnection
 
         return chofer[0].usuario;
     } catch (error) {
-        console.error("Error en checkIfExistLogisticAsDriverInExternalShipments:", error);
+        logRed(`Error en checkIfExistLogisticAsDriverInExternalCompany: ${error.message}`);
         throw error;
     }
 }

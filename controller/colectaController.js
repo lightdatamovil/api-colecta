@@ -1,9 +1,10 @@
-import { getAccountBySenderId, getProdDbConfig } from "../../db.js";
-import { handleInternalFlex } from "./handlers/flex/handleInternalFlex.js";
-import { handleExternalFlex } from "./handlers/flex/handleExternalFlex.js";
-import { handleExternalNoFlex } from "./handlers/noflex/handleExternalNoFlex.js";
-import { handleInternalNoFlex } from "./handlers/noflex/handleInternalNoFlex.js";
+import { getAccountBySenderId, getProdDbConfig } from "../db.js";
+import { handleInternalFlex } from "./colectaController/handlers/flex/handleInternalFlex.js";
+import { handleExternalFlex } from "./colectaController/handlers/flex/handleExternalFlex.js";
+import { handleExternalNoFlex } from "./colectaController/handlers/noflex/handleExternalNoFlex.js";
+import { handleInternalNoFlex } from "./colectaController/handlers/noflex/handleInternalNoFlex.js";
 import mysql from "mysql";
+import { logRed } from "../src/funciones/logsCustom.js";
 
 export async function colectar(company, dataQr, userId, profile, autoAssign) {
     const dbConfig = getProdDbConfig(company);
@@ -28,7 +29,7 @@ export async function colectar(company, dataQr, userId, profile, autoAssign) {
 
                 /// Si la cuenta no existe, es externo
             } else {
-                response = await handleExternalFlex(dbConnection, company.did, userId, profile, dataQr, autoAssign);
+                response = await handleExternalFlex(dbConnection, company, userId, profile, dataQr, autoAssign);
             }
             /// Si no es flex
         } else {
@@ -44,7 +45,7 @@ export async function colectar(company, dataQr, userId, profile, autoAssign) {
 
         return response;
     } catch (error) {
-        console.error("Error en colectar:", error);
+        logRed(`Error en colectar: ${error.message}`);
         throw error;
     } finally {
         dbConnection.end();

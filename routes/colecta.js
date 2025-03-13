@@ -1,12 +1,12 @@
 import { Router } from 'express';
-import { colectar } from '../controller/colectaController/colectaController.js';
-import { verifyParamaters } from '../src/functions/verifyParameters.js';
+import { colectar } from '../controller/colectaController.js';
 import { getCompanyById } from '../db.js';
+import { verifyParameters } from '../src/funciones/verifyParameters.js';
 
 const colecta = Router();
 
 colecta.post('/colecta', async (req, res) => {
-    const errorMessage = verifyParamaters(req.body, ['dataQr', 'autoAssign', 'deviceFrom']);
+    const errorMessage = verifyParameters(req.body, ['dataQr', 'autoAssign', 'deviceFrom']);
 
     if (errorMessage) {
         return res.status(400).json({ message: errorMessage });

@@ -10,7 +10,7 @@ app.use(json());
 
 const PORT = process.env.PORT || 13000;
 
-app.use("/api/colecta", asignaciones)
+app.use("/api/colecta", colecta)
 
 await redisClient.connect();
 

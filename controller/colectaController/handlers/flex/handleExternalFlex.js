@@ -8,6 +8,7 @@ import { sendToShipmentStateMicroService } from "../../functions/sendToShipmentS
 import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
 import { checkIfExistLogisticAsDriverInExternalCompany } from "../../functions/checkIfExistLogisticAsDriverInExternalCompany.js";
 import { informe } from "../../functions/informe.js"
+import { logYellow } from "../../../../src/funciones/logsCustom.js";
 
 /// Esta funcion busca las logisticas vinculadas
 /// Reviso si el envío ya fue colectado cancelado o entregado en la logística externa
@@ -47,7 +48,7 @@ export async function handleExternalFlex(dbConnection, company, userId, profile,
 
         /// Busco el envío
         const sqlEnvios = `
-                        SELECT did,didCliente
+                        SELECT did, didCliente
                         FROM envios 
                         WHERE ml_shipment_id = ? AND ml_vendedor_id = ? 
                         LIMIT 1
@@ -55,13 +56,12 @@ export async function handleExternalFlex(dbConnection, company, userId, profile,
         let rowsEnvios = await executeQuery(externalDbConnection, sqlEnvios, [shipmentId, senderid]);
 
         let externalShipmentId;
-        let clienteExt;
+        let externalClientId;
 
         /// Si existe el envío, tomo el did
         if (rowsEnvios.length > 0) {
             externalShipmentId = rowsEnvios[0].did;
-            clienteExt = rowsEnvios[0].didCliente;
-
+            externalClientId = rowsEnvios[0].didCliente;
             /// Si no existe, lo inserto y tomo el did
         } else {
             /// Tomo los datos del cliente de la logística externa
@@ -78,7 +78,7 @@ export async function handleExternalFlex(dbConnection, company, userId, profile,
                 return { estadoRespuesta: false, mensaje: "No se encontró cuenta asociada" };
             }
 
-            const didcliente_ext = rowsCuentas[0].didCliente;
+            externalClientId = rowsCuentas[0].didCliente;
             const didcuenta_ext = rowsCuentas[0].did;
 
             const result = await insertEnvios(externalDbConnection, externalCompanyId, didcliente_ext, didcuenta_ext, dataQr, 1, 0);
@@ -86,7 +86,6 @@ export async function handleExternalFlex(dbConnection, company, userId, profile,
             rowsEnvios = await executeQuery(externalDbConnection, sqlEnvios, [result, senderid]);
 
             externalShipmentId = rowsEnvios[0].did;
-
         }
 
         /// Chequeo si el envío ya fue colectado cancelado o entregado
@@ -105,9 +104,18 @@ export async function handleExternalFlex(dbConnection, company, userId, profile,
 
             return { estadoRespuesta: false, mensaje: "No se encontró chofer asignado" };
         }
+        let internalShipmentId;
 
-        /// Inserto en envios y en envios exteriores de la logistica interna
-        const internalShipmentId = await insertEnvios(dbConnection, company.did, externalLogisticId, 0, dataQr, 1, 1,);
+        const consulta = 'SELECT didLocal FROM envios_exteriores WHERE didExterno = ?';
+        internalShipmentId = await executeQuery(dbConnection, consulta, [externalShipmentId]);
+
+        if (internalShipmentId.length > 0 && internalShipmentId[0]?.didLocal) {
+            internalShipmentId = internalShipmentId[0].didLocal;
+        } else {
+            /// Inserto en envios y en envios exteriores de la logistica interna
+            internalShipmentId = await insertEnvios(dbConnection, company.did, externalLogisticId, 0, dataQr, 1, 1,);
+        }
+
         await insertEnviosExteriores(dbConnection, externalShipmentId, internalShipmentId, 1, nombreFantasia, externalCompanyId);
 
         /// Actualizo el estado del envío y lo envío al microservicio de estados en la logística interna
@@ -116,7 +124,7 @@ export async function handleExternalFlex(dbConnection, company, userId, profile,
 
         /// Actualizo el estado del envío y lo envío al microservicio de estados en la logística externa
         await updateLastShipmentState(externalDbConnection, externalShipmentId);
-        await sendToShipmentStateMicroService(externalCompanyId, clienteExt, externalShipmentId);
+        await sendToShipmentStateMicroService(externalCompanyId, externalClientId, externalShipmentId);
 
         if (autoAssign) {
             const dqr = {
@@ -132,7 +140,15 @@ export async function handleExternalFlex(dbConnection, company, userId, profile,
 
         externalDbConnection.end();
 
-        const body = await informe(dbConnection, clienteExt, userId, internalShipmentId);
+        const queryInternalClient = `
+            SELECT didCliente 
+            FROM envios 
+            WHERE did = ?
+        `;
+
+        const internalClient = await executeQuery(dbConnection, queryInternalClient, [internalShipmentId]);
+
+        const body = await informe(dbConnection, company.did, internalClient[0].didCliente, userId, internalShipmentId);
         return { estadoRespuesta: true, mensaje: "Paquete colectado correctamente - FLEX", body: body };
 
     }

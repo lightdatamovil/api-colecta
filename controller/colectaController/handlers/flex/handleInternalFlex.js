@@ -5,6 +5,7 @@ import { updateLastShipmentState } from "../../functions/updateLastShipmentState
 import { sendToShipmentStateMicroService } from "../../functions/sendToShipmentStateMicroService.js";
 import { informe } from "../../functions/informe.js";
 import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
+import { logYellow } from "../../../../src/funciones/logsCustom.js";
 
 /// Busco el envio
 /// Si no existe, lo inserto y tomo el did
@@ -58,7 +59,7 @@ export async function handleInternalFlex(dbConnection, companyId, userId, profil
         await assign(companyId, userId, profile, dataQr, userId);
     }
 
-    const body = await informe(dbConnection, account.didCliente, userId, shipmentId);
+    const body = await informe(dbConnection, companyId, account.didCliente, userId, shipmentId);
     return { estadoRespuesta: true, mensaje: "Paquete insertado y colectado - FLEX", body: body };
 
 }
