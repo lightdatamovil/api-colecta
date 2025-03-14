@@ -1,6 +1,7 @@
 import express, { json, urlencoded } from 'express';
 import colecta from './routes/colecta.js';
 import { redisClient } from './db.js';
+import { logPurple } from './src/funciones/logsCustom.js';
 
 const app = express();
 
