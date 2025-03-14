@@ -10,7 +10,14 @@ app.use(json());
 
 const PORT = process.env.PORT || 13500;
 
-app.use("/api", colecta)
+app.use("/api", colecta);
+app.post('/api/testapi', async (req, res) => {
+    const startTime = performance.now();
+    const endTime = performance.now();
+    logPurple(`Tiempo de ejecución: ${endTime - startTime} ms`)
+    res.status(200).json({ message: 'API funcionando correctamente' });
+});
+
 
 await redisClient.connect();
 
