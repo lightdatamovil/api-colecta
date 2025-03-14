@@ -8,11 +8,13 @@ const colecta = Router();
 
 colecta.post('/colecta', async (req, res) => {
     const startTime = performance.now();
-    const errorMessage = verifyParameters(req.body, ['dataQr', 'autoAssign', 'deviceFrom']);
+    // const errorMessage = verifyParameters(req.body, ['dataQr', 'autoAssign', 'deviceFrom']);
 
-    if (errorMessage) {
-        return res.status(400).json({ message: errorMessage });
-    }
+    // if (errorMessage) {
+    //     const endTime = performance.now();
+    //     logPurple(`Tiempo de ejecución: ${endTime - startTime} ms`);
+    //     return res.status(400).json({ message: errorMessage });
+    // }
 
     const { companyId, userId, profile, dataQr, autoAssign } = req.body;
 
@@ -21,13 +23,12 @@ colecta.post('/colecta', async (req, res) => {
 
         const result = await colectar(company, JSON.parse(dataQr), userId, profile, autoAssign);
 
-        const endTime = performance.now();
-        logPurple(`Tiempo de ejecución: ${endTime - startTime} ms`);
         res.status(200).json(result);
     } catch (error) {
+        res.status(500).json({ message: error.message });
+    } finally {
         const endTime = performance.now();
         logPurple(`Tiempo de ejecución: ${endTime - startTime} ms`);
-        res.status(500).json({ message: error.message });
     }
 });
 
