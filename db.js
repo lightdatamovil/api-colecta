@@ -1,6 +1,5 @@
 import redis from 'redis';
 import dotenv from 'dotenv';
-import mysql from 'mysql';
 import { logRed, logYellow } from './src/funciones/logsCustom.js';
 
 dotenv.config({ path: process.env.ENV_FILE || ".env" });
@@ -21,6 +20,19 @@ redisClient.on('error', (err) => {
     logRed(`Error al conectar con Redis: ${error.message}`);
 });
 
+let companiesList = {};
+let clientList = {};
+let accountList = {};
+let driverList = {};
+
+export function getProdDbConfig(company) {
+    return {
+        host: "bhsmysql1.lightdata.com.ar",
+        user: company.dbuser,
+        password: company.dbpass,
+        database: company.dbname
+    };
+}
 export async function updateRedis(empresaId, envioId, choferId) {
     const DWRTE = await redisClient.get('DWRTE',);
     const empresaKey = `e.${empresaId}`;
@@ -39,20 +51,6 @@ export async function updateRedis(empresaId, envioId, choferId) {
     }
 
     await redisClient.set('DWRTE', JSON.stringify(DWRTE));
-}
-
-let companiesList = {};
-let clientList = {};
-let accountList = {};
-let driverList = {};
-
-export function getProdDbConfig(company) {
-    return {
-        host: "bhsmysql1.lightdata.com.ar",
-        user: company.dbuser,
-        password: company.dbpass,
-        database: company.dbname
-    };
 }
 
 async function loadCompaniesFromRedis() {
@@ -169,8 +167,6 @@ export async function getAccountBySenderId(dbConnection, companyId, senderId) {
 }
 
 async function loadClients(dbConnection, companyId) {
-
-    // Verifica si la compañía especificada existe en la lista de compañías
     if (!clientList[companyId]) {
         clientList[companyId] = {}
     }
@@ -283,6 +279,7 @@ export async function getDriversByCompany(dbConnection, companyId) {
         throw error;
     }
 }
+
 export async function executeQuery(connection, query, values, log = false) {
     if (log) {
         logYellow(`Ejecutando query: ${query} con valores: ${values}`);

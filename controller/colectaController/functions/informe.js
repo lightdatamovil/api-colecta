@@ -1,4 +1,4 @@
-import { executeQuery, getClientsByCompany } from '../../../db.js';
+import { executeQuery, getClientsByCompany, getDriversByCompany } from '../../../db.js'; // Asegúrate de importar correctamente executeQuery
 import { logCyan, logRed, logYellow } from '../../../src/funciones/logsCustom.js';
 
 export async function informe(dbConnection, companyId, clientId, userId, shipmentId) {
@@ -7,12 +7,10 @@ export async function informe(dbConnection, companyId, clientId, userId, shipmen
         let ayer = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
         // Ingresados hoy
-        const sql1 = `
-            SELECT COUNT(id) as total FROM envios 
-            WHERE superado=0 AND elim=0 
-            AND autofecha BETWEEN ? AND ? 
-            AND didCliente = ?
-        `;
+        const sql1 = `SELECT COUNT(id) as total FROM envios 
+               WHERE superado=0 AND elim=0 
+               AND autofecha BETWEEN ? AND ? 
+               AND didCliente = ?`;
         const resultsql1 = await executeQuery(dbConnection, sql1, [`${hoy} 00:00:00`, `${hoy} 23:59:59`, clientId]);
 
         let retiradoshoy = resultsql1.length > 0 ? resultsql1[0].total : 0;
@@ -41,7 +39,7 @@ export async function informe(dbConnection, companyId, clientId, userId, shipmen
             FROM envios_historial 
             WHERE superado=0
             AND elim=0
-            AND didCadete = ? 
+            AND quien IN (?) 
             AND (autofecha > ? and autofecha < ?)
             AND estado=0
         `;
