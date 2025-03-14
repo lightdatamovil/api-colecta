@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { logGreen, logRed } from '../../../src/funciones/logsCustom.js';
+import { logGreen, logRed, logYellow } from '../../../src/funciones/logsCustom.js';
 
 export async function assign(companyId, userId, profile, dataQr, driverId) {
 

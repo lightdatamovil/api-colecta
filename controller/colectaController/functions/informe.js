@@ -1,4 +1,4 @@
-import { executeQuery, getClientsByCompany, getDriversByCompany } from '../../../db.js'; // Asegúrate de importar correctamente executeQuery
+import { executeQuery, getClientsByCompany } from '../../../db.js';
 import { logCyan, logRed, logYellow } from '../../../src/funciones/logsCustom.js';
 
 export async function informe(dbConnection, companyId, clientId, userId, shipmentId) {
