@@ -4,8 +4,8 @@ export function verifyParameters(body, parametrosRequeridos, userData = false) {
     if (userData) {
         param.push('companyId', 'userId', 'profile');
     }
+    const faltantes = param.filter(p => !(p in body));
 
-    const faltantes = param.filter(p => !body[p]);
 
     if (faltantes.length > 0) {
         return `Faltan los siguientes parámetros: ${faltantes.join(', ')}`;
