@@ -50,7 +50,7 @@ export async function handleExternalNoFlex(dbConnection, dataQr, companyId, user
         if (!driver) {
             externalDbConnection.end();
 
-            return { estadoRespuesta: false, mensaje: "No se encontró chofer asignado" };
+            return { success: false, message: "No se encontró chofer asignado" };
         }
         logCyan("Se encontró la logistica como chofer en la logistica externa");
 
@@ -123,7 +123,7 @@ export async function handleExternalNoFlex(dbConnection, dataQr, companyId, user
 
         externalDbConnection.end();
 
-        return { estadoRespuesta: true, mensaje: "Paquete colectado con exito", body: body };
+        return { success: true, message: "Paquete colectado con exito", body: body };
     } catch (error) {
         logRed(`Error en handleExternalNoFlex: ${error.message}`);
         throw error;

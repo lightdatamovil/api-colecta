@@ -69,7 +69,7 @@ export async function handleInternalFlex(dbConnection, companyId, userId, profil
 
         const body = await informe(dbConnection, companyId, account.didCliente, userId, shipmentId);
 
-        return { estadoRespuesta: true, mensaje: "Paquete insertado y colectado - FLEX", body: body };
+        return { success: true, message: "Paquete insertado y colectado - FLEX", body: body };
     } catch (error) {
         logRed(`Error en handleInternalFlex: ${error.message}`);
         throw error;

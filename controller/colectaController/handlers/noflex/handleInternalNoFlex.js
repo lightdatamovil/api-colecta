@@ -26,7 +26,7 @@ export async function handleInternalNoFlex(dbConnection, dataQr, companyId, user
 
         /// Si no encuentro el envio mando error
         if (resultChoferAsignado.length === 0) {
-            return { estadoRespuesta: false, mensaje: "Paquete no encontrado" };
+            return { success: false, message: "Paquete no encontrado" };
         }
         logCyan("Se encontro el chofer asignado");
 
@@ -47,7 +47,7 @@ export async function handleInternalNoFlex(dbConnection, dataQr, companyId, user
 
         const body = await informe(dbConnection, companyId, dataQr.cliente, userId, shipmentId);
 
-        return { estadoRespuesta: true, mensaje: "Paquete colectado correctamente", body: body };
+        return { success: true, message: "Paquete colectado correctamente", body: body };
     } catch (error) {
         logRed(`Error en handleInternalNoFlex: ${error.message}`);
         throw error;
