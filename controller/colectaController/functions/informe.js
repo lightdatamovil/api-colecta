@@ -39,12 +39,14 @@ export async function informe(dbConnection, companyId, clientId, userId, shipmen
             FROM envios_historial 
             WHERE superado=0
             AND elim=0
-            AND quien IN (?) 
+            AND quien  ? 
             AND (autofecha > ? and autofecha < ?)
             AND estado=0
         `;
 
         const resultsql4 = await executeQuery(dbConnection, sql4, [userId, `${hoy} 00:00:00`, `${hoy} 23:59:59`]);
+        console.log(executeQuery);
+        
         let retiradoshoymi = resultsql4.length > 0 ? resultsql4[0].total : 0;
 
         const companyClients = await getClientsByCompany(dbConnection, companyId);
