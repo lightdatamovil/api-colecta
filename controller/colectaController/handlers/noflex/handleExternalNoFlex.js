@@ -122,6 +122,7 @@ export async function handleExternalNoFlex(dbConnection, dataQr, companyId, user
         const body = await informe(dbConnection, companyId, externalClient[0].did, userId, internalShipmentId);
 
         externalDbConnection.end();
+     
 
         return { success: true, message: "Paquete colectado con exito", body: body };
     } catch (error) {
