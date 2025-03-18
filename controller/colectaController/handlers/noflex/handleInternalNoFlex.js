@@ -33,6 +33,8 @@ export async function handleInternalNoFlex(dbConnection, dataQr, companyId, user
         const isAlreadyAssigned = resultChoferAsignado[0].choferAsignado == userId;
         /// Si el envio no esta asignado y se quiere autoasignar, lo asigno
         if (!isAlreadyAssigned && autoAssign) {
+            console.log(dataQr);
+            
             await assign(companyId, userId, profile, dataQr, userId);
             logCyan("Se asigno el envio");
         }
@@ -42,7 +44,7 @@ export async function handleInternalNoFlex(dbConnection, dataQr, companyId, user
         logCyan("Se actualizo el estado del envio en el micro servicio");
 
         /// Actualizamos el estado del envio en la base de datos
-        await updateLastShipmentState(dbConnection, shipmentId);
+   
         logCyan("Se actualizo el estado del envio en la base de datos");
 
         const body = await informe(dbConnection, companyId, dataQr.cliente, userId, shipmentId);
