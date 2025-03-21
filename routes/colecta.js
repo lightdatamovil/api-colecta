@@ -5,7 +5,7 @@ import { verifyParameters } from '../src/funciones/verifyParameters.js';
 import { logPurple } from '../src/funciones/logsCustom.js';
 import mysql from "mysql";
 import { crearLog } from '../src/funciones/crear_log.js';
-import { json } from 'body-parser';
+
 
 const colecta = Router();
 const dbConfigLocal = getLocalDbConfig();
