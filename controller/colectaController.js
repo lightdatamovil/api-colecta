@@ -8,7 +8,7 @@ import { logCyan, logRed, logYellow } from "../src/funciones/logsCustom.js";
 import { crearLog } from "../src/funciones/crear_log.js";
 
 
-export async function colectar(company, dataQr, userId, profile, autoAssign) {
+export async function colectar(company, dataQr, userId, profile, autoAssign,dbConnectionLocal) {
     const dbConfig = getProdDbConfig(company);
     const dbConnection = mysql.createConnection(dbConfig);
     dbConnection.connect();

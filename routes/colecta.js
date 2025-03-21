@@ -26,7 +26,7 @@ colecta.post('/colecta', async (req, res) => {
     try {
         const company = await getCompanyById(companyId);
 
-        const result = await colectar(company, JSON.parse(dataQr), userId, profile, autoAssign);
+        const result = await colectar(company, JSON.parse(dataQr), userId, profile, autoAssign,dbConnectionLocal);
 crearLog(companyId,userId,dataQr.did, "colecta", req.body,userId,dbConnectionLocal);
         res.status(200).json(result);
     } catch (error) {
