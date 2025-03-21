@@ -19,7 +19,7 @@ import { crearLog } from "../../../../src/funciones/crear_log.js";
 /// Inserto el envio en la tabla envios y envios exteriores de la logística interna
 /// Actualizo el estado del envío y lo envío al microservicio de estados en la logística interna
 /// Actualizo el estado del envío y lo envío al microservicio de estados en la logística externa
-export async function handleExternalFlex(dbConnection, company, userId, profile, dataQr, autoAssign,dbConnectionLocal) {
+export async function handleExternalFlex(dbConnection, company, userId, profile, dataQr, autoAssign, dbConnectionLocal) {
     try {
         const senderid = dataQr.sender_id;
         const shipmentId = dataQr.id;
@@ -67,8 +67,8 @@ export async function handleExternalFlex(dbConnection, company, userId, profile,
 
             if (!driver) {
                 externalDbConnection.end();
-              
-                return { estadoRespuesta: false, mensaje: "No se encontró chofer asignado" };
+
+                return { success: false, message: "No se encontró chofer asignado" };
             }
 
             logCyan("Encontre la logistica como chofer en la logistica externa");
@@ -91,8 +91,8 @@ export async function handleExternalFlex(dbConnection, company, userId, profile,
 
                 if (rowsCuentas.length == 0) {
                     externalDbConnection.end();
-          
-                    return { estadoRespuesta: false, mensaje: "No se encontró cuenta asociada" };
+
+                    return { success: false, message: "No se encontró cuenta asociada" };
                 }
 
                 externalClientId = rowsCuentas[0].didCliente;
@@ -134,12 +134,12 @@ export async function handleExternalFlex(dbConnection, company, userId, profile,
             logCyan("Inserte el envio en envios exteriores");
 
             /// Actualizo el estado del envío y lo envío al microservicio de estados en la logística interna
-         
+
             await sendToShipmentStateMicroService(company.did, userId, internalShipmentId);
             logCyan("Actualice el estado del envio y lo envie al microservicio de estados en la logistica interna");
 
             /// Actualizo el estado del envío y lo envío al microservicio de estados en la logística externa
-         
+
             await sendToShipmentStateMicroService(externalCompanyId, externalClientId, externalShipmentId);
             logCyan("Actualice el estado del envio y lo envie al microservicio de estados en la logistica externa");
 
@@ -167,15 +167,15 @@ export async function handleExternalFlex(dbConnection, company, userId, profile,
         `;
             const internalClient = await executeQuery(dbConnection, queryInternalClient, [internalShipmentId], true);
             if (internalClient.length == 0) {
-                return { estadoRespuesta: false, mensaje: "No se encontró cliente asociado" };
+                return { success: false, message: "No se encontró cliente asociado" };
             }
             logCyan("Encontre el cliente interno");
             logYellow(`values: ${company.did}, ${internalClient[0].didCliente}, ${userId}, ${internalShipmentId}`);
             const body = await informe(dbConnection, company.did, internalClient[0].didCliente, userId, internalShipmentId);
 
 
-       
-            return { estadoRespuesta: true, mensaje: "Paquete colectado correctamente - FLEX", body: body };
+
+            return { success: true, message: "Paquete colectado correctamente - FLEX", body: body };
 
         }
     } catch (error) {

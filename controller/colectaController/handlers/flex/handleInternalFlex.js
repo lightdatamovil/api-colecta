@@ -13,7 +13,7 @@ import { crearLog } from "../../../../src/funciones/crear_log.js";
 /// Checkeo si el envío ya fue colectado cancelado o entregado
 /// Actualizo el estado del envío y lo envío al microservicio de estados
 /// Asigno el envío al usuario si es necesario
-export async function handleInternalFlex(dbConnection, companyId, userId, profile, dataQr, autoAssign, account,dbConnectionLocal) {
+export async function handleInternalFlex(dbConnection, companyId, userId, profile, dataQr, autoAssign, account, dbConnectionLocal) {
     try {
         const senderId = dataQr.sender_id;
         const mlShipmentId = dataQr.id;
@@ -46,7 +46,7 @@ export async function handleInternalFlex(dbConnection, companyId, userId, profil
         const check = await checkearEstadoEnvio(dbConnection, shipmentId);
         if (check) return check;
         logCyan("El envio no fue colectado cancelado o entregado");
-  
+
 
         const queryUpdateEnvios = `
                     UPDATE envios 
@@ -59,7 +59,7 @@ export async function handleInternalFlex(dbConnection, companyId, userId, profil
         logCyan("Actualice el ml_qr_seguridad del envio");
 
         /// Actualizo el estado del envío y lo envío al microservicio de estados
- 
+
         await sendToShipmentStateMicroService(companyId, userId, shipmentId);
         logCyan("Actualice el estado del envio y lo envie al microservicio de estados");
 
@@ -71,7 +71,7 @@ export async function handleInternalFlex(dbConnection, companyId, userId, profil
 
         const body = await informe(dbConnection, companyId, account.didCliente, userId, shipmentId);
 
-        return { estadoRespuesta: true, mensaje: "Paquete insertado y colectado - FLEX", body: body };
+        return { success: true, message: "Paquete insertado y colectado - FLEX", body: body };
     } catch (error) {
 
         logRed(`Error en handleInternalFlex: ${error.stack}`);
