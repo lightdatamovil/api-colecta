@@ -1,14 +1,13 @@
 import { executeQuery } from '../../db.js';
 export async function crearLog(idEmpresa, operador,shipmentId, endpoint, result, quien,conLocal, idDispositivo, modelo, marca, versionAndroid, versionApp) {
+   console.log("llegamos a entrar");
    
     try {
         const fechaunix = Date.now();
         const sqlLog = `INSERT INTO logs (didempresa,didEnvio, quien, cadete, data, fechaunix) VALUES (?,?, ?, ?, ?, ?)`;
 
         const values = [idEmpresa,shipmentId, quien, operador, JSON.stringify(result), fechaunix];
-console.log(values,"values");
-console.log(conLocal,"conLocal");
-
+        console.log("llegamos a entrar2");
 
     const results=  await executeQuery(conLocal,sqlLog, values);
     console.log(results,"result");
