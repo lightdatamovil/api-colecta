@@ -8,6 +8,8 @@ export async function crearLog(idEmpresa, operador,shipmentId, endpoint, result,
 
         const values = [idEmpresa,shipmentId, quien, operador, JSON.stringify(result), fechaunix];
         console.log("llegamos a entrar2");
+console.log(values);
+
 
     const results=  await executeQuery(conLocal,sqlLog, values);
     console.log(results,"result");
