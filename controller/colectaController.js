@@ -58,6 +58,6 @@ export async function colectar(company, dataQr, userId, profile, autoAssign) {
         throw error;
     } finally {
         dbConnection.end();
-        dbConnectionLocal.end();
+      
     }
 }
