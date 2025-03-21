@@ -30,7 +30,7 @@ colecta.post('/colecta', async (req, res) => {
 crearLog(companyId,userId,dataQr.did, "colecta", req.body,userId,dbConnectionLocal);
         res.status(200).json(result);
     } catch (error) {
-        crearLog(companyId,userId,dataQr.did, "colecta", { estadoRespuesta: false, mensaje: error.message },userId,dbConnectionLocal);
+        crearLog(companyId,userId,dataQr.did || 0, "colecta2", { estadoRespuesta: false, mensaje: error.message },userId,dbConnectionLocal);
         res.status(500).json({ message: error.message });
     } finally {
         const endTime = performance.now();
