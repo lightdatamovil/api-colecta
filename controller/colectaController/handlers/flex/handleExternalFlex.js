@@ -9,6 +9,7 @@ import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
 import { checkIfExistLogisticAsDriverInExternalCompany } from "../../functions/checkIfExistLogisticAsDriverInExternalCompany.js";
 import { informe } from "../../functions/informe.js"
 import { logCyan, logRed, logYellow } from "../../../../src/funciones/logsCustom.js";
+import { crearLog } from "../../../../src/funciones/crear_log.js";
 
 /// Esta funcion busca las logisticas vinculadas
 /// Reviso si el envío ya fue colectado cancelado o entregado en la logística externa
@@ -18,7 +19,7 @@ import { logCyan, logRed, logYellow } from "../../../../src/funciones/logsCustom
 /// Inserto el envio en la tabla envios y envios exteriores de la logística interna
 /// Actualizo el estado del envío y lo envío al microservicio de estados en la logística interna
 /// Actualizo el estado del envío y lo envío al microservicio de estados en la logística externa
-export async function handleExternalFlex(dbConnection, company, userId, profile, dataQr, autoAssign,) {
+export async function handleExternalFlex(dbConnection, company, userId, profile, dataQr, autoAssign,dbConnectionLocal) {
     try {
         const senderid = dataQr.sender_id;
         const shipmentId = dataQr.id;
@@ -66,8 +67,8 @@ export async function handleExternalFlex(dbConnection, company, userId, profile,
 
             if (!driver) {
                 externalDbConnection.end();
-
-                return { success: false, message: "No se encontró chofer asignado" };
+                crearLog(codLocal, userId, shipmentId, "colecta", "No se encontró chofer asignado", "colecta",userId,dbConnectionLocal);
+                return { estadoRespuesta: false, mensaje: "No se encontró chofer asignado" };
             }
 
             logCyan("Encontre la logistica como chofer en la logistica externa");
@@ -90,8 +91,8 @@ export async function handleExternalFlex(dbConnection, company, userId, profile,
 
                 if (rowsCuentas.length == 0) {
                     externalDbConnection.end();
-
-                    return { success: false, message: "No se encontró cuenta asociada" };
+                    crearLog(codLocal, userId, shipmentId, "coelcta", "No se encontró cuenta asociada", "colecta",userId,dbConnectionLocal);
+                    return { estadoRespuesta: false, mensaje: "No se encontró cuenta asociada" };
                 }
 
                 externalClientId = rowsCuentas[0].didCliente;
@@ -110,7 +111,7 @@ export async function handleExternalFlex(dbConnection, company, userId, profile,
             const check = await checkearEstadoEnvio(externalDbConnection, externalShipmentId);
             if (check) {
                 externalDbConnection.end();
-
+crearLog(codLocal, userId, shipmentId, "colecta", "El envio ya fue colectado cancelado o entregado", "colecta",userId,dbConnectionLocal);
                 return check;
             };
             logCyan("El envio no fue colectado cancelado o entregado");
@@ -133,12 +134,12 @@ export async function handleExternalFlex(dbConnection, company, userId, profile,
             logCyan("Inserte el envio en envios exteriores");
 
             /// Actualizo el estado del envío y lo envío al microservicio de estados en la logística interna
-        
+         
             await sendToShipmentStateMicroService(company.did, userId, internalShipmentId);
             logCyan("Actualice el estado del envio y lo envie al microservicio de estados en la logistica interna");
 
             /// Actualizo el estado del envío y lo envío al microservicio de estados en la logística externa
-          
+         
             await sendToShipmentStateMicroService(externalCompanyId, externalClientId, externalShipmentId);
             logCyan("Actualice el estado del envio y lo envie al microservicio de estados en la logistica externa");
 
@@ -166,17 +167,20 @@ export async function handleExternalFlex(dbConnection, company, userId, profile,
         `;
             const internalClient = await executeQuery(dbConnection, queryInternalClient, [internalShipmentId], true);
             if (internalClient.length == 0) {
-                return { success: false, message: "No se encontró cliente asociado" };
+                return { estadoRespuesta: false, mensaje: "No se encontró cliente asociado" };
             }
             logCyan("Encontre el cliente interno");
             logYellow(`values: ${company.did}, ${internalClient[0].didCliente}, ${userId}, ${internalShipmentId}`);
             const body = await informe(dbConnection, company.did, internalClient[0].didCliente, userId, internalShipmentId);
 
-            return { success: true, message: "Paquete colectado correctamente - FLEX", body: body };
+
+            crearLog(company.did,userId,dataQr.did, "colecta", { estadoRespuesta: true, mensaje: "Paquete colectado correctamente - FLEX", body: body },userId,dbConnectionLocal);
+            return { estadoRespuesta: true, mensaje: "Paquete colectado correctamente - FLEX", body: body };
 
         }
     } catch (error) {
-        logRed(`Error en handleExternalFlex: ${error.message}`);
+crearLog(company.did,userId,dataQr.did, "colecta", { estadoRespuesta: false, mensaje: "Error en handleExternalFlex" },userId,dbConnectionLocal);
+        logRed(`Error en handleExternalFlex: ${error.stack}`);
         throw error;
     }
 

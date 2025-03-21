@@ -8,10 +8,10 @@ export async function checkearEstadoEnvio(dbConnection, shipmentId) {
 
     if (estado.length > 0) {
         if (estado[0].estado_envio == 5 || estado[0].estado_envio == 9 || estado[0].estado_envio == 8) {
-            return { success: false, message: "El paquete ya fue entregado o cancelado" };
+            return { estadoRespuesta: false, mensaje: "El paquete ya fue entregado o cancelado" };
         }
         if (estado[0].estado_envio == 0) {
-            return { success: false, message: "El paquete ya se encuentra colectado" };
+            return { estadoRespuesta: false, mensaje: "El paquete ya se encuentra colectado" };
         }
     }
 }
