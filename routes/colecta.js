@@ -5,6 +5,7 @@ import { verifyParameters } from '../src/funciones/verifyParameters.js';
 import { logPurple } from '../src/funciones/logsCustom.js';
 import mysql from "mysql";
 import { crearLog } from '../src/funciones/crear_log.js';
+import { json } from 'body-parser';
 
 const colecta = Router();
 const dbConfigLocal = getLocalDbConfig();
@@ -24,10 +25,11 @@ colecta.post('/colecta', async (req, res) => {
     const { companyId, userId, profile, dataQr, autoAssign } = req.body;
 
     try {
+       const qr= JSON.parse=req.body.dataQr
         const company = await getCompanyById(companyId);
 
         const result = await colectar(company, JSON.parse(dataQr), userId, profile, autoAssign,dbConnectionLocal);
-crearLog(companyId,userId,dataQr.did, "colecta", req.body,userId,dbConnectionLocal);
+crearLog(companyId,userId,qr.did || 0, "colecta", req.body,userId,dbConnectionLocal);
         res.status(200).json(result);
     } catch (error) {
         crearLog(companyId,userId,dataQr.did || 0, "colecta2", { estadoRespuesta: false, mensaje: error.message },userId,dbConnectionLocal);
