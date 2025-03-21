@@ -20,7 +20,7 @@ export async function handleInternalNoFlex(dbConnection, dataQr, companyId, user
         /// Chequeo si el envio ya fue colectado, entregado o cancelado
         const check = await checkearEstadoEnvio(dbConnection, shipmentId);
         if (check) {
-crearLog(companyId,userId,dataQr.did, "colecta", { estadoRespuesta: false, mensaje: "El envio ya fue colectado, entregado o cancelado" },userId,dbConnectionLocal);
+
             return check;
 
         }
@@ -33,7 +33,7 @@ crearLog(companyId,userId,dataQr.did, "colecta", { estadoRespuesta: false, mensa
 
         /// Si no encuentro el envio mando error
         if (resultChoferAsignado.length === 0) {
-            crearLog(companyId,userId,dataQr.did, "colecta", { estadoRespuesta: false, mensaje: "Paquete no encontrado" },userId,dbConnectionLocal);
+      
             return { estadoRespuesta: false, mensaje: "Paquete no encontrado" };
         }
         logCyan("Se encontro el chofer asignado");
@@ -52,10 +52,10 @@ crearLog(companyId,userId,dataQr.did, "colecta", { estadoRespuesta: false, mensa
       
 
         const body = await informe(dbConnection, companyId, dataQr.cliente, userId, shipmentId);
-        crearLog(companyId,userId,dataQr.did, "colecta", {estadoRespuesta: true, mensaje: "Paquete colectado correctamente", body: body},userId,dbConnectionLocal);
+    
         return { estadoRespuesta: true, mensaje: "Paquete colectado correctamente", body: body };
     } catch (error) {
-        crearLog(companyId,userId,dataQr.did, "colecta", error.stack,userId,dbConnectionLocal);
+ 
         logRed(`Error en handleInternalNoFlex: ${error.stack}`);
         throw error;
     } 
