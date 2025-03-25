@@ -12,8 +12,8 @@ export async function colectar(company, dataQr, userId, profile, autoAssign,dbCo
     const dbConfig = getProdDbConfig(company);
     const dbConnection = mysql.createConnection(dbConfig);
     dbConnection.connect();
- dataQr= JSON.parse(dataQr);
 
+dataQr =JSON.parse(dataQr);
     try {
         let response;
        

@@ -30,7 +30,7 @@ colecta.post('/colecta', async (req, res) => {
 
 
 
-        const result = await colectar(company, JSON.stringify(dataQr), userId, profile, autoAssign,dbConnectionLocal);
+        const result = await colectar(company, dataQr, userId, profile, autoAssign,dbConnectionLocal);
 crearLog(companyId,userId,dataQr.did || 0, "1", req.body,userId,dbConnectionLocal,JSON.stringify(result));
         res.status(200).json(result);
     } catch (error) {
