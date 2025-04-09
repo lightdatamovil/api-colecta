@@ -1,19 +1,17 @@
 import { executeQuery } from "../../../../db.js";
 import { assign } from "../../functions/assign.js";
 import { insertEnvios } from "../../functions/insertEnvios.js";
-import { updateLastShipmentState } from "../../functions/updateLastShipmentState.js";
 import { sendToShipmentStateMicroService } from "../../functions/sendToShipmentStateMicroService.js";
 import { informe } from "../../functions/informe.js";
 import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
 import { logCyan, logRed, logYellow } from "../../../../src/funciones/logsCustom.js";
-import { crearLog } from "../../../../src/funciones/crear_log.js";
 
 /// Busco el envio
 /// Si no existe, lo inserto y tomo el did
 /// Checkeo si el envío ya fue colectado cancelado o entregado
 /// Actualizo el estado del envío y lo envío al microservicio de estados
 /// Asigno el envío al usuario si es necesario
-export async function handleInternalFlex(dbConnection, companyId, userId, profile, dataQr, autoAssign, account, dbConnectionLocal) {
+export async function handleInternalFlex(dbConnection, companyId, userId, profile, dataQr, autoAssign, account) {
     try {
         const senderId = dataQr.sender_id;
         const mlShipmentId = dataQr.id;
