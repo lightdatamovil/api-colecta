@@ -12,8 +12,11 @@ export async function colectar(company, dataQr, userId, profile, autoAssign) {
     const dbConnection = mysql.createConnection(dbConfig);
     dbConnection.connect();
 
+dataQr =JSON.parse(dataQr);
     try {
         let response;
+       
+        
 
         /// Me fijo si es flex o no
         const isFlex = dataQr.hasOwnProperty("sender_id");
