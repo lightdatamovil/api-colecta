@@ -1,14 +1,13 @@
-import { getAccountBySenderId, getProdDbConfig,getLocalDbConfig } from "../db.js";
+import { getAccountBySenderId, getProdDbConfig } from "../db.js";
 import { handleInternalFlex } from "./colectaController/handlers/flex/handleInternalFlex.js";
 import { handleExternalFlex } from "./colectaController/handlers/flex/handleExternalFlex.js";
 import { handleExternalNoFlex } from "./colectaController/handlers/noflex/handleExternalNoFlex.js";
 import { handleInternalNoFlex } from "./colectaController/handlers/noflex/handleInternalNoFlex.js";
 import mysql from "mysql";
 import { logCyan, logRed, logYellow } from "../src/funciones/logsCustom.js";
-import { crearLog } from "../src/funciones/crear_log.js";
 
 
-export async function colectar(company, dataQr, userId, profile, autoAssign,dbConnectionLocal) {
+export async function colectar(company, dataQr, userId, profile, autoAssign) {
     const dbConfig = getProdDbConfig(company);
     const dbConnection = mysql.createConnection(dbConfig);
     dbConnection.connect();
@@ -31,12 +30,12 @@ dataQr =JSON.parse(dataQr);
             /// Si la cuenta existe, es interno
             if (account) {
                 logCyan("Es interno");
-                response = await handleInternalFlex(dbConnection, company.did, userId, profile, dataQr, autoAssign, account,dbConnectionLocal);
+                response = await handleInternalFlex(dbConnection, company.did, userId, profile, dataQr, autoAssign, account);
 
                 /// Si la cuenta no existe, es externo
             } else {
                 logCyan("Es externo");
-                response = await handleExternalFlex(dbConnection, company, userId, profile, dataQr, autoAssign,dbConnectionLocal);
+                response = await handleExternalFlex(dbConnection, company, userId, profile, dataQr, autoAssign);
             }
             /// Si no es flex
         } else {
@@ -44,22 +43,22 @@ dataQr =JSON.parse(dataQr);
             /// Si la empresa del QR es la misma que la empresa del usuario, es interno
             if (company.did == dataQr.empresa) {
                 logCyan("Es interno");
-                response = await handleInternalNoFlex(dbConnection, dataQr, company.did, userId, profile, autoAssign,dbConnectionLocal);
+                response = await handleInternalNoFlex(dbConnection, dataQr, company.did, userId, profile, autoAssign);
 
                 /// Si la empresa del QR es distinta a la empresa del usuario, es externo
             } else {
                 logCyan("Es externo");
-                response = await handleExternalNoFlex(dbConnection, dataQr, company.did, userId, profile, autoAssign,dbConnectionLocal);
+                response = await handleExternalNoFlex(dbConnection, dataQr, company.did, userId, profile, autoAssign);
             }
         }
 
         return response;
     } catch (error) {
-       
+
         logRed(`Error en colectar: ${error.stack}`);
         throw error;
     } finally {
         dbConnection.end();
-      
+
     }
 }

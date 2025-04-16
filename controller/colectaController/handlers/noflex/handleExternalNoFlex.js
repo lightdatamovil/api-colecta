@@ -1,7 +1,6 @@
 import { executeQuery, getClientsByCompany, getCompanyById, getProdDbConfig } from "../../../../db.js";
 import { assign } from "../../functions/assign.js";
 import { sendToShipmentStateMicroService } from "../../functions/sendToShipmentStateMicroService.js";
-import { updateLastShipmentState } from "../../functions/updateLastShipmentState.js";
 import mysql from "mysql";
 import { insertEnvios } from "../../functions/insertEnvios.js";
 import { insertEnviosExteriores } from "../../functions/insertEnviosExteriores.js";
@@ -9,7 +8,6 @@ import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
 import { checkIfExistLogisticAsDriverInExternalCompany } from "../../functions/checkIfExistLogisticAsDriverInExternalCompany.js";
 import { informe } from "../../functions/informe.js";
 import { logCyan, logRed, logYellow } from "../../../../src/funciones/logsCustom.js";
-import { crearLog } from "../../../../src/funciones/crear_log.js";
 
 /// Esta funcion se conecta a la base de datos de la empresa externa
 /// Checkea si el envio ya fue colectado, entregado o cancelado
@@ -18,7 +16,7 @@ import { crearLog } from "../../../../src/funciones/crear_log.js";
 /// Asigno a la empresa externa
 /// Si es autoasignacion, asigno a la empresa interna
 /// Actualizo el estado del envio a colectado y envio el estado del envio en los microservicios
-export async function handleExternalNoFlex(dbConnection, dataQr, companyId, userId, profile, autoAssign, dbConnectionLocal) {
+export async function handleExternalNoFlex(dbConnection, dataQr, companyId, userId, profile, autoAssign) {
     try {
         const shipmentIdFromDataQr = dataQr.did;
         const clientIdFromDataQr = dataQr.cliente;

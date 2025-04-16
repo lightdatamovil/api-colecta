@@ -3,13 +3,11 @@ import { assign } from "../../functions/assign.js";
 import mysql from 'mysql';
 import { insertEnvios } from "../../functions/insertEnvios.js";
 import { insertEnviosExteriores } from "../../functions/insertEnviosExteriores.js";
-import { updateLastShipmentState } from "../../functions/updateLastShipmentState.js";
 import { sendToShipmentStateMicroService } from "../../functions/sendToShipmentStateMicroService.js";
 import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
 import { checkIfExistLogisticAsDriverInExternalCompany } from "../../functions/checkIfExistLogisticAsDriverInExternalCompany.js";
 import { informe } from "../../functions/informe.js"
 import { logCyan, logRed, logYellow } from "../../../../src/funciones/logsCustom.js";
-import { crearLog } from "../../../../src/funciones/crear_log.js";
 
 /// Esta funcion busca las logisticas vinculadas
 /// Reviso si el envío ya fue colectado cancelado o entregado en la logística externa
@@ -19,7 +17,7 @@ import { crearLog } from "../../../../src/funciones/crear_log.js";
 /// Inserto el envio en la tabla envios y envios exteriores de la logística interna
 /// Actualizo el estado del envío y lo envío al microservicio de estados en la logística interna
 /// Actualizo el estado del envío y lo envío al microservicio de estados en la logística externa
-export async function handleExternalFlex(dbConnection, company, userId, profile, dataQr, autoAssign, dbConnectionLocal) {
+export async function handleExternalFlex(dbConnection, company, userId, profile, dataQr, autoAssign) {
     try {
         const senderid = dataQr.sender_id;
         const shipmentId = dataQr.id;

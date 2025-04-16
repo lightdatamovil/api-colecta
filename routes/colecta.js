@@ -26,28 +26,21 @@ const body = req.body;
     const { companyId, userId, profile, dataQr, autoAssign } = req.body;
 
 
-    const company = await getCompanyById(companyId);
-    
-    console.log("hoila");
-    
     try {
-        const endTime = performance.now();
-        const tiempo = endTime - startTime;
-        const result = await colectar(company, dataQr, userId, profile, autoAssign,dbConnectionLocal);
-        crearLog(dbConnectionLocal, company.did, userId, body.profile, body, tiempo, JSON.stringify(result), "api", true);
+        const company = await getCompanyById(companyId);
 
+
+
+        const result = await colectar(company, dataQr, userId, profile, autoAssign,dbConnectionLocal);
+crearLog(companyId,userId,dataQr.did || 0, "1", req.body,userId,dbConnectionLocal,JSON.stringify(result));
         res.status(200).json(result);
     } catch (error) {
-        const endTime = performance.now();
-        const tiempo = endTime - startTime;
-    
-      
-        
-        crearLog(dbConnectionLocal, company.did, userId, body.profile, body, tiempo, JSON.stringify(error), "api", false);
+        crearLog(companyId,userId,dataQr.did || 0, "-1", req.body,userId,dbConnectionLocal,error.message);
 
         res.status(500).json({ message: error.message });
     } finally {
         const endTime = performance.now();
+
         logPurple(`Tiempo de ejecución: ${endTime - startTime} ms`);
     }
 });

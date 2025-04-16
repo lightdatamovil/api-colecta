@@ -2,10 +2,8 @@ import { executeQuery } from "../../../../db.js";
 import { assign } from "../../functions/assign.js";
 import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
 import { sendToShipmentStateMicroService } from "../../functions/sendToShipmentStateMicroService.js";
-import { updateLastShipmentState } from "../../functions/updateLastShipmentState.js";
 import { informe } from "../../functions/informe.js";
 import { logCyan, logRed } from "../../../../src/funciones/logsCustom.js";
-import { crearLog } from "../../../../src/funciones/crear_log.js";
 
 
 /// Esta funcion checkea si el envio ya fue colectado, entregado o cancelado
@@ -13,7 +11,7 @@ import { crearLog } from "../../../../src/funciones/crear_log.js";
 /// Si el envio no esta asignado y se quiere autoasignar, lo asigna
 /// Actualiza el estado del envio en el micro servicio
 /// Actualiza el estado del envio en la base de datos
-export async function handleInternalNoFlex(dbConnection, dataQr, companyId, userId, profile, autoAssign, dbConnectionLocal) {
+export async function handleInternalNoFlex(dbConnection, dataQr, companyId, userId, profile, autoAssign) {
     try {
         const shipmentId = dataQr.did;
 
