@@ -16,7 +16,8 @@ colecta.post("/colecta", async (req, res) => {
   const errorMessage = verifyParameters(req.body, [
     "dataQr",
     "autoAssign",
-    "deviceFrom",
+    "ilat",
+    "ilong"
   ]);
 
   if (errorMessage) {
@@ -26,7 +27,7 @@ colecta.post("/colecta", async (req, res) => {
   }
 
   const body = req.body;
-  const { companyId, userId, profile, dataQr, autoAssign } = req.body;
+  const { companyId, userId, profile, dataQr, autoAssign, ilat, ilong } = req.body;
 
   try {
     const company = await getCompanyById(companyId);
@@ -37,7 +38,8 @@ colecta.post("/colecta", async (req, res) => {
       userId,
       profile,
       autoAssign,
-      dbConnectionLocal
+      ilat,
+      ilong
     );
     const endTime = performance.now();
     crearLog(

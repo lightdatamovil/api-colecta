@@ -16,7 +16,7 @@ import { logCyan, logRed, logYellow } from "../../../../src/funciones/logsCustom
 /// Asigno a la empresa externa
 /// Si es autoasignacion, asigno a la empresa interna
 /// Actualizo el estado del envio a colectado y envio el estado del envio en los microservicios
-export async function handleExternalNoFlex(dbConnection, dataQr, companyId, userId, profile, autoAssign) {
+export async function handleExternalNoFlex(dbConnection, dataQr, companyId, userId, profile, autoAssign, latitud, longitud) {
     try {
         const shipmentIdFromDataQr = dataQr.did;
         const clientIdFromDataQr = dataQr.cliente;
@@ -77,7 +77,7 @@ export async function handleExternalNoFlex(dbConnection, dataQr, companyId, user
                 { id: "", sender_id: "" },
                 0,
                 1,
-                driver
+                driver, latitud, longitud
             );
             logCyan("Inserté en envios");
         }

@@ -17,7 +17,7 @@ import { logCyan, logRed, logYellow } from "../../../../src/funciones/logsCustom
 /// Inserto el envio en la tabla envios y envios exteriores de la logística interna
 /// Actualizo el estado del envío y lo envío al microservicio de estados en la logística interna
 /// Actualizo el estado del envío y lo envío al microservicio de estados en la logística externa
-export async function handleExternalFlex(dbConnection, company, userId, profile, dataQr, autoAssign) {
+export async function handleExternalFlex(dbConnection, company, userId, profile, dataQr, autoAssign, latitud, longitud) {
     try {
         const senderid = dataQr.sender_id;
         const shipmentId = dataQr.id;
@@ -96,7 +96,7 @@ export async function handleExternalFlex(dbConnection, company, userId, profile,
                 externalClientId = rowsCuentas[0].didCliente;
                 const didcuenta_ext = rowsCuentas[0].did;
 
-                const result = await insertEnvios(externalDbConnection, externalCompanyId, externalClientId, didcuenta_ext, dataQr, 1, 0, driver);
+                const result = await insertEnvios(externalDbConnection, externalCompanyId, externalClientId, didcuenta_ext, dataQr, 1, 0, driver, latitud, longitud);
 
                 rowsEnvios = await executeQuery(externalDbConnection, sqlEnvios, [result, senderid]);
 
@@ -124,7 +124,7 @@ export async function handleExternalFlex(dbConnection, company, userId, profile,
                 logCyan("Encontre el envio en envios exteriores");
             } else {
                 /// Inserto en envios y en envios exteriores de la logistica interna
-                internalShipmentId = await insertEnvios(dbConnection, company.did, externalLogisticId, 0, dataQr, 1, 1, userId);
+                internalShipmentId = await insertEnvios(dbConnection, company.did, externalLogisticId, 0, dataQr, 1, 1, userId, latitud, longitud);
                 logCyan("Inserte el envio en envios");
             }
 

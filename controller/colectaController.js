@@ -7,16 +7,16 @@ import mysql from "mysql";
 import { logCyan, logRed, logYellow } from "../src/funciones/logsCustom.js";
 
 
-export async function colectar(company, dataQr, userId, profile, autoAssign) {
+export async function colectar(company, dataQr, userId, profile, autoAssign, latitude, longitude) {
     const dbConfig = getProdDbConfig(company);
     const dbConnection = mysql.createConnection(dbConfig);
     dbConnection.connect();
 
-dataQr =JSON.parse(dataQr);
+    dataQr = JSON.parse(dataQr);
     try {
         let response;
-       
-        
+
+
 
         /// Me fijo si es flex o no
         const isFlex = dataQr.hasOwnProperty("sender_id");
@@ -30,12 +30,12 @@ dataQr =JSON.parse(dataQr);
             /// Si la cuenta existe, es interno
             if (account) {
                 logCyan("Es interno");
-                response = await handleInternalFlex(dbConnection, company.did, userId, profile, dataQr, autoAssign, account);
+                response = await handleInternalFlex(dbConnection, company.did, userId, profile, dataQr, autoAssign, account, latitude, longitude);
 
                 /// Si la cuenta no existe, es externo
             } else {
                 logCyan("Es externo");
-                response = await handleExternalFlex(dbConnection, company, userId, profile, dataQr, autoAssign);
+                response = await handleExternalFlex(dbConnection, company, userId, profile, dataQr, autoAssign, latitude, longitude);
             }
             /// Si no es flex
         } else {
@@ -48,7 +48,7 @@ dataQr =JSON.parse(dataQr);
                 /// Si la empresa del QR es distinta a la empresa del usuario, es externo
             } else {
                 logCyan("Es externo");
-                response = await handleExternalNoFlex(dbConnection, dataQr, company.did, userId, profile, autoAssign);
+                response = await handleExternalNoFlex(dbConnection, dataQr, company.did, userId, profile, autoAssign, latitude, longitude);
             }
         }
 
