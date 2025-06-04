@@ -1,6 +1,6 @@
 export function formatFechaUTC3() {
   const fecha = new Date();
-  fecha.setHours(fecha.getHours());
+  fecha.setHours(fecha.getHours() - 3);
 
   const yyyy = fecha.getFullYear();
   const mm = String(fecha.getMonth() + 1).padStart(2, "0");
