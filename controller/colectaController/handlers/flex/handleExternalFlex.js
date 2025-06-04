@@ -1,13 +1,21 @@
-import { executeQuery, getProdDbConfig, getCompanyByCode } from "../../../../db.js";
+import {
+  executeQuery,
+  getProdDbConfig,
+  getCompanyByCode,
+} from "../../../../db.js";
 import { assign } from "../../functions/assign.js";
-import mysql from 'mysql';
+import mysql from "mysql";
 import { insertEnvios } from "../../functions/insertEnvios.js";
 import { insertEnviosExteriores } from "../../functions/insertEnviosExteriores.js";
 import { sendToShipmentStateMicroService } from "../../functions/sendToShipmentStateMicroService.js";
 import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
 import { checkIfExistLogisticAsDriverInExternalCompany } from "../../functions/checkIfExistLogisticAsDriverInExternalCompany.js";
-import { informe } from "../../functions/informe.js"
-import { logCyan, logRed, logYellow } from "../../../../src/funciones/logsCustom.js";
+import { informe } from "../../functions/informe.js";
+import {
+  logCyan,
+  logRed,
+  logYellow,
+} from "../../../../src/funciones/logsCustom.js";
 
 /// Esta funcion busca las logisticas vinculadas
 /// Reviso si el envío ya fue colectado cancelado o entregado en la logística externa
@@ -17,169 +25,267 @@ import { logCyan, logRed, logYellow } from "../../../../src/funciones/logsCustom
 /// Inserto el envio en la tabla envios y envios exteriores de la logística interna
 /// Actualizo el estado del envío y lo envío al microservicio de estados en la logística interna
 /// Actualizo el estado del envío y lo envío al microservicio de estados en la logística externa
-export async function handleExternalFlex(dbConnection, company, userId, profile, dataQr, autoAssign, latitud, longitud) {
-    try {
-        const senderid = dataQr.sender_id;
-        const shipmentId = dataQr.id;
-        const codLocal = company.codigo;
+export async function handleExternalFlex(
+  dbConnection,
+  company,
+  userId,
+  profile,
+  dataQr,
+  autoAssign,
+  latitud,
+  longitud
+) {
+  try {
+    const senderid = dataQr.sender_id;
+    const shipmentId = dataQr.id;
+    const codLocal = company.codigo;
 
-        // Se llama logisticas y se toman de la tabla de clientes porque al vincularlas se crea un
-        // cliente con el código de vinculación
-        const queryLogisticasExternas = `
+    // Se llama logisticas y se toman de la tabla de clientes porque al vincularlas se crea un
+    // cliente con el código de vinculación
+    const queryLogisticasExternas = `
             SELECT did, nombre_fantasia, codigoVinculacionLogE 
             FROM clientes 
             WHERE superado = 0 AND elim = 0 AND codigoVinculacionLogE != ''
         `;
-        const logisticasExternas = await executeQuery(dbConnection, queryLogisticasExternas);
-        logCyan("Me traigo las logisticas externas");
+    const logisticasExternas = await executeQuery(
+      dbConnection,
+      queryLogisticasExternas,
+      [],
+      true
+    );
+    logCyan("Me traigo las logisticas externas");
 
-        /// Por cada logística externa
-        for (const logistica of logisticasExternas) {
-            logCyan(`logistica externa actual: ${logistica.nombre_fantasia}`);
-            const externalLogisticId = logistica.did;
-            const nombreFantasia = logistica.nombre_fantasia;
-            const syncCode = logistica.codigoVinculacionLogE;
+    if (logisticasExternas.length === 0) {
+      logRed("No hay logisticas externas");
+      throw new Error(`La cuenta de ML: ${dataQr.sender_id} no esta vinculada`);
+    }
+    /// Por cada logística externa
+    for (const logistica of logisticasExternas) {
+      logCyan(`logistica externa actual: ${logistica.nombre_fantasia}`);
+      const externalLogisticId = logistica.did;
+      const nombreFantasia = logistica.nombre_fantasia;
+      const syncCode = logistica.codigoVinculacionLogE;
 
-            const externalCompany = await getCompanyByCode(syncCode);
-            const externalCompanyId = externalCompany.did;
+      const externalCompany = await getCompanyByCode(syncCode);
+      const externalCompanyId = externalCompany.did;
 
-            /// Me conecto a la base de datos de la logística externa
-            const dbConfigExt = getProdDbConfig(externalCompany);
-            const externalDbConnection = mysql.createConnection(dbConfigExt);
-            externalDbConnection.connect();
+      /// Me conecto a la base de datos de la logística externa
+      const dbConfigExt = getProdDbConfig(externalCompany);
+      const externalDbConnection = mysql.createConnection(dbConfigExt);
+      externalDbConnection.connect();
 
-            /// Busco el envío
-            const sqlEnvios = `
+      /// Busco el envío
+      const sqlEnvios = `
                         SELECT did, didCliente
                         FROM envios 
                         WHERE ml_shipment_id = ? AND ml_vendedor_id = ? 
                         LIMIT 1
                     `;
-            let rowsEnvios = await executeQuery(externalDbConnection, sqlEnvios, [shipmentId, senderid]);
+      let rowsEnvios = await executeQuery(externalDbConnection, sqlEnvios, [
+        shipmentId,
+        senderid,
+      ]);
 
-            let externalShipmentId;
-            let externalClientId;
+      let externalShipmentId;
+      let externalClientId;
 
-            /// Busco si el chofer está asignado
-            const driver = await checkIfExistLogisticAsDriverInExternalCompany(externalDbConnection, codLocal);
+      /// Busco si el chofer está asignado
+      const driver = await checkIfExistLogisticAsDriverInExternalCompany(
+        externalDbConnection,
+        codLocal
+      );
 
-            if (!driver) {
-                externalDbConnection.end();
+      if (!driver) {
+        externalDbConnection.end();
 
-                return { success: false, message: "No se encontró chofer asignado" };
-            }
+        return {
+          estadoRespuesta: false,
+          mensaje: "No se encontró chofer asignado",
+        };
+      }
 
-            logCyan("Encontre la logistica como chofer en la logistica externa");
-            /// Si existe el envío, tomo el did
-            if (rowsEnvios.length > 0) {
-                externalShipmentId = rowsEnvios[0].did;
-                externalClientId = rowsEnvios[0].didCliente;
-                logCyan("Encontre el envio en la logistica externa");
-                /// Si no existe, lo inserto y tomo el did
-            } else {
-                logCyan("No encontre el envio en la logistica externa");
-                /// Tomo los datos del cliente de la logística externa
-                const sqlCuentas = `
+      logCyan("Encontre la logistica como chofer en la logistica externa");
+      /// Si existe el envío, tomo el did
+      if (rowsEnvios.length > 0) {
+        externalShipmentId = rowsEnvios[0].did;
+        externalClientId = rowsEnvios[0].didCliente;
+        logCyan("Encontre el envio en la logistica externa");
+        /// Si no existe, lo inserto y tomo el did
+      } else {
+        logCyan("No encontre el envio en la logistica externa");
+        /// Tomo los datos del cliente de la logística externa
+        const sqlCuentas = `
                 SELECT did, didCliente 
                 FROM clientes_cuentas 
                 WHERE superado = 0 AND elim = 0 AND tipoCuenta = 1 AND ML_id_vendedor = ?
             `;
-                const rowsCuentas = await executeQuery(externalDbConnection, sqlCuentas, [senderid]);
+        const rowsCuentas = await executeQuery(
+          externalDbConnection,
+          sqlCuentas,
+          [senderid]
+        );
 
+        if (rowsCuentas.length == 0) {
+          externalDbConnection.end();
+          return {
+            estadoRespuesta: false,
+            mensaje: "No se encontró cuenta asociada",
+          };
+        }
 
-                if (rowsCuentas.length == 0) {
-                    externalDbConnection.end();
+        externalClientId = rowsCuentas[0].didCliente;
+        const didcuenta_ext = rowsCuentas[0].did;
 
-                    return { success: false, message: "No se encontró cuenta asociada" };
-                }
+        const result = await insertEnvios(
+          externalDbConnection,
+          externalCompanyId,
+          externalClientId,
+          didcuenta_ext,
+          dataQr,
+          1,
+          0,
+          driver,
+          latitud,
+          longitud
+        );
+        const sqlEnvios2 = `
+                SELECT did, didCliente
+                FROM envios 
+                WHERE did = ? AND ml_vendedor_id = ? 
+                LIMIT 1
+            `;
 
-                externalClientId = rowsCuentas[0].didCliente;
-                const didcuenta_ext = rowsCuentas[0].did;
+        rowsEnvios = await executeQuery(externalDbConnection, sqlEnvios2, [
+          result,
+          senderid,
+        ]);
 
-                const result = await insertEnvios(externalDbConnection, externalCompanyId, externalClientId, didcuenta_ext, dataQr, 1, 0, driver, latitud, longitud);
+        logCyan("Inserte el envio en la logistica externa");
 
-                rowsEnvios = await executeQuery(externalDbConnection, sqlEnvios, [result, senderid]);
+        externalShipmentId = rowsEnvios[0].did;
+      }
 
-                logCyan("Inserte el envio en la logistica externa");
+      /// Chequeo si el envío ya fue colectado cancelado o entregado
+      const check = await checkearEstadoEnvio(
+        externalDbConnection,
+        externalShipmentId
+      );
+      if (check) {
+        externalDbConnection.end();
 
-                externalShipmentId = rowsEnvios[0].did;
-            }
+        return check;
+      }
+      logCyan("El envio no fue colectado cancelado o entregado");
 
-            /// Chequeo si el envío ya fue colectado cancelado o entregado
-            const check = await checkearEstadoEnvio(externalDbConnection, externalShipmentId);
-            if (check) {
-                externalDbConnection.end();
+      let internalShipmentId;
 
-                return check;
-            };
-            logCyan("El envio no fue colectado cancelado o entregado");
+      const consulta =
+        "SELECT didLocal FROM envios_exteriores WHERE didExterno = ?";
+      internalShipmentId = await executeQuery(dbConnection, consulta, [
+        externalShipmentId,
+      ]);
 
-            let internalShipmentId;
+      if (internalShipmentId.length > 0 && internalShipmentId[0]?.didLocal) {
+        internalShipmentId = internalShipmentId[0].didLocal;
+        logCyan("Encontre el envio en envios exteriores");
+      } else {
+        /// Inserto en envios y en envios exteriores de la logistica interna
+        internalShipmentId = await insertEnvios(
+          dbConnection,
+          company.did,
+          externalLogisticId,
+          0,
+          dataQr,
+          1,
+          1,
+          userId
+        );
+        logCyan("Inserte el envio en envios");
+      }
 
-            const consulta = 'SELECT didLocal FROM envios_exteriores WHERE didExterno = ?';
-            internalShipmentId = await executeQuery(dbConnection, consulta, [externalShipmentId]);
+      await insertEnviosExteriores(
+        dbConnection,
+        externalShipmentId,
+        internalShipmentId,
+        1,
+        nombreFantasia,
+        externalCompanyId
+      );
+      logCyan("Inserte el envio en envios exteriores");
 
-            if (internalShipmentId.length > 0 && internalShipmentId[0]?.didLocal) {
-                internalShipmentId = internalShipmentId[0].didLocal;
-                logCyan("Encontre el envio en envios exteriores");
-            } else {
-                /// Inserto en envios y en envios exteriores de la logistica interna
-                internalShipmentId = await insertEnvios(dbConnection, company.did, externalLogisticId, 0, dataQr, 1, 1, userId, latitud, longitud);
-                logCyan("Inserte el envio en envios");
-            }
+      /// Actualizo el estado del envío y lo envío al microservicio de estados en la logística interna
 
-            await insertEnviosExteriores(dbConnection, externalShipmentId, internalShipmentId, 1, nombreFantasia, externalCompanyId);
-            logCyan("Inserte el envio en envios exteriores");
+      await sendToShipmentStateMicroService(
+        company.did,
+        userId,
+        internalShipmentId
+      );
+      logCyan(
+        "Actualice el estado del envio y lo envie al microservicio de estados en la logistica interna"
+      );
 
-            /// Actualizo el estado del envío y lo envío al microservicio de estados en la logística interna
+      /// Actualizo el estado del envío y lo envío al microservicio de estados en la logística externa
 
-            await sendToShipmentStateMicroService(company.did, userId, internalShipmentId);
-            logCyan("Actualice el estado del envio y lo envie al microservicio de estados en la logistica interna");
+      await sendToShipmentStateMicroService(
+        externalCompanyId,
+        externalClientId,
+        externalShipmentId
+      );
+      logCyan(
+        "Actualice el estado del envio y lo envie al microservicio de estados en la logistica externa"
+      );
 
-            /// Actualizo el estado del envío y lo envío al microservicio de estados en la logística externa
+      if (autoAssign) {
+        const dqr = {
+          did: internalShipmentId,
+          empresa: company.did,
+          local: 1,
+          cliente: externalLogisticId,
+        };
+        /// Asigno el envío a la logística interna y a la logística externa
+        await assign(company.did, userId, profile, dqr, userId);
+        logCyan("Asigne el envio en la logistica interna");
 
-            await sendToShipmentStateMicroService(externalCompanyId, externalClientId, externalShipmentId);
-            logCyan("Actualice el estado del envio y lo envie al microservicio de estados en la logistica externa");
+        await assign(externalCompany.did, userId, profile, dataQr, driver);
+        logCyan("Asigne el envio en la logistica externa");
+      }
 
-            if (autoAssign) {
-                const dqr = {
-                    did: internalShipmentId,
-                    empresa: company.did,
-                    local: 1,
-                    cliente: externalLogisticId,
-                };
-                /// Asigno el envío a la logística interna y a la logística externa
-                await assign(company.did, userId, profile, dqr, userId);
-                logCyan("Asigne el envio en la logistica interna");
+      externalDbConnection.end();
 
-                await assign(externalCompany.did, userId, profile, dataQr, driver);
-                logCyan("Asigne el envio en la logistica externa");
-            }
-
-            externalDbConnection.end();
-
-            const queryInternalClient = `
+      const queryInternalClient = `
             SELECT didCliente 
             FROM envios 
             WHERE did = ?
         `;
-            const internalClient = await executeQuery(dbConnection, queryInternalClient, [internalShipmentId], true);
-            if (internalClient.length == 0) {
-                return { success: false, message: "No se encontró cliente asociado" };
-            }
-            logCyan("Encontre el cliente interno");
-            logYellow(`values: ${company.did}, ${internalClient[0].didCliente}, ${userId}, ${internalShipmentId}`);
-            const body = await informe(dbConnection, company.did, internalClient[0].didCliente, userId, internalShipmentId);
+      const internalClient = await executeQuery(
+        dbConnection,
+        queryInternalClient,
+        [internalShipmentId],
+        true
+      );
+      if (internalClient.length == 0) {
+        return {
+          estadoRespuesta: false,
+          mensaje: "No se encontró cliente asociado",
+        };
+      }
+      logCyan("Encontre el cliente interno");
+      const body = await informe(
+        dbConnection,
+        company.did,
+        internalClient[0].didCliente,
+        userId,
+        internalShipmentId
+      );
 
-
-
-            return { success: true, message: "Paquete colectado correctamente - FLEX", body: body };
-
-        }
-    } catch (error) {
-
-        logRed(`Error en handleExternalFlex: ${error.stack}`);
-        throw error;
+      return {
+        estadoRespuesta: true,
+        mensaje: "Paquete colectado correctamente - FLEX",
+        body: body,
+      };
     }
-
+  } catch (error) {
+    logRed(`Error en handleExternalFlex: ${error.stack}`);
+    throw error;
+  }
 }
