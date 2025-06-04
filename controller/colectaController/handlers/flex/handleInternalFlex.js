@@ -65,15 +65,15 @@ export async function handleInternalFlex(
       ]);
       logCyan("Inserte el envio");
     } else {
+      /// Checkeo si el envío ya fue colectado cancelado o entregado
+      const check = await checkearEstadoEnvio(dbConnection, shipmentId);
+      if (check) return check;
       logCyan("Encontre el envio");
     }
+
     const row = resultBuscarEnvio[0];
 
     shipmentId = row.did;
-
-    /// Checkeo si el envío ya fue colectado cancelado o entregado
-    const check = await checkearEstadoEnvio(dbConnection, shipmentId);
-    if (check) return check;
     logCyan("El envio no fue colectado cancelado o entregado");
 
     const queryUpdateEnvios = `
