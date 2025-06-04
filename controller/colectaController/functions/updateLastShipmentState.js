@@ -4,7 +4,6 @@ import { checkearEstadoEnvio } from "./checkarEstadoEnvio.js";
 
 export async function updateLastShipmentState(dbConnection, shipmentId) {
     try {
-        const fecha = new Date().toISOString().slice(0, 19).replace('T', ' ');
         const estado = 0;
 
         const check = await checkearEstadoEnvio(dbConnection, shipmentId);
@@ -31,11 +30,9 @@ export async function updateLastShipmentState(dbConnection, shipmentId) {
         `;
         const cadeteResults = await executeQuery(dbConnection, sqlDidCadete, [shipmentId]);
 
-
-
         const didCadete = cadeteResults.length > 0 ? cadeteResults[0].quien : 0;
 
-        const fechaT = fecha || new Date().toISOString().slice(0, 19).replace('T', ' ');
+        const fechaT = new Date().toISOString().slice(0, 19).replace('T', ' ');
 
         const sqlInsertHistorial = `
             INSERT INTO envios_historial (didEnvio, estado, quien, fecha, didCadete) 

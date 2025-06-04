@@ -8,7 +8,7 @@ dotenv.config({ path: process.env.ENV_FILE || '.env' });
 const RABBITMQ_URL = process.env.RABBITMQ_URL;
 const QUEUE_ESTADOS = process.env.QUEUE_ESTADOS;
 
-export async function sendToShipmentStateMicroService(companyId, userId, shipmentId) {
+export async function sendToShipmentStateMicroService(companyId, userId, shipmentId, latitud, longitud) {
     try {
         const connection = await connect(RABBITMQ_URL);
         const channel = await connection.createChannel();
@@ -22,14 +22,17 @@ export async function sendToShipmentStateMicroService(companyId, userId, shipmen
             estadoML: null,
             fecha: formatFechaUTC3(),
             quien: userId,
-            operacion: "colecta"
+            operacion: "colecta",
+            latitud: latitud,
+            longitud: longitud
+
         };
 
         channel.sendToQueue(QUEUE_ESTADOS, Buffer.from(JSON.stringify(message)), { persistent: true }, (err, ok) => {
             if (err) {
-                logRed('❌ Error al enviar el message:', err);
+                logRed(`❌ Error al enviar el mensaje: ${err}`);
             } else {
-                logGreen('✅ message enviado correctamente al microservicio de estados');
+                logGreen('✅ Mensaje enviado correctamente al microservicio de estados');
             }
             connection.close();
         });
