@@ -22,7 +22,9 @@ export async function handleInternalFlex(
   profile,
   dataQr,
   autoAssign,
-  account, latitud, longitud
+  account,
+  latitud,
+  longitud
 ) {
   try {
     const senderId = dataQr.sender_id;
@@ -53,7 +55,9 @@ export async function handleInternalFlex(
         dataQr,
         1,
         0,
-        0, latitud, longitud
+        userId,
+        latitud,
+        longitud
       );
       resultBuscarEnvio = await executeQuery(dbConnection, sql, [
         mlShipmentId,
