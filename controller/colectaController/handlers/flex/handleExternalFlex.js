@@ -189,7 +189,8 @@ export async function handleExternalFlex(
         internalShipmentId = internalShipmentId[0].didLocal;
         logCyan("Encontre el envio en envios exteriores");
       } else {
-        /// Inserto en envios y en envios exteriores de la logistica interna
+        console.log("entroooo aca ");
+
         internalShipmentId = await insertEnvios(
           dbConnection,
           company.did,
