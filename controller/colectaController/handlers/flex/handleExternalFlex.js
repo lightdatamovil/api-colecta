@@ -280,8 +280,8 @@ export async function handleExternalFlex(
       );
 
       return {
-        estadoRespuesta: true,
-        mensaje: "Paquete colectado correctamente - FLEX",
+        success: true,
+        message: "Paquete colectado correctamente - FLEX",
         body: body,
       };
     }
