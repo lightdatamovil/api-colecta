@@ -186,7 +186,7 @@ export async function handleExternalFlex(
       internalShipmentId = await executeQuery(
         dbConnection,
         consulta,
-        [externalShipmentId],
+        [internalShipmentId],
         true
       );
 
@@ -213,8 +213,8 @@ export async function handleExternalFlex(
 
       await insertEnviosExteriores(
         dbConnection,
-        externalShipmentId,
         internalShipmentId,
+        externalShipmentId,
         1,
         nombreFantasia,
         externalCompanyId
