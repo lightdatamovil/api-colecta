@@ -81,10 +81,12 @@ export async function handleExternalFlex(
                         WHERE ml_shipment_id = ? AND ml_vendedor_id = ? 
                         LIMIT 1
                     `;
-      let rowsEnvios = await executeQuery(externalDbConnection, sqlEnvios, [
-        shipmentId,
-        senderid,
-      ]);
+      let rowsEnvios = await executeQuery(
+        externalDbConnection,
+        sqlEnvios,
+        [shipmentId, senderid],
+        true
+      );
 
       let externalShipmentId;
       let externalClientId;
