@@ -183,9 +183,14 @@ export async function handleExternalFlex(
 
       const consulta =
         "SELECT didLocal FROM envios_exteriores WHERE didExterno = ?";
-      internalShipmentId = await executeQuery(dbConnection, consulta, [
-        externalShipmentId,
-      ]);
+      internalShipmentId = await executeQuery(
+        dbConnection,
+        consulta,
+        [externalShipmentId],
+        true
+      );
+
+      console.log(internalShipmentId, "SDADASD");
 
       if (internalShipmentId.length > 0 && internalShipmentId[0]?.didLocal) {
         internalShipmentId = internalShipmentId[0].didLocal;
