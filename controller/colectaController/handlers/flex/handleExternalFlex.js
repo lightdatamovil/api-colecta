@@ -236,20 +236,18 @@ export async function handleExternalFlex(
         "Actualice el estado del envio y lo envie al microservicio de estados en la logistica externa"
       );
 
-      if (autoAssign) {
-        const dqr = {
-          did: internalShipmentId,
-          empresa: company.did,
-          local: 1,
-          cliente: externalLogisticId,
-        };
-        /// Asigno el envío a la logística interna y a la logística externa
-        await assign(company.did, userId, profile, dqr, userId);
-        logCyan("Asigne el envio en la logistica interna");
+      const dqr = {
+        did: internalShipmentId,
+        empresa: company.did,
+        local: 1,
+        cliente: externalLogisticId,
+      };
+      /// Asigno el envío a la logística interna y a la logística externa
+      await assign(company.did, userId, profile, dqr, userId);
+      logCyan("Asigne el envio en la logistica interna");
 
-        await assign(externalCompany.did, userId, profile, dataQr, driver);
-        logCyan("Asigne el envio en la logistica externa");
-      }
+      await assign(externalCompany.did, userId, profile, dataQr, driver);
+      logCyan("Asigne el envio en la logistica externa");
 
       externalDbConnection.end();
 
