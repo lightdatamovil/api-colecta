@@ -246,21 +246,20 @@ export async function handleExternalFlex(
         /// Asigno el envío a la logística interna y a la logística externa
         await assign(company.did, userId, profile, dqr, userId);
 
-        const dqrext = {
-          did: externalShipmentId,
-          empresa: externalCompanyId,
-          local: 1,
-          cliente: externalLogisticId,
-        };
-
-        logCyan("Voy a asignar el envio en la logistica interna");
-        await assign(externalCompanyId, userId, profile, dqrext, userId);
-
         logCyan("Asigne el envio en la logistica interna");
 
         await assign(externalCompany.did, userId, profile, dataQr, driver);
         logCyan("Asigne el envio en la logistica externa");
       }
+      const dqrext = {
+        did: externalShipmentId,
+        empresa: externalCompanyId,
+        local: 1,
+        cliente: externalLogisticId,
+      };
+
+      logCyan("Voy a asignar el envio en la logistica interna");
+      await assign(externalCompanyId, userId, profile, dqrext, userId);
 
       externalDbConnection.end();
 
