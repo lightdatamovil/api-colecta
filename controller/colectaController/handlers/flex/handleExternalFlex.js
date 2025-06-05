@@ -253,6 +253,9 @@ export async function handleExternalFlex(
           cliente: externalLogisticId,
         };
 
+        logCyan("Voy a asignar el envio en la logistica interna");
+        await assign(externalCompanyId, userId, profile, dqrext, userId);
+
         logCyan("Asigne el envio en la logistica interna");
 
         await assign(externalCompany.did, userId, profile, dataQr, driver);
