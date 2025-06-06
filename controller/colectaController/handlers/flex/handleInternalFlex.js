@@ -44,7 +44,7 @@ export async function handleInternalFlex(
       mlShipmentId,
       senderId,
     ]);
-
+    shipmentId = resultBuscarEnvio.length > 0 ? resultBuscarEnvio[0].did : null;
     /// Si no existe, lo inserto y tomo el did
     if (resultBuscarEnvio.length === 0) {
       shipmentId = await insertEnvios(

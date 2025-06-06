@@ -35,9 +35,9 @@ export function getProdDbConfig(company) {
 }
 export function getLocalDbConfig() {
     return {
-       // host: "localhost",
+        // host: "localhost",
         host: "149.56.182.49",
-        user:"ulogs" ,
+        user: "ulogs",
         password: "logs123456*",
         database: "data",
         port: 44343
@@ -290,28 +290,31 @@ export async function getDriversByCompany(dbConnection, companyId) {
     }
 }
 
-export async function executeQuery(connection, query, values, log = false) {
-    if (log) {
-        logYellow(`Ejecutando query: ${query} con valores: ${values}`);
-    }
+export async function executeQuery(connection, query, values, log) {
+    // Utilizamos connection.format para obtener la query completa con valores
+    const formattedQuery = connection.format(query, values);
+
     try {
         return new Promise((resolve, reject) => {
             connection.query(query, values, (err, results) => {
+                if (log) {
+                    logYellow(`Ejecutando query: ${formattedQuery}`);
+                }
                 if (err) {
                     if (log) {
-                        logRed(`Error en executeQuery: ${err.message}`);
+                        logRed(`Error en executeQuery: ${err.message} en query: ${formattedQuery}`);
                     }
                     reject(err);
                 } else {
                     if (log) {
-                        logYellow(`Query ejecutado con éxito: ${JSON.stringify(results)}`);
+                        logYellow(`Query ejecutado con éxito: ${formattedQuery} - Resultados: ${JSON.stringify(results)}`);
                     }
                     resolve(results);
                 }
             });
         });
     } catch (error) {
-        logRed(`Error en executeQuery: ${error.message}`);
+        logRed(`Error en executeQuery: ${error.stack}`);
         throw error;
     }
 }
