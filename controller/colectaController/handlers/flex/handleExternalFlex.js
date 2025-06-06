@@ -62,6 +62,9 @@ export async function handleExternalFlex(
     /// Por cada logística externa
     for (const logistica of logisticasExternas) {
       logCyan(`logistica externa actual: ${logistica.nombre_fantasia}`);
+      if (logistica.did == undefined) {
+        throw new Error(`La logística esta mal vinculada`);
+      }
       const externalLogisticId = logistica.did;
       const nombreFantasia = logistica.nombre_fantasia;
       const syncCode = logistica.codigoVinculacionLogE;
