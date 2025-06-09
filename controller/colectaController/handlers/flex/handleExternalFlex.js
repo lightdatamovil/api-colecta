@@ -108,10 +108,12 @@ export async function handleExternalFlex(
           mensaje: "No se encontró chofer asignado",
         };
       }
+      console.log(rowsEnvios, "rowenvios");
 
       logCyan("Encontre la logistica como chofer en la logistica externa");
       /// Si existe el envío, tomo el did
-      if (rowsEnvios.length > 0) {
+      if (rowsEnvios[0].length > 0) {
+
         externalShipmentId = rowsEnvios[0].did;
         externalClientId = rowsEnvios[0].didCliente;
         logCyan("Encontre el envio en la logistica externa");
