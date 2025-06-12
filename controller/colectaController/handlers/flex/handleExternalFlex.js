@@ -111,6 +111,7 @@ export async function handleExternalFlex(
       console.log(rowsEnvios, "rowenvios");
 
       logCyan("Encontre la logistica como chofer en la logistica externa");
+
       /// Si existe el envío, tomo el did
       if (rowsEnvios[0].length > 0) {
 

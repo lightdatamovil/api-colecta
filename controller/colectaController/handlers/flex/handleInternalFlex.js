@@ -36,7 +36,7 @@ export async function handleInternalFlex(
     const sql = `
             SELECT did
             FROM envios 
-            WHERE ml_shipment_id = ? AND ml_vendedor_id = ? 
+            WHERE ml_shipment_id = ? AND ml_vendedor_id = ? and elim = 0 and superado = 0
             LIMIT 1
         `;
 
