@@ -16,6 +16,7 @@ import {
   logRed,
   logYellow,
 } from "../../../../src/funciones/logsCustom.js";
+import { insertEnviosLogisticaInversa } from "../../functions/insertLogisticaInversa.js";
 
 /// Esta funcion busca las logisticas vinculadas
 /// Reviso si el envío ya fue colectado cancelado o entregado en la logística externa
@@ -108,16 +109,15 @@ export async function handleExternalFlex(
           mensaje: "No se encontró chofer asignado",
         };
       }
-      console.log(rowsEnvios, "rowenvios");
 
       logCyan("Encontre la logistica como chofer en la logistica externa");
 
       /// Si existe el envío, tomo el did
       if (rowsEnvios[0].length > 0) {
-
         externalShipmentId = rowsEnvios[0].did;
         externalClientId = rowsEnvios[0].didCliente;
         logCyan("Encontre el envio en la logistica externa");
+
         /// Si no existe, lo inserto y tomo el did
       } else {
         logCyan("No encontre el envio en la logistica externa");
@@ -196,14 +196,10 @@ export async function handleExternalFlex(
         true
       );
 
-      console.log(internalShipmentId, "SDADASD");
-
       if (internalShipmentId.length > 0 && internalShipmentId[0]?.didLocal) {
         internalShipmentId = internalShipmentId[0].didLocal;
         logCyan("Encontre el envio en envios exteriores");
       } else {
-        console.log("entroooo aca ");
-
         internalShipmentId = await insertEnvios(
           dbConnection,
           company.did,
@@ -215,6 +211,23 @@ export async function handleExternalFlex(
           userId
         );
         logCyan("Inserte el envio en envios");
+
+        const check = "SELECT valor FROM envios_logisticainversa WHERE didEnvio = ?";
+
+        const rows = await executeQuery(
+          externalDbConnection,
+          check,
+          [externalShipmentId],
+          true
+        );
+        if (rows.length > 0) {
+          await insertEnviosLogisticaInversa(
+            dbConnection,
+            internalShipmentId,
+            rows[0].valor,
+            userId,
+          );
+        }
       }
 
       await insertEnviosExteriores(
@@ -226,6 +239,9 @@ export async function handleExternalFlex(
         externalCompanyId
       );
       logCyan("Inserte el envio en envios exteriores");
+
+
+
 
       /// Actualizo el estado del envío y lo envío al microservicio de estados en la logística interna
 

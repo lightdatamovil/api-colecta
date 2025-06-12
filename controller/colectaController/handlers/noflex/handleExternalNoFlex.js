@@ -8,6 +8,7 @@ import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
 import { checkIfExistLogisticAsDriverInExternalCompany } from "../../functions/checkIfExistLogisticAsDriverInExternalCompany.js";
 import { informe } from "../../functions/informe.js";
 import { logCyan, logRed, logYellow } from "../../../../src/funciones/logsCustom.js";
+import { insertEnviosLogisticaInversa } from "../../functions/insertLogisticaInversa.js";
 
 /// Esta funcion se conecta a la base de datos de la empresa externa
 /// Checkea si el envio ya fue colectado, entregado o cancelado
@@ -107,6 +108,23 @@ export async function handleExternalNoFlex(dbConnection, dataQr, companyId, user
             // Asigno a la empresa interna
             await assign(companyId, userId, profile, dqr, userId);
             logCyan("Asigné a la empresa interna");
+        }
+
+        const check2 = "SELECT valor FROM envios_logisticainversa WHERE didEnvio = ?";
+
+        const rows = await executeQuery(
+            externalDbConnection,
+            check2,
+            [shipmentIdFromDataQr],
+            true
+        );
+        if (rows.length > 0) {
+            await insertEnviosLogisticaInversa(
+                dbConnection,
+                internalShipmentId,
+                rows[0].valor,
+                userId,
+            );
         }
 
 
