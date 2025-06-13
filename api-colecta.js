@@ -3,6 +3,7 @@ import colecta from './routes/colecta.js';
 import { redisClient } from './db.js';
 import { logPurple } from './src/funciones/logsCustom.js';
 import cors from 'cors';
+import clear from './routes/clearClient.js';
 
 const app = express();
 
@@ -14,6 +15,7 @@ app.use(cors());
 const PORT = process.env.PORT || 13000;
 
 app.use("/api", colecta);
+app.use("/client", clear);
 app.post('/api/testapi', async (req, res) => {
   const startTime = performance.now();
   const endTime = performance.now();

@@ -21,7 +21,7 @@ redisClient.on('error', (err) => {
 });
 
 let companiesList = {};
-let clientList = {};
+export let clientList = {};
 let accountList = {};
 let driverList = {};
 
