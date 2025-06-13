@@ -16,8 +16,6 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
     try {
         let response;
 
-
-
         /// Me fijo si es flex o no
         const isFlex = dataQr.hasOwnProperty("sender_id");
 

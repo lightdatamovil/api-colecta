@@ -82,14 +82,13 @@ export async function handleExternalFlex(
       const sqlEnvios = `
                         SELECT did, didCliente
                         FROM envios 
-                        WHERE ml_shipment_id = ? AND ml_vendedor_id = ? 
+                        WHERE ml_shipment_id = ? AND ml_vendedor_id = ? and elim = 0 and superado = 0
                         LIMIT 1
                     `;
       let rowsEnvios = await executeQuery(
         externalDbConnection,
         sqlEnvios,
-        [shipmentId, senderid],
-        true
+        [shipmentId, senderid]
       );
 
       let externalShipmentId;
@@ -111,7 +110,6 @@ export async function handleExternalFlex(
       }
 
       logCyan("Encontre la logistica como chofer en la logistica externa");
-      console.log(rowsEnvios, "rowsEnvios");
 
       /// Si existe el envío, tomo el did
       if (rowsEnvios.length > 0) {
@@ -160,7 +158,7 @@ export async function handleExternalFlex(
         const sqlEnvios2 = `
                 SELECT did, didCliente
                 FROM envios 
-                WHERE did = ? AND ml_vendedor_id = ? 
+                WHERE did = ? AND ml_vendedor_id = ? and elim = 0 and superado = 0
                 LIMIT 1
             `;
 
