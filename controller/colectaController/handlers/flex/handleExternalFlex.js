@@ -88,8 +88,7 @@ export async function handleExternalFlex(
       let rowsEnvios = await executeQuery(
         externalDbConnection,
         sqlEnvios,
-        [shipmentId, senderid],
-        true
+        [shipmentId, senderid]
       );
 
       let externalShipmentId;

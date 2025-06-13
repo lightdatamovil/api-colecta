@@ -2,7 +2,7 @@ import { executeQuery } from "../../../db.js";
 
 /// Checkea si el envio ya fue colectado, entregado o cancelado
 export async function checkearEstadoEnvio(dbConnection, shipmentId) {
-    const querySelectEstadoEnvio = 'SELECT estado_envio FROM envios WHERE did = ? LIMIT 1';
+    const querySelectEstadoEnvio = 'SELECT estado_envio FROM envios WHERE did = ? and elim = 0 and superado = 0 LIMIT 1';
 
     const estado = await executeQuery(dbConnection, querySelectEstadoEnvio, [shipmentId]);
 
