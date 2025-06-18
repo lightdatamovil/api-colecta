@@ -21,7 +21,7 @@ redisClient.on('error', (err) => {
 });
 
 let companiesList = {};
-let clientList = {};
+export let clientList = {};
 let accountList = {};
 let driverList = {};
 
@@ -168,6 +168,12 @@ export async function getAccountBySenderId(dbConnection, companyId, senderId) {
         }
 
         const account = accountList[companyId][senderId];
+
+
+        if (account === undefined) {
+            await loadAccountList(dbConnection, companyId, senderId);
+            account = accountList[companyId][senderId];
+        }
 
         return account;
     } catch (error) {
