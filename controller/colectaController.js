@@ -5,6 +5,7 @@ import { handleExternalNoFlex } from "./colectaController/handlers/noflex/handle
 import { handleInternalNoFlex } from "./colectaController/handlers/noflex/handleInternalNoFlex.js";
 import mysql from "mysql";
 import { logCyan, logRed, logYellow } from "../src/funciones/logsCustom.js";
+import { parseIfJson } from "../src/funciones/isValidJson.js";
 
 
 export async function colectar(company, dataQr, userId, profile, autoAssign, latitude, longitude) {
@@ -12,10 +13,10 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
     const dbConnection = mysql.createConnection(dbConfig);
     dbConnection.connect();
 
-    dataQr = JSON.parse(dataQr);
     try {
         let response;
 
+        dataQr = parseIfJson(dataQr);
         /// Me fijo si es flex o no
         const isFlex = dataQr.hasOwnProperty("sender_id");
 
