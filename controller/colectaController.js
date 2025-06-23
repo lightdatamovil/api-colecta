@@ -6,7 +6,35 @@ import { handleInternalNoFlex } from "./colectaController/handlers/noflex/handle
 import mysql from "mysql";
 import { logCyan, logRed, logYellow } from "../src/funciones/logsCustom.js";
 import { parseIfJson } from "../src/funciones/isValidJson.js";
+import axios from "axios";
+async function getShipmentIdFromQr(companyId, dataQr) {
 
+    try {
+        const payload = {
+            companyId: Number(companyId),
+            userId: 0,
+            profile: 0,
+            deviceId: "null",
+            brand: "null",
+            model: "null",
+            androidVersion: "null",
+            deviceFrom: "Autoasignado de colecta",
+            appVersion: "null",
+            dataQr: dataQr
+        };
+
+        const result = await axios.post('https://apimovil2test.lightdata.app/api/qr/get-shipment-id', payload);
+        if (result.status == 200) {
+            return result.body;
+        } else {
+            logRed("Error al obtener el shipmentId");
+            throw new Error("Error al obtener el shipmentId");
+        }
+    } catch (error) {
+        logRed(`Error al obtener el shipmentId: ${error.stack}`);
+        throw error;
+    }
+}
 
 export async function colectar(company, dataQr, userId, profile, autoAssign, latitude, longitude) {
     const dbConfig = getProdDbConfig(company);
@@ -17,6 +45,15 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
         let response;
 
         dataQr = parseIfJson(dataQr);
+        if (company.did == 211 && !dataQr.hasOwnProperty("local") && !dataQr.hasOwnProperty("sender_id")) {
+            const shipmentId = await getShipmentIdFromQr(company.did, dataQr);
+            dataQr = {
+                local: "1",
+                empresa: company.did,
+                did: shipmentId,
+                cliente: 301
+            }
+        }
         /// Me fijo si es flex o no
         const isFlex = dataQr.hasOwnProperty("sender_id");
 
