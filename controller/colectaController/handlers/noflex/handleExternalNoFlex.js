@@ -78,7 +78,10 @@ export async function handleExternalNoFlex(dbConnection, dataQr, companyId, user
                 { id: "", sender_id: "" },
                 0,
                 1,
-                driver, latitud, longitud
+                driver,
+                latitud,
+                longitud,
+                userId
             );
             logCyan("Inserté en envios");
         }

@@ -153,7 +153,8 @@ export async function handleExternalFlex(
           0,
           driver,
           latitud,
-          longitud
+          longitud,
+          userId
         );
         const sqlEnvios2 = `
                 SELECT did, didCliente

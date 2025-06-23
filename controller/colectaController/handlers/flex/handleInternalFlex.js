@@ -57,7 +57,8 @@ export async function handleInternalFlex(
         0,
         userId,
         latitud,
-        longitud
+        longitud,
+        userId
       );
       resultBuscarEnvio = await executeQuery(dbConnection, sql, [
         mlShipmentId,
