@@ -33,8 +33,8 @@ export async function handleExternalFlex(
   profile,
   dataQr,
   autoAssign,
-  latitud,
-  longitud
+  latitude,
+  longitude
 ) {
   try {
     const senderid = dataQr.sender_id;
@@ -151,9 +151,6 @@ export async function handleExternalFlex(
           dataQr,
           1,
           0,
-          driver,
-          latitud,
-          longitud,
           userId
         );
         const sqlEnvios2 = `
@@ -248,7 +245,7 @@ export async function handleExternalFlex(
       await sendToShipmentStateMicroService(
         company.did,
         userId,
-        internalShipmentId
+        internalShipmentId, latitude, longitude
       );
       logCyan(
         "Actualice el estado del envio y lo envie al microservicio de estados en la logistica interna"
@@ -259,7 +256,7 @@ export async function handleExternalFlex(
       await sendToShipmentStateMicroService(
         externalCompanyId,
         externalClientId,
-        externalShipmentId
+        externalShipmentId, latitude, longitude
       );
       logCyan(
         "Actualice el estado del envio y lo envie al microservicio de estados en la logistica externa"

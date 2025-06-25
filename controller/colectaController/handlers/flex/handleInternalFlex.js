@@ -23,8 +23,8 @@ export async function handleInternalFlex(
   dataQr,
   autoAssign,
   account,
-  latitud,
-  longitud
+  latitude,
+  longitude
 ) {
   try {
     const senderId = dataQr.sender_id;
@@ -55,9 +55,6 @@ export async function handleInternalFlex(
         dataQr,
         1,
         0,
-        userId,
-        latitud,
-        longitud,
         userId
       );
       resultBuscarEnvio = await executeQuery(dbConnection, sql, [
@@ -92,7 +89,7 @@ export async function handleInternalFlex(
 
     /// Actualizo el estado del envío y lo envío al microservicio de estados
 
-    await sendToShipmentStateMicroService(companyId, userId, shipmentId);
+    await sendToShipmentStateMicroService(companyId, userId, shipmentId, latitude, longitude);
     logCyan(
       "Actualice el estado del envio y lo envie al microservicio de estados"
     );

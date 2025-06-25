@@ -17,7 +17,7 @@ import { insertEnviosLogisticaInversa } from "../../functions/insertLogisticaInv
 /// Asigno a la empresa externa
 /// Si es autoasignacion, asigno a la empresa interna
 /// Actualizo el estado del envio a colectado y envio el estado del envio en los microservicios
-export async function handleExternalNoFlex(dbConnection, dataQr, companyId, userId, profile, autoAssign, latitud, longitud) {
+export async function handleExternalNoFlex(dbConnection, dataQr, companyId, userId, profile, autoAssign, latitude, longitude) {
     try {
         const shipmentIdFromDataQr = dataQr.did;
         const clientIdFromDataQr = dataQr.cliente;
@@ -78,9 +78,6 @@ export async function handleExternalNoFlex(dbConnection, dataQr, companyId, user
                 { id: "", sender_id: "" },
                 0,
                 1,
-                driver,
-                latitud,
-                longitud,
                 userId
             );
             logCyan("Inserté en envios");
@@ -131,11 +128,11 @@ export async function handleExternalNoFlex(dbConnection, dataQr, companyId, user
         }
 
 
-        await sendToShipmentStateMicroService(companyId, userId, internalShipmentId);
+        await sendToShipmentStateMicroService(companyId, userId, internalShipmentId, latitude, longitude);
         logCyan("Actualicé el estado del envio a colectado y envié el estado del envio en los microservicios internos");
 
 
-        await sendToShipmentStateMicroService(dataQr.empresa, driver, shipmentIdFromDataQr);
+        await sendToShipmentStateMicroService(dataQr.empresa, driver, shipmentIdFromDataQr, latitude, longitude);
         logCyan("Actualicé el estado del envio a colectado y envié el estado del envio en los microservicios externos");
 
 

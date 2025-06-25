@@ -10,9 +10,6 @@ export async function insertEnvios(
   dataQr,
   flex,
   externo,
-  driverId,
-  latitud,
-  longitud,
   userId
 ) {
   const lote = Math.random().toString(36).substring(2, 15);
@@ -48,20 +45,6 @@ export async function insertEnvios(
       fechaunix,
     ]);
 
-    // const sqlInsertHistorial = `
-    //         INSERT INTO envios_historial (didEnvio, estado, quien, fecha, didCadete, latitud, longitud) 
-    //         VALUES (?, ?, ?, ?, ?, ?, ?)
-    //     `;
-
-    // await executeQuery(dbConnection, sqlInsertHistorial, [
-    //   result.insertId,
-    //   0,
-    //   userId,
-    //   fecha_inicio,
-    //   driverId,
-    //   latitud,
-    //   longitud,
-    // ]);
     if (result.insertId) {
       await axios.post(
         "https://altaenvios.lightdata.com.ar/api/enviosMLredis",

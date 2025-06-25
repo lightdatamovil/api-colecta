@@ -11,7 +11,7 @@ import { logCyan, logRed } from "../../../../src/funciones/logsCustom.js";
 /// Si el envio no esta asignado y se quiere autoasignar, lo asigna
 /// Actualiza el estado del envio en el micro servicio
 /// Actualiza el estado del envio en la base de datos
-export async function handleInternalNoFlex(dbConnection, dataQr, companyId, userId, profile, autoAssign) {
+export async function handleInternalNoFlex(dbConnection, dataQr, companyId, userId, profile, autoAssign, latitude, longitude) {
     try {
         const shipmentId = dataQr.did;
 
@@ -44,7 +44,7 @@ export async function handleInternalNoFlex(dbConnection, dataQr, companyId, user
         }
 
         /// Actualizamos el estado del envio en el micro servicio
-        await sendToShipmentStateMicroService(companyId, userId, shipmentId);
+        await sendToShipmentStateMicroService(companyId, userId, shipmentId, latitude, longitude);
         logCyan("Se actualizo el estado del envio en el micro servicio");
 
 

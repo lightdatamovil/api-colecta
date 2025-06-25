@@ -79,7 +79,7 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
             /// Si la empresa del QR es la misma que la empresa del usuario, es interno
             if (company.did == dataQr.empresa) {
                 logCyan("Es interno");
-                response = await handleInternalNoFlex(dbConnection, dataQr, company.did, userId, profile, autoAssign);
+                response = await handleInternalNoFlex(dbConnection, dataQr, company.did, userId, profile, autoAssign, latitude, longitude);
 
                 /// Si la empresa del QR es distinta a la empresa del usuario, es externo
             } else {
