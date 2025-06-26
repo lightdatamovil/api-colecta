@@ -18,7 +18,7 @@ async function getShipmentIdFromQr(companyId, dataQr) {
             brand: "null",
             model: "null",
             androidVersion: "null",
-            deviceFrom: "Autoasignado de colecta",
+            deviceFrom: "getShipmentIdFromQr de Colecta",
             appVersion: "null",
             dataQr: dataQr
         };
