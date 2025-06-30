@@ -115,7 +115,18 @@ export async function handleExternalFlex(
       if (rowsEnvios.length > 0) {
         externalShipmentId = rowsEnvios[0].did;
         externalClientId = rowsEnvios[0].didCliente;
+        console.log("Encontre el envio en la logistica externa", externalShipmentId);
+
         logCyan("Encontre el envio en la logistica externa");
+        const check = await checkearEstadoEnvio(
+          externalDbConnection,
+          externalShipmentId
+        );
+        if (check) {
+          externalDbConnection.end();
+
+          return check;
+        }
 
         /// Si no existe, lo inserto y tomo el did
       } else {
@@ -171,15 +182,7 @@ export async function handleExternalFlex(
       }
 
       /// Chequeo si el envío ya fue colectado cancelado o entregado
-      const check = await checkearEstadoEnvio(
-        externalDbConnection,
-        externalShipmentId
-      );
-      if (check) {
-        externalDbConnection.end();
 
-        return check;
-      }
       logCyan("El envio no fue colectado cancelado o entregado");
 
       let internalShipmentId;
