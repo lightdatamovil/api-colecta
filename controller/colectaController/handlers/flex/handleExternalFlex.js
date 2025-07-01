@@ -94,6 +94,7 @@ export async function handleExternalFlex(
     if (!driver) {
       externalDbConnection.end();
 
+
       return {
         success: false,
         message: "No se encontró chofer asignado",
