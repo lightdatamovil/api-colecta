@@ -104,8 +104,8 @@ export async function handleExternalFlex(
         externalDbConnection.end();
 
         return {
-          estadoRespuesta: false,
-          mensaje: "No se encontró chofer asignado",
+          success: false,
+          message: "No se encontró chofer asignado",
         };
       }
 
@@ -146,8 +146,8 @@ export async function handleExternalFlex(
         if (rowsCuentas.length == 0) {
           externalDbConnection.end();
           return {
-            estadoRespuesta: false,
-            mensaje: "No se encontró cuenta asociada",
+            success: false,
+            message: "No se encontró cuenta asociada",
           };
         }
 
@@ -305,8 +305,8 @@ export async function handleExternalFlex(
       );
       if (internalClient.length == 0) {
         return {
-          estadoRespuesta: false,
-          mensaje: "No se encontró cliente asociado",
+          success: false,
+          message: "No se encontró cliente asociado",
         };
       }
       logCyan("Encontre el cliente interno");
