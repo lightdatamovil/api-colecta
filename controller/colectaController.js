@@ -4,7 +4,7 @@ import { handleExternalFlex } from "./colectaController/handlers/flex/handleExte
 import { handleExternalNoFlex } from "./colectaController/handlers/noflex/handleExternalNoFlex.js";
 import { handleInternalNoFlex } from "./colectaController/handlers/noflex/handleInternalNoFlex.js";
 import mysql from "mysql";
-import { logCyan, logRed, logYellow } from "../src/funciones/logsCustom.js";
+import { logCyan, logRed } from "../src/funciones/logsCustom.js";
 import { parseIfJson } from "../src/funciones/isValidJson.js";
 import axios from "axios";
 async function getShipmentIdFromQr(companyId, dataQr) {
@@ -45,7 +45,7 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
         let response;
 
         dataQr = parseIfJson(dataQr);
-        if (company.did == 211 && !dataQr.hasOwnProperty("local") && !dataQr.hasOwnProperty("sender_id")) {
+        if (company.did == 211 && !Object.prototype.hasOwnProperty.call(dataQr, "local") && !Object.prototype.hasOwnProperty.call(dataQr, "sender_id")) {
             const shipmentId = await getShipmentIdFromQr(company.did, dataQr);
             dataQr = {
                 local: "1",
@@ -55,7 +55,7 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
             };
         }
         /// Me fijo si es flex o no
-        const isFlex = dataQr.hasOwnProperty("sender_id");
+        const isFlex = Object.prototype.hasOwnProperty.call(dataQr, "sender_id");
 
         /// Si es flex
         if (isFlex) {
