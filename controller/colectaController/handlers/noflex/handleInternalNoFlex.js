@@ -17,9 +17,7 @@ export async function handleInternalNoFlex(dbConnection, dataQr, companyId, user
     /// Chequeo si el envio ya fue colectado, entregado o cancelado
     const check = await checkearEstadoEnvio(dbConnection, shipmentId);
     if (check) {
-
         return check;
-
     }
 
     logCyan("El envio no fue colectado, entregado o cancelado");
@@ -30,7 +28,6 @@ export async function handleInternalNoFlex(dbConnection, dataQr, companyId, user
 
     /// Si no encuentro el envio mando error
     if (resultChoferAsignado.length === 0) {
-
         return { success: false, message: "Paquete no encontrado" };
     }
     logCyan("Se encontro el chofer asignado");
@@ -45,8 +42,6 @@ export async function handleInternalNoFlex(dbConnection, dataQr, companyId, user
     /// Actualizamos el estado del envio en el micro servicio
     await sendToShipmentStateMicroService(companyId, userId, shipmentId, latitude, longitude);
     logCyan("Se actualizo el estado del envio en el micro servicio");
-
-
 
     const body = await informe(dbConnection, companyId, dataQr.cliente, userId, shipmentId);
 
