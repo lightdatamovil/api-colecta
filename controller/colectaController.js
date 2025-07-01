@@ -86,8 +86,9 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
         return response;
     } catch (error) {
         logRed("Error en colectar: ", error.message);
+        throw error;
 
-        throw new Error(`Error al procesar la colecta: ${error.message}`);
+
     } finally {
         dbConnection.end();
     };
