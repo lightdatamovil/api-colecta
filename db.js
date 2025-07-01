@@ -4,9 +4,23 @@ import { logRed, logYellow } from './src/funciones/logsCustom.js';
 
 dotenv.config({ path: process.env.ENV_FILE || ".env" });
 
+/// Redis para obtener las empresas
 const redisHost = process.env.REDIS_HOST;
 const redisPort = process.env.REDIS_PORT;
 const redisPassword = process.env.REDIS_PASSWORD;
+
+/// Base de datos de colecta
+const colectaDBHost = process.env.COLECTA_DB_HOST;
+const colectaDBPort = process.env.COLECTA_DB_PORT;
+
+/// Usuario y contraseña para los logs de la base de datos de colecta
+const colectaDbUserForLogs = process.env.COLECTA_DB_USER_FOR_LOGS;
+const colectaDbPasswordForLogs = process.env.COLECTA_DB_PASSWORD_FOR_LOGS;
+const colectaDbNameForLogs = process.env.COLECTA_DB_NAME_FOR_LOGS;
+
+// Produccion
+const hostProductionDb = process.env.PRODUCTION_DB_HOST;
+const portProductionDb = process.env.PRODUCTION_DB_PORT;
 
 export const redisClient = redis.createClient({
     socket: {
@@ -17,7 +31,7 @@ export const redisClient = redis.createClient({
 });
 
 redisClient.on('error', (err) => {
-    logRed(`Error al conectar con Redis: ${error.message}`);
+    logRed(`Error al conectar con Redis: ${err.message}`);
 });
 
 let companiesList = {};
@@ -27,159 +41,104 @@ let driverList = {};
 
 export function getProdDbConfig(company) {
     return {
-        host: "bhsmysql1.lightdata.com.ar",
+        host: hostProductionDb,
         user: company.dbuser,
         password: company.dbpass,
-        database: company.dbname
+        database: company.dbname,
+        port: portProductionDb,
     };
 }
 export function getLocalDbConfig() {
     return {
-        // host: "localhost",
-        host: "149.56.182.49",
-        user: "ulogs",
-        password: "logs123456*",
-        database: "data",
-        port: 44343
+        host: colectaDBHost,
+        user: colectaDbUserForLogs,
+        password: colectaDbPasswordForLogs,
+        database: colectaDbNameForLogs,
+        port: colectaDBPort
     };
-}
-export async function updateRedis(empresaId, envioId, choferId) {
-    const DWRTE = await redisClient.get('DWRTE',);
-    const empresaKey = `e.${empresaId}`;
-    const envioKey = `en.${envioId}`;
-
-    // Si la empresa no existe, la creamos
-    if (!DWRTE[empresaKey]) {
-        DWRTE[empresaKey] = {};
-    }
-
-    // Solo agrega si el envío no existe
-    if (!DWRTE[empresaKey][envioKey]) {
-        DWRTE[empresaKey][envioKey] = {
-            choferId: choferId
-        };
-    }
-
-    await redisClient.set('DWRTE', JSON.stringify(DWRTE));
 }
 
 async function loadCompaniesFromRedis() {
-    try {
-        const companiesListString = await redisClient.get('empresasData');
+    const companiesListString = await redisClient.get('empresasData');
 
-        companiesList = JSON.parse(companiesListString);
-
-    } catch (error) {
-        logRed(`Error en loadCompaniesFromRedis: ${error.message}`);
-        throw error;
-    }
+    companiesList = JSON.parse(companiesListString);
 }
 
 export async function getCompanyById(companyId) {
-    try {
-        let company = companiesList[companyId];
+    let company = companiesList[companyId];
 
-        if (company == undefined || Object.keys(companiesList).length === 0) {
-            try {
-                await loadCompaniesFromRedis();
+    if (company == undefined || Object.keys(companiesList).length === 0) {
+        await loadCompaniesFromRedis();
 
-                company = companiesList[companyId];
-            } catch (error) {
-                logRed(`Error al cargar compañías desde Redis: ${error.message}`);
-                throw error;
-            }
-        }
-
-        return company;
-    } catch (error) {
-        logRed(`Error en getCompanyById: ${error.message}`);
-        throw error;
+        company = companiesList[companyId];
     }
+
+    return company;
 }
 
 export async function getCompanyByCode(companyCode) {
-    try {
-        let company;
+    let company;
 
-        if (Object.keys(companiesList).length === 0) {
-            try {
-                await loadCompaniesFromRedis();
-            } catch (error) {
-                logRed(`Error al cargar compañías desde Redis: ${error.message}`);
-                throw error;
-            }
-        }
-
-        for (const key in companiesList) {
-            if (companiesList.hasOwnProperty(key)) {
-                const currentCompany = companiesList[key];
-                if (String(currentCompany.codigo) === String(companyCode)) {
-                    company = currentCompany;
-                    break;
-                }
-            }
-        }
-
-        return company;
-    } catch (error) {
-        logRed(`Error en getCompanyByCode: ${error.message}`);
-        throw error;
+    if (Object.keys(companiesList).length === 0) {
+        await loadCompaniesFromRedis();
     }
+
+    for (const key in companiesList) {
+        if (Object.prototype.hasOwnProperty.call(companiesList, key)) {
+            const currentCompany = companiesList[key];
+            if (String(currentCompany.codigo) === String(companyCode)) {
+                company = currentCompany;
+                break;
+            }
+        }
+    }
+
+    return company;
 }
 
 async function loadAccountList(dbConnection, companyId, senderId) {
-    try {
-        const querySelectClientesCuentas = `
+    const querySelectClientesCuentas = `
             SELECT did, didCliente, ML_id_vendedor 
             FROM clientes_cuentas 
             WHERE superado = 0 AND elim = 0 AND tipoCuenta = 1 AND ML_id_vendedor != ''
         `;
 
-        const result = await executeQuery(dbConnection, querySelectClientesCuentas);
+    const result = await executeQuery(dbConnection, querySelectClientesCuentas);
 
-        if (!accountList[companyId]) {
-            accountList[companyId] = {};
+    if (!accountList[companyId]) {
+        accountList[companyId] = {};
+    }
+
+    result.forEach(row => {
+        const keySender = row.ML_id_vendedor;
+
+        if (!accountList[companyId][keySender]) {
+            accountList[companyId][keySender] = {};
         }
 
-        result.forEach(row => {
-            const keySender = row.ML_id_vendedor;
+        accountList[companyId][keySender] = {
+            didCliente: row.didCliente,
+            didCuenta: row.did,
+        };
+    });
 
-            if (!accountList[companyId][keySender]) {
-                accountList[companyId][keySender] = {};
-            }
-
-            accountList[companyId][keySender] = {
-                didCliente: row.didCliente,
-                didCuenta: row.did,
-            };
-        });
-
-        return accountList[companyId] ? accountList[companyId][senderId] : null;
-    } catch (error) {
-        logRed(`Error en obtenerMisCuentas: ${error.message}`);
-        throw error;
-    }
+    return accountList[companyId] ? accountList[companyId][senderId] : null;
 }
 
 export async function getAccountBySenderId(dbConnection, companyId, senderId) {
-    try {
-        if (accountList === undefined || accountList === null || Object.keys(accountList).length === 0 || !accountList[companyId]) {
-            await loadAccountList(dbConnection, companyId, senderId);
-        }
-
-        let account = accountList[companyId][senderId];
-
-
-        if (account === undefined) {
-            await loadAccountList(dbConnection, companyId, senderId);
-            account = accountList[companyId][senderId];
-        }
-
-        return account;
-    } catch (error) {
-        logRed(`Error en getAccountBySenderId: ${error.message}`);
-        throw error;
+    if (accountList === undefined || accountList === null || Object.keys(accountList).length === 0 || !accountList[companyId]) {
+        await loadAccountList(dbConnection, companyId, senderId);
     }
+
+    let account = accountList[companyId][senderId];
+
+
+    if (account === undefined) {
+        await loadAccountList(dbConnection, companyId, senderId);
+        account = accountList[companyId][senderId];
+    }
+
+    return account;
 }
 
 async function loadClients(dbConnection, companyId) {
@@ -187,50 +146,35 @@ async function loadClients(dbConnection, companyId) {
         clientList[companyId] = {}
     }
 
-    try {
-        const queryUsers = "SELECT * FROM clientes";
-        const resultQueryUsers = await executeQuery(dbConnection, queryUsers, []);
+    const queryUsers = "SELECT * FROM clientes";
+    const resultQueryUsers = await executeQuery(dbConnection, queryUsers, []);
 
-        resultQueryUsers.forEach(row => {
-            const client = row.did;
+    resultQueryUsers.forEach(row => {
+        const client = row.did;
 
-            if (!clientList[companyId][client]) {
-                clientList[companyId][client] = {};
-            }
+        if (!clientList[companyId][client]) {
+            clientList[companyId][client] = {};
+        }
 
-            clientList[companyId][client] = {
-                fecha_sincronizacion: row.fecha_sincronizacion,
-                did: row.did,
-                codigo: row.codigoVinculacionLogE,
-                nombre: row.nombre_fantasia,
-            };
-        });
-    } catch (error) {
-        logRed(`Error en loadClients para la compañía ${companyId}: ${error.message}`);
-        throw error;
-    }
+        clientList[companyId][client] = {
+            fecha_sincronizacion: row.fecha_sincronizacion,
+            did: row.did,
+            codigo: row.codigoVinculacionLogE,
+            nombre: row.nombre_fantasia,
+        };
+    });
 }
 
 export async function getClientsByCompany(dbConnection, companyId) {
-    try {
-        let companyClients = clientList[companyId];
+    let companyClients = clientList[companyId];
 
-        if (companyClients == undefined || Object.keys(clientList).length === 0) {
-            try {
-                await loadClients(dbConnection, companyId);
+    if (companyClients == undefined || Object.keys(clientList).length === 0) {
+        await loadClients(dbConnection, companyId);
 
-                companyClients = clientList[companyId];
-            } catch (error) {
-                logRed(`Error al cargar compañías desde Redis: ${error.message}`);
-                throw companyClients;
-            }
-        }
-
-        return companyClients;
-    } catch (error) {
-        logRed(`Error en getClientsByCompany: ${error.message}`);
-        throw error;
+        companyClients = clientList[companyId];
     }
+
+    return companyClients;
 }
 
 async function loadDrivers(dbConnection, companyId) {
@@ -238,8 +182,7 @@ async function loadDrivers(dbConnection, companyId) {
         driverList[companyId] = {}
     }
 
-    try {
-        const queryUsers = `
+    const queryUsers = `
             SELECT sistema_usuarios.did, sistema_usuarios.usuario 
             FROM sistema_usuarios_accesos
             INNER JOIN sistema_usuarios ON sistema_usuarios_accesos.did = sistema_usuarios.did
@@ -250,77 +193,60 @@ async function loadDrivers(dbConnection, companyId) {
             AND sistema_usuarios.superado = 0
         `;
 
-        const resultQueryUsers = await executeQuery(dbConnection, queryUsers, []);
+    const resultQueryUsers = await executeQuery(dbConnection, queryUsers, []);
 
-        for (let i = 0; i < resultQueryUsers.length; i++) {
-            const row = resultQueryUsers[i];
+    for (let i = 0; i < resultQueryUsers.length; i++) {
+        const row = resultQueryUsers[i];
 
-            if (!driverList[companyId][row.did]) {
-                driverList[companyId][row.did] = {};
-            }
-
-            driverList[companyId][row.did] = {
-                id: row.id,
-                id_origen: row.id_origen,
-                fecha_sincronizacion: row.fecha_sincronizacion,
-                did: row.did,
-                codigo: row.codigo_empleado,
-                nombre: row.usuario,
-            };
+        if (!driverList[companyId][row.did]) {
+            driverList[companyId][row.did] = {};
         }
-    } catch (error) {
-        logRed(`Error en loadDrivers para la compañía ${companyId}: ${error.message}`);
-        throw error;
+
+        driverList[companyId][row.did] = {
+            id: row.id,
+            id_origen: row.id_origen,
+            fecha_sincronizacion: row.fecha_sincronizacion,
+            did: row.did,
+            codigo: row.codigo_empleado,
+            nombre: row.usuario,
+        };
     }
 }
 
 export async function getDriversByCompany(dbConnection, companyId) {
-    try {
-        let companyDrivers = driverList[companyId];
+    let companyDrivers = driverList[companyId];
 
-        if (companyDrivers == undefined || Object.keys(driverList).length === 0) {
-            try {
-                await loadDrivers(dbConnection, companyId);
+    if (companyDrivers == undefined || Object.keys(driverList).length === 0) {
 
-                companyDrivers = driverList[companyId];
-            } catch (error) {
-                logRed(`Error al cargar compañías desde Redis: ${error.message}`);
-                throw companyDrivers;
-            }
-        }
+        await loadDrivers(dbConnection, companyId);
 
-        return companyDrivers;
-    } catch (error) {
-        logRed(`Error en getDriversByCompany para la compañía ${companyId}: ${error.message}`);
-        throw error;
+        companyDrivers = driverList[companyId];
+
     }
+
+    return companyDrivers;
 }
 
 export async function executeQuery(connection, query, values, log) {
     // Utilizamos connection.format para obtener la query completa con valores
     const formattedQuery = connection.format(query, values);
 
-    try {
-        return new Promise((resolve, reject) => {
-            connection.query(query, values, (err, results) => {
+    return new Promise((resolve, reject) => {
+        connection.query(query, values, (err, results) => {
+            if (log) {
+                logYellow(`Ejecutando query: ${formattedQuery}`);
+            }
+            if (err) {
                 if (log) {
-                    logYellow(`Ejecutando query: ${formattedQuery}`);
+                    logRed(`Error en executeQuery: ${err.message} en query: ${formattedQuery}`);
                 }
-                if (err) {
-                    if (log) {
-                        logRed(`Error en executeQuery: ${err.message} en query: ${formattedQuery}`);
-                    }
-                    reject(err);
-                } else {
-                    if (log) {
-                        logYellow(`Query ejecutado con éxito: ${formattedQuery} - Resultados: ${JSON.stringify(results)}`);
-                    }
-                    resolve(results);
+                reject(err);
+            } else {
+                if (log) {
+                    logYellow(`Query ejecutado con éxito: ${formattedQuery} - Resultados: ${JSON.stringify(results)}`);
                 }
-            });
+                resolve(results);
+            }
         });
-    } catch (error) {
-        logRed(`Error en executeQuery: ${error.stack}`);
-        throw error;
-    }
+    });
 }

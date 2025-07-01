@@ -25,6 +25,6 @@ export async function crearLog(
     exito,
   ];
 
-  await executeQuery(dbConnection, sqlLog, values, true);
+  await executeQuery(dbConnection, sqlLog, values);
   logGreen(`Log creado: ${JSON.stringify(values)}`);
 }

@@ -75,7 +75,7 @@ export async function sendToShipmentStateMicroService(
             logGreen(`✅ Enviado por HTTP con status ${response.status}`);
         } catch (httpError) {
             logRed(`❌ Falló el envío por HTTP también: ${httpError.message}`);
-            throw httpError; // Podés decidir si querés lanzar o silenciar este error final
+            throw httpError;
         }
     }
 }

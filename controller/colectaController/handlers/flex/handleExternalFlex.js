@@ -1,8 +1,4 @@
-import {
-  executeQuery,
-  getProdDbConfig,
-  getCompanyByCode,
-} from "../../../../db.js";
+import { executeQuery, getProdDbConfig, getCompanyByCode } from "../../../../db.js";
 import { assign } from "../../functions/assign.js";
 import mysql from "mysql";
 import { insertEnvios } from "../../functions/insertEnvios.js";
@@ -110,7 +106,6 @@ export async function handleExternalFlex(
     if (rowsEnvios.length > 0) {
       externalShipmentId = rowsEnvios[0].did;
       externalClientId = rowsEnvios[0].didCliente;
-      console.log("Encontre el envio en la logistica externa", externalShipmentId);
 
       logCyan("Encontre el envio en la logistica externa");
       const check = await checkearEstadoEnvio(

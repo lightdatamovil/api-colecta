@@ -58,7 +58,7 @@ export async function handleExternalNoFlex(dbConnection, dataQr, companyId, user
             FROM clientes WHERE codigoVinculacionLogE = ?
         `;
 
-    const externalClient = await executeQuery(dbConnection, queryClient, [externalCompany.codigo], true);
+    const externalClient = await executeQuery(dbConnection, queryClient, [externalCompany.codigo]);
     let internalShipmentId;
 
     const consulta = 'SELECT didLocal FROM envios_exteriores WHERE didExterno = ?';

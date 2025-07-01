@@ -1,7 +1,7 @@
 import express, { json, urlencoded } from 'express';
 import colecta from './routes/colecta.js';
 import { redisClient } from './db.js';
-import { logPurple } from './src/funciones/logsCustom.js';
+import { logBlue, logPurple } from './src/funciones/logsCustom.js';
 import cors from 'cors';
 import clear from './routes/clearClient.js';
 
@@ -41,5 +41,5 @@ app.get('/ping', (req, res) => {
 await redisClient.connect();
 
 app.listen(PORT, () => {
-  console.log(`Servidor corriendo en el puerto ${PORT}`);
+  logBlue(`Servidor corriendo en el puerto ${PORT}`);
 });
