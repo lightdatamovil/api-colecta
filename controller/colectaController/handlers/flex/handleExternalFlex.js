@@ -125,10 +125,7 @@ export async function handleExternalFlex(
         console.log(rowsCuentas, " rowsCuentasSSSSSSSSSSSSSSSSSSSSSSS");
 
         if (rowsCuentas.length == 0) {
-          return {
-            success: false,
-            message: "No se encontró cuenta asociada",
-          };
+          continue;
         }
 
         externalClientId = rowsCuentas[0].didCliente;
@@ -301,5 +298,9 @@ export async function handleExternalFlex(
       });
     }
   }
+  return {
+    success: false,
+    message: "No se encontró cuenta asociada",
+  };
 }
 
