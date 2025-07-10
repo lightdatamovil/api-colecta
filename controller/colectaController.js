@@ -79,50 +79,30 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
 
             if (account) {
                 logCyan("Es interno");
-                response = await handleInternalFlex(dbConnection, company.did, userId, profile, dataQr, autoAssign, account, latitude, longitude, senderId);
+                response = await handleInternalFlex(dbConnection, company.did, userId, profile, dataQr, autoAssign, account, latitude, longitude);
 
                 /// Si la cuenta no existe, es externo
+            } else {
+                logCyan("Es externo");
+                response = await handleExternalFlex(dbConnection, company, userId, profile, dataQr, autoAssign, latitude, longitude);
             }
 
+        } else {
+            logCyan("No es flex");
 
-            if (!account && company.did == 144) {
-                console.log("Empresa 144, chequeo extra de empresa");
-
-                const queryCheck = `
-                    SELECT did
-                    FROM envios
-                    WHERE ml_vendedor_id = ?
-                        AND superado = 0
-                        AND elim = 0
-                    LIMIT 1
-                `;
-                const resultCheck = await executeQuery(dbConnection, queryCheck, [dataQr.sender_id], true);
-
-                if (resultCheck.length > 0) {
-                    logCyan("Es interno (por verificación extra de empresa 144)");
-                    response = await handleInternalFlex(dbConnection, company.did, userId, profile, dataQr, autoAssign, account, latitude, longitude);
-                } else {
-                    logCyan("Es externo");
-                    response = await handleExternalFlex(dbConnection, company, userId, profile, dataQr, autoAssign, latitude, longitude);
-                }
-
+            if (company.did == dataQr.empresa) {
+                logCyan("Es interno");
+                response = await handleInternalNoFlex(dbConnection, dataQr, company.did, userId, profile, autoAssign, latitude, longitude);
             } else {
-                logCyan("No es flex");
-
-                if (company.did == dataQr.empresa) {
-                    logCyan("Es interno");
-                    response = await handleInternalNoFlex(dbConnection, dataQr, company.did, userId, profile, autoAssign, latitude, longitude);
-                } else {
-                    logCyan("Es externo");
-                    response = await handleExternalNoFlex(dbConnection, dataQr, company.did, userId, profile, autoAssign, latitude, longitude);
-                }
+                logCyan("Es externo");
+                response = await handleExternalNoFlex(dbConnection, dataQr, company.did, userId, profile, autoAssign, latitude, longitude);
             }
         }
 
         return response;
 
     } catch (error) {
-        logRed(`Error en colectar: ${error.message}`);
+        logRed("Error en colectar: ", error.message);
         throw error;
 
     } finally {
