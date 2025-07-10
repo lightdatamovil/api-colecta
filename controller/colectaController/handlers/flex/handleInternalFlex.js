@@ -20,9 +20,9 @@ export async function handleInternalFlex(
   autoAssign,
   account,
   latitude,
-  longitude
+  longitude,
+  senderId
 ) {
-  const senderId = dataQr.sender_id;
   const mlShipmentId = dataQr.id;
 
   let shipmentId;
