@@ -102,7 +102,7 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
         return response;
 
     } catch (error) {
-        logRed("Error en colectar: ", error.message);
+        logRed(`Error en colectar: ${error.message}`);
         throw error;
 
     } finally {
