@@ -83,7 +83,7 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
 
                 /// Si la cuenta no existe, es externo
             }
-            else if (company.did === 144) {
+            else if (company.did == 144) {
                 logCyan("⚠️ Cuenta nula, verificando envío interno por empresa 144");
 
                 const queryCheck = `
