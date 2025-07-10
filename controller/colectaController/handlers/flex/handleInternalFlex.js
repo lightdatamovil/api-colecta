@@ -21,7 +21,6 @@ export async function handleInternalFlex(
   account,
   latitude,
   longitude,
-  senderId
 ) {
   const mlShipmentId = dataQr.id;
 
