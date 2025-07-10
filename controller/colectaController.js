@@ -82,7 +82,26 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
                 response = await handleInternalFlex(dbConnection, company.did, userId, profile, dataQr, autoAssign, account, latitude, longitude, senderId);
 
                 /// Si la cuenta no existe, es externo
-            } else {
+            }
+            if (!account && company.did == 144) {
+                logCyan("Es interno (por verificación extra de empresa 144)");
+                const queryCheck = `
+                SELECT did
+                FROM envios
+                WHERE ml_vendedor_id = ?
+                AND superado = 0
+                AND elim = 0
+                LIMIT 1
+                `;
+                const resultCheck = await executeQuery(dbConnection, queryCheck, [dataQr.sender_id]);
+
+                if (resultCheck.length > 0) {
+                    senderId = dataQr.sender_id;
+                    logCyan("Es interno (por verificación extra de empresa 144)");
+                    response = await handleInternalFlex(dbConnection, company.did, userId, profile, dataQr, autoAssign, account, latitude, longitude, senderId);
+                }
+            }
+            else {
                 logCyan("Es externo");
                 response = await handleExternalFlex(dbConnection, company, userId, profile, dataQr, autoAssign, latitude, longitude);
             }
