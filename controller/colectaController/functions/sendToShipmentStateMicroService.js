@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 import { logCyan, logGreen, logRed, logYellow } from '../../../src/funciones/logsCustom.js';
 import { formatFechaUTC3 } from '../../../src/funciones/formatFechaUTC3.js';
 import axios from 'axios';
-import { generarTokenFechaHoy } from '../../../src/funciones/generarTokenFechahoy.js';
+import { generarTokenFechaHoy } from '../../../src/funciones/generarTokenFechaHoy.js';
 dotenv.config({ path: process.env.ENV_FILE || '.env' });
 
 const RABBITMQ_URL = process.env.RABBITMQ_URL;
