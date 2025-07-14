@@ -20,8 +20,7 @@ export async function handleInternalFlex(
   autoAssign,
   account,
   latitude,
-  longitude,
-  senderId
+  longitude, senderId,
 ) {
   const mlShipmentId = dataQr.id;
 
@@ -29,7 +28,7 @@ export async function handleInternalFlex(
 
   /// Busco el envio
   const sql = `
-            SELECT did
+            SELECT did,didCliente
             FROM envios 
             WHERE ml_shipment_id = ? AND ml_vendedor_id = ? and elim = 0 and superado = 0
             LIMIT 1
@@ -40,6 +39,7 @@ export async function handleInternalFlex(
     senderId,
   ]);
   shipmentId = resultBuscarEnvio.length > 0 ? resultBuscarEnvio[0].did : null;
+  let didCLiente = resultBuscarEnvio.length > 0 ? resultBuscarEnvio[0].didCliente : null;
   /// Si no existe, lo inserto y tomo el did
   if (resultBuscarEnvio.length === 0) {
     shipmentId = await insertEnvios(
@@ -95,10 +95,25 @@ export async function handleInternalFlex(
     logCyan("Asigne el envio");
   }
 
+  if (companyId == 144) {
+    const body = await informe(
+      dbConnection,
+      companyId,
+      didCLiente,
+      userId,
+      shipmentId
+    );
+    return {
+      success: true,
+      message: "Paquete insertado y puesto a planta  - FLEX",
+      body: body,
+    };
+  }
+
   const body = await informe(
     dbConnection,
     companyId,
-    account.didCliente,
+    account.didCliente || 0,
     userId,
     shipmentId
   );
