@@ -1,9 +1,9 @@
 import { connect } from 'amqplib';
 import dotenv from 'dotenv';
-import { logGreen, logRed, logYellow } from '../../../src/funciones/logsCustom.js';
+import { logCyan, logGreen, logRed, logYellow } from '../../../src/funciones/logsCustom.js';
 import { formatFechaUTC3 } from '../../../src/funciones/formatFechaUTC3.js';
 import axios from 'axios';
-
+import { generarTokenFechaHoy } from '../../../src/funciones/generarTokenFechahoy.js';
 dotenv.config({ path: process.env.ENV_FILE || '.env' });
 
 const RABBITMQ_URL = process.env.RABBITMQ_URL;
@@ -50,10 +50,14 @@ export async function sendToShipmentStateMicroService(
         quien: userId,
         operacion: 'colecta',
         latitud,
-        longitud
+        longitud,
+        tkn: generarTokenFechaHoy(),
     };
-
     try {
+        if (process.env.LOCAL == 'true') {
+            throw new Error();
+        }
+        logCyan(`Enviando mensaje a RabbitMQ: ${JSON.stringify(message)}`);
         const ch = await getChannel();
         const sent = ch.sendToQueue(
             QUEUE_ESTADOS,

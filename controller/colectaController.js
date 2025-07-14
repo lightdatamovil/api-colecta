@@ -39,15 +39,16 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
         let response;
 
         dataQr = parseIfJson(dataQr);
-        if (company.did == 211 && !Object.prototype.hasOwnProperty.call(dataQr, "local") && !Object.prototype.hasOwnProperty.call(dataQr, "sender_id")) {
+        if ((company.did == 211 || company.did == 20) && !Object.prototype.hasOwnProperty.call(dataQr, "local") && !Object.prototype.hasOwnProperty.call(dataQr, "sender_id")) {
             const shipmentId = await getShipmentIdFromQr(company.did, dataQr);
             dataQr = {
                 local: "1",
                 empresa: company.did,
                 did: shipmentId,
-                cliente: 301
+                cliente: company.did == 20 ? 215 : 301,
             };
         }
+        logCyan(`Datos del QR: ${JSON.stringify(dataQr)}`);
         const isCollectShipmentML = Object.prototype.hasOwnProperty.call(dataQr, "t");
         /// Me fijo si es flex o no
         const isFlex = Object.prototype.hasOwnProperty.call(dataQr, "sender_id") || isCollectShipmentML;
