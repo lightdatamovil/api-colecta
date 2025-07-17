@@ -30,12 +30,13 @@ export async function handleExternalNoFlex(dbConnection, dataQr, companyId, user
     externalDbConnection.connect();
 
     /// Chequeo si el envio ya fue colectado, entregado o cancelado
-    const check = await checkearEstadoEnvio(externalDbConnection, shipmentIdFromDataQr);
-    if (check) {
-        externalDbConnection.end();
+    //! Se comento porque si el paquete estaba colectado en la empresa que da el paquete, no se podia ingresar en la que se lo recibe
+    // const check = await checkearEstadoEnvio(externalDbConnection, shipmentIdFromDataQr);
+    // if (check) {
+    //     externalDbConnection.end();
 
-        return check;
-    }
+    //     return check;
+    // }
     logCyan("El envio no es colectado, entregado o cancelado");
 
     const companyClientList = await getClientsByCompany(externalDbConnection, externalCompany.did);
