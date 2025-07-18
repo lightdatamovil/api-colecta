@@ -42,7 +42,7 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
         dataQr = parseIfJson(dataQr);
 
         if (
-            company.did === 211 &&
+            (company.did == 211 || company.did == 20) &&
             !Object.prototype.hasOwnProperty.call(dataQr, "local") &&
             !Object.prototype.hasOwnProperty.call(dataQr, "sender_id")
         ) {

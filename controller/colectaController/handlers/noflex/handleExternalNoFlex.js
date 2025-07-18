@@ -4,7 +4,6 @@ import { sendToShipmentStateMicroService } from "../../functions/sendToShipmentS
 import mysql from "mysql";
 import { insertEnvios } from "../../functions/insertEnvios.js";
 import { insertEnviosExteriores } from "../../functions/insertEnviosExteriores.js";
-import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
 import { checkIfExistLogisticAsDriverInExternalCompany } from "../../functions/checkIfExistLogisticAsDriverInExternalCompany.js";
 import { informe } from "../../functions/informe.js";
 import { logCyan } from "../../../../src/funciones/logsCustom.js";
