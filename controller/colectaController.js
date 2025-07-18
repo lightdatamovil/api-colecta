@@ -49,7 +49,7 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
             const shipmentId = await getShipmentIdFromQr(company.did, dataQr);
             dataQr = {
                 local: "1",
-                empresa: company.did,
+                empresa: company.did == 20 ? 211 : company.did,
                 did: shipmentId,
                 cliente: company.did == 20 ? 215 : 301,
             };
@@ -112,7 +112,7 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
 
         } else {
             logCyan("No es flex");
-
+            logCyan(`Empresa: ${company.did}, Data QR: ${JSON.stringify(dataQr)}`);
             if (company.did == dataQr.empresa) {
                 logCyan("Es interno");
                 response = await handleInternalNoFlex(dbConnection, dataQr, company.did, userId, profile, autoAssign, latitude, longitude);
