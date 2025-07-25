@@ -7,7 +7,7 @@ import mysql from "mysql";
 import { logCyan, logRed } from "../src/funciones/logsCustom.js";
 import { parseIfJson } from "../src/funciones/isValidJson.js";
 import axios from "axios";
-import LogisticaConf from "../models/logisticas_conf.js";
+import LogisticaConf from "../classes/logisticas_conf.js";
 
 async function getShipmentIdFromQr(companyId, dataQr) {
     const payload = {
@@ -24,7 +24,7 @@ async function getShipmentIdFromQr(companyId, dataQr) {
     };
 
     try {
-        const result = await axios.post('http://localhost:13001/api/qr/get-shipment-id', payload);
+        const result = await axios.post('https://apimovil2.lightdata.app/api/qr/get-shipment-id', payload);
         if (result.status == 200) {
             return result.data.body;
         } else {
@@ -56,13 +56,12 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
             const shipmentId = await getShipmentIdFromQr(company.did, dataQr);
 
             const cliente = LogisticaConf.getSenderId(company.did);
-            const empresa = LogisticaConf.getEmpresaId(company.did);
 
             dataQr = {
                 local: '1',
-                empresa,
                 did: shipmentId,
                 cliente,
+                empresa: company.did
             };
         }
         logCyan(`Datos del QR: ${JSON.stringify(dataQr)}`);
