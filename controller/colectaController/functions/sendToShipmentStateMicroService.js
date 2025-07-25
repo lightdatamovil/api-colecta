@@ -53,6 +53,7 @@ export async function sendToShipmentStateMicroService(
         longitud,
         tkn: generarTokenFechaHoy(),
     };
+    logCyan(`Enviando mensaje a RabbitMQ: ${JSON.stringify(message)}`);
     try {
         if (process.env.LOCAL == 'true') {
             throw new Error();

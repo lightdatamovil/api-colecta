@@ -7,7 +7,7 @@ import mysql from "mysql";
 import { logCyan, logRed } from "../src/funciones/logsCustom.js";
 import { parseIfJson } from "../src/funciones/isValidJson.js";
 import axios from "axios";
-
+import LogisticaConf from "../models/logisticas_conf.js";
 
 async function getShipmentIdFromQr(companyId, dataQr) {
     const payload = {
@@ -23,15 +23,20 @@ async function getShipmentIdFromQr(companyId, dataQr) {
         dataQr: dataQr
     };
 
-    const result = await axios.post('https://apimovil2.lightdata.app/api/qr/get-shipment-id', payload);
-    if (result.status === 200) {
-        return result.data.body;
-    } else {
-        logRed("Error al obtener el shipmentId");
+    try {
+        const result = await axios.post('http://localhost:13001/api/qr/get-shipment-id', payload);
+        if (result.status == 200) {
+            return result.data.body;
+        } else {
+            logRed("Error al obtener el shipmentId");
+            throw new Error("Error al obtener el shipmentId");
+        }
+    } catch (error) {
+        logRed(`Error al obtener el shipmentId: ${error.message}`);
         throw new Error("Error al obtener el shipmentId");
     }
-}
 
+}
 export async function colectar(company, dataQr, userId, profile, autoAssign, latitude, longitude) {
     const dbConfig = getProdDbConfig(company);
     const dbConnection = mysql.createConnection(dbConfig);
@@ -41,10 +46,8 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
         let response;
         dataQr = parseIfJson(dataQr);
 
-        const eligibleCompanies = [20, 211, 55];
-
         if (
-            eligibleCompanies.includes(company.did) &&
+            LogisticaConf.hasBarcodeEnabled(company.did) &&
             // mejor usar Object.hasOwn para chequear sólo properties propias
             !Object.hasOwn(dataQr, 'local') &&
             !Object.hasOwn(dataQr, 'sender_id')
@@ -52,26 +55,8 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
             // obtenemos el envío
             const shipmentId = await getShipmentIdFromQr(company.did, dataQr);
 
-            // variables a asignar según el caso
-            let empresa;
-            let cliente;
-
-            switch (company.did) {
-                case 20:
-                    empresa = 211;
-                    cliente = 215;
-                    break;
-
-                case 211:
-                    empresa = 211;
-                    cliente = 301;
-                    break;
-
-                case 55:
-                    empresa = 55;
-                    cliente = 184;
-                    break;
-            }
+            const cliente = LogisticaConf.getSenderId(company.did);
+            const empresa = LogisticaConf.getEmpresaId(company.did);
 
             dataQr = {
                 local: '1',
