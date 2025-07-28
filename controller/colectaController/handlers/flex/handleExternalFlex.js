@@ -161,7 +161,7 @@ export async function handleExternalFlex(
       logCyan("El envío no fue colectado, cancelado ni entregado");
 
       let internalShipmentId;
-      const consulta = "SELECT didLocal FROM envios_exteriores WHERE didExterno = ?";
+      const consulta = "SELECT didLocal FROM envios_exteriores WHERE didExterno = ? and superado = 0 and elim=0";
       internalShipmentId = await executeQuery(
         dbConnection,
         consulta,
@@ -256,7 +256,7 @@ export async function handleExternalFlex(
       const queryInternalClient = `
         SELECT didCliente 
         FROM envios 
-        WHERE did = ?
+        WHERE did = ? and elim = 0 and superado=0
       `;
       const internalClient = await executeQuery(
         dbConnection,
@@ -286,7 +286,7 @@ export async function handleExternalFlex(
         body: body,
       };
     } catch (error) {
-      logRed("Error procesando logística externa: ", error.message);
+      logRed(`Error procesando logística externa:  ${error.message}`);
       return {
         success: false,
         message: "Error procesando logística externa",
