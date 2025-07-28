@@ -102,11 +102,11 @@ export async function handleExternalFlex(
         externalClientId = rowsEnvios[0].didCliente;
 
         logCyan("Encontré el envío en la logística externa");
-        const check = await checkearEstadoEnvio(
-          externalDbConnection,
-          externalShipmentId
-        );
-        if (check) return check;
+        /*  const check = await checkearEstadoEnvio(
+            externalDbConnection,
+            externalShipmentId
+          );
+          if (check) return check;*/
 
       } else {
         logCyan("No encontré el envío en la logística externa");
