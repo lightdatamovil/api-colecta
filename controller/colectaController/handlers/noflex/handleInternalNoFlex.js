@@ -30,9 +30,11 @@ export async function handleInternalNoFlex(dbConnection, dataQr, companyId, user
     if (resultChoferAsignado.length === 0) {
         return { success: false, message: "Paquete no encontrado" };
     }
+
     logCyan("Se encontro el chofer asignado");
 
     const isAlreadyAssigned = resultChoferAsignado[0].choferAsignado == userId;
+
     /// Si el envio no esta asignado y se quiere autoasignar, lo asigno
     if (!isAlreadyAssigned && autoAssign) {
         await assign(companyId, userId, profile, dataQr, userId);

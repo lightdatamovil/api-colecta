@@ -53,10 +53,7 @@ export async function handleExternalNoFlex(dbConnection, dataQr, companyId, user
     }
     logCyan("Se encontró la logistica como chofer en la logistica externa");
 
-    const queryClient = `
-            SELECT did 
-            FROM clientes WHERE codigoVinculacionLogE = ?
-        `;
+    const queryClient = `SELECT did  FROM clientes WHERE codigoVinculacionLogE = ?`;
 
     const externalClient = await executeQuery(dbConnection, queryClient, [externalCompany.codigo]);
     let internalShipmentId;
