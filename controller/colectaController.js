@@ -45,24 +45,45 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
     try {
         let response;
         dataQr = parseIfJson(dataQr);
-
+        //es barcode
         if (
             LogisticaConf.hasBarcodeEnabled(company.did) &&
             // mejor usar Object.hasOwn para chequear sólo properties propias
             !Object.hasOwn(dataQr, 'local') &&
             !Object.hasOwn(dataQr, 'sender_id')
         ) {
-            // obtenemos el envío
-            const shipmentId = await getShipmentIdFromQr(company.did, dataQr);
+            try {
+                // obtenemos el envío
+                const shipmentId = await getShipmentIdFromQr(company.did, dataQr);
+                const cliente = LogisticaConf.getSenderId(company.did);
 
-            const cliente = LogisticaConf.getSenderId(company.did);
+                dataQr = {
+                    local: '1',
+                    did: shipmentId,
+                    cliente,
+                    empresa: company.did
+                };
 
-            dataQr = {
-                local: '1',
-                did: shipmentId,
-                cliente,
-                empresa: company.did
-            };
+            } catch (error) {
+
+                const cliente = LogisticaConf.getSenderId(company.did);
+                const empresaVinculada = LogisticaConf.getEmpresaVinculada(company.did);
+                // que pasa si es 211 o  55 que no tienen empresa vinculada
+                if (empresaVinculada === null) {
+                    // preguntar a cris 
+                    throw new Error("El envio no esta igresado en su sistema");
+                };
+
+                const shipmentIdExterno = await getShipmentIdFromQr(empresaVinculada, dataQr);
+
+                //no encontre shipmentiD : cambiar en el qr la empresa x la externa --- si no esta lo inserta 
+                dataQr = {
+                    local: '1',
+                    did: shipmentIdExterno,
+                    cliente,
+                    empresa: empresaVinculada
+                };
+            }
         }
         logCyan(`Datos del QR: ${JSON.stringify(dataQr)}`);
         const isCollectShipmentML = Object.prototype.hasOwnProperty.call(dataQr, "t");
