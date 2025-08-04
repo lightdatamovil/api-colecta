@@ -13,7 +13,7 @@ import { logCyan } from "../../../../src/funciones/logsCustom.js";
 /// Asigno el envío al usuario si es necesario
 export async function handleInternalFlex(
   dbConnection,
-  companyId,
+  company,
   userId,
   profile,
   dataQr,
@@ -22,6 +22,7 @@ export async function handleInternalFlex(
   latitude,
   longitude, senderId,
 ) {
+  const companyId = company.did;
   const mlShipmentId = dataQr.id;
 
   let shipmentId;
@@ -112,7 +113,7 @@ export async function handleInternalFlex(
 
   const body = await informe(
     dbConnection,
-    companyId,
+    company,
     account.didCliente || 0,
     userId,
     shipmentId

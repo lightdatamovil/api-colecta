@@ -4,7 +4,6 @@ import mysql from "mysql";
 import { insertEnvios } from "../../functions/insertEnvios.js";
 import { insertEnviosExteriores } from "../../functions/insertEnviosExteriores.js";
 import { sendToShipmentStateMicroService } from "../../functions/sendToShipmentStateMicroService.js";
-import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
 import { checkIfExistLogisticAsDriverInExternalCompany } from "../../functions/checkIfExistLogisticAsDriverInExternalCompany.js";
 import { informe } from "../../functions/informe.js";
 import { logCyan, logRed } from "../../../../src/funciones/logsCustom.js";
@@ -274,7 +273,7 @@ export async function handleExternalFlex(
       logCyan("Encontré el cliente interno");
       const body = await informe(
         dbConnection,
-        company.did,
+        company,
         internalClient[0].didCliente,
         userId,
         internalShipmentId

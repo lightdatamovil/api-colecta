@@ -1,27 +1,12 @@
 import { executeQuery, getClientsByCompany } from "../../../db.js";
+import { getFechaLocalDePais } from "../../../src/funciones/getFechaLocalByPais.js";
 import { logCyan } from "../../../src/funciones/logsCustom.js";
 
-const cache = {}; // Caché en memoria
+const cache = {};
 
-export async function informe(dbConnection, companyId, clientId, userId) {
-  let hoy = new Date().toISOString().split("T")[0];
-  let ayer = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-    .toISOString()
-    .split("T")[0];
+export async function informe(dbConnection, company, clientId, userId) {
+  const hoy = getFechaLocalDePais(company.pais);
 
-  // Ingresados hoy
-  const sql1 = `SELECT COUNT(id) as total FROM envios 
-                      WHERE superado=0 AND elim=0 
-                      AND autofecha BETWEEN ? AND ? 
-                      AND didCliente = ?`;
-  const resultsql1 = await executeQuery(dbConnection, sql1, [
-    `${hoy} 00:00:00`,
-    `${hoy} 23:59:59`,
-    clientId,
-  ]);
-  let retiradoshoy = resultsql1.length > 0 ? resultsql1[0].total : 0;
-
-  // Total a colectar del cliente
   const sql2 = `
             SELECT count(e.id) as total
             FROM envios as e
@@ -33,31 +18,43 @@ export async function informe(dbConnection, companyId, clientId, userId) {
             AND e.didCliente = ?
             AND eh.fecha > ?
         `;
-  const resultsql2 = await executeQuery(dbConnection, sql2, [
-    clientId,
-    `${ayer} 00:00:00`,
-  ]);
-  let cliente_total = resultsql2.length > 0 ? resultsql2[0].total : 0;
-  let aretirarHoy = cliente_total;
+  const resultsql2 = await executeQuery(dbConnection, sql2, [clientId, `${hoy} 00:00:00`]);
+  let totalARetirarCliente = resultsql2.length > 0 ? resultsql2[0].total : 0;
 
-  // Clave en la caché
-  const cacheKey = `${hoy}>${companyId}>${userId}`;
+
+  // -------2----------------
+
+  // Ingresados hoy
+  const sql3 = `SELECT COUNT(id) as total FROM envios 
+                      WHERE superado=0 AND elim=0 
+                      AND estado_envio=7
+                      AND autofecha > ?
+                      AND choferAsignado = ?`;
+  const resultsql3 = await executeQuery(dbConnection, sql3, [`${hoy} 00:00:00`, userId], true);
+  let aColectarHoy = resultsql3.length > 0 ? resultsql3[0].total : 0;
+
+
+  // ------------3--------------------
+
+
+  const sql1 = `SELECT COUNT(id) as total FROM envios WHERE superado=0 AND elim=0 AND autofecha > ? AND estado_envio=7`;
+  const resultsql1 = await executeQuery(dbConnection, sql1, [`${hoy} 00:00:00`, clientId]);
+  let retiradoshoy = resultsql1.length > 0 ? resultsql1[0].total : 0;
+
+
+  // ----------4------------
+  const cacheKey = `${hoy}>${company.did}>${userId}`;
 
   if (!(cacheKey in cache)) {
     const sql4 = `
                 SELECT COUNT(id) as total
                 FROM envios_historial 
-                WHERE superado=0
-                AND elim=0
-                AND quien IN (?) 
-                AND (autofecha > ? and autofecha < ?)
+                WHERE elim=0
+                AND quien = ? 
+                AND autofecha > ? 
                 AND estado=0
             `;
-    const resultsql4 = await executeQuery(dbConnection, sql4, [
-      userId,
-      `${hoy} 00:00:00`,
-      `${hoy} 23:59:59`,
-    ]);
+    const resultsql4 = await executeQuery(dbConnection, sql4, [userId, `${hoy} 00:00:00`]);
     cache[cacheKey] =
       resultsql4.length > 0 && resultsql4[0].total > 0
         ? resultsql4[0].total
@@ -66,9 +63,10 @@ export async function informe(dbConnection, companyId, clientId, userId) {
     cache[cacheKey] += 1;
   }
 
-  let retiradoshoymi = cache[cacheKey];
+  let colectadosHoyPorMi = cache[cacheKey];
 
-  const companyClients = await getClientsByCompany(dbConnection, companyId);
+
+  const companyClients = await getClientsByCompany(dbConnection, company.did);
 
   if (companyClients[clientId] === undefined) {
     throw new Error("Cliente no encontrado");
@@ -78,9 +76,9 @@ export async function informe(dbConnection, companyId, clientId, userId) {
   logCyan("Se generó el informe");
   return {
     cliente: companyClients[clientId].nombre || "Sin informacion",
-    cliente_total,
-    aretirarHoy,
-    retiradoshoy,
-    retiradoshoymi,
+    cliente_total: totalARetirarCliente,
+    aretirarHoy: aColectarHoy,
+    retiradoshoy: retiradoshoy,// SOLO PARA ADMINS Y COORDINADORES
+    retiradoshoymi: colectadosHoyPorMi, // SOLO PARA CHOFERES
   };
 }

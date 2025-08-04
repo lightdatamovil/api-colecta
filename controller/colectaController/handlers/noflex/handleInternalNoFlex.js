@@ -11,8 +11,9 @@ import { logCyan } from "../../../../src/funciones/logsCustom.js";
 /// Si el envio no esta asignado y se quiere autoasignar, lo asigna
 /// Actualiza el estado del envio en el micro servicio
 /// Actualiza el estado del envio en la base de datos
-export async function handleInternalNoFlex(dbConnection, dataQr, companyId, userId, profile, autoAssign, latitude, longitude) {
+export async function handleInternalNoFlex(dbConnection, dataQr, company, userId, profile, autoAssign, latitude, longitude) {
     const shipmentId = dataQr.did;
+    const companyId = company.did;
 
     /// Chequeo si el envio ya fue colectado, entregado o cancelado
     const check = await checkearEstadoEnvio(dbConnection, shipmentId);
@@ -45,7 +46,7 @@ export async function handleInternalNoFlex(dbConnection, dataQr, companyId, user
     await sendToShipmentStateMicroService(companyId, userId, shipmentId, latitude, longitude);
     logCyan("Se actualizo el estado del envio en el micro servicio");
 
-    const body = await informe(dbConnection, companyId, dataQr.cliente, userId, shipmentId);
+    const body = await informe(dbConnection, company, dataQr.cliente, userId, shipmentId);
 
     return { success: true, message: "Paquete colectado correctamente", body: body };
 }

@@ -130,7 +130,7 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
 
                 if (resultCheck.length > 0) {
                     senderId = dataQr.sender_id;
-                    response = await handleInternalFlex(dbConnection, company.did, userId, profile, dataQr, autoAssign, account, latitude, longitude, senderId);
+                    response = await handleInternalFlex(dbConnection, company, userId, profile, dataQr, autoAssign, account, latitude, longitude, senderId);
                 } else {
                     logCyan("🌐 Es externo (empresa 144 sin coincidencia)");
                     response = await handleExternalFlex(dbConnection, company, userId, profile, dataQr, autoAssign, latitude, longitude);
@@ -146,10 +146,10 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
             logCyan(`Empresa: ${company.did}, Data QR: ${JSON.stringify(dataQr)}`);
             if (company.did == dataQr.empresa) {
                 logCyan("Es interno");
-                response = await handleInternalNoFlex(dbConnection, dataQr, company.did, userId, profile, autoAssign, latitude, longitude);
+                response = await handleInternalNoFlex(dbConnection, dataQr, company, userId, profile, autoAssign, latitude, longitude);
             } else {
                 logCyan("Es externo");
-                response = await handleExternalNoFlex(dbConnection, dataQr, company.did, userId, profile, autoAssign, latitude, longitude);
+                response = await handleExternalNoFlex(dbConnection, dataQr, company, userId, profile, autoAssign, latitude, longitude);
             }
         }
 
