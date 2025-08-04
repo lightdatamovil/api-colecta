@@ -111,7 +111,7 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
 
             if (account) {
                 logCyan("Es interno");
-                response = await handleInternalFlex(dbConnection, company.did, userId, profile, dataQr, autoAssign, account, latitude, longitude, senderId);
+                response = await handleInternalFlex(dbConnection, company, userId, profile, dataQr, autoAssign, account, latitude, longitude, senderId);
 
                 /// Si la cuenta no existe, es externo
             }
