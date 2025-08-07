@@ -8,6 +8,7 @@ import { checkIfExistLogisticAsDriverInExternalCompany } from "../../functions/c
 import { informe } from "../../functions/informe.js";
 import { logCyan, logRed } from "../../../../src/funciones/logsCustom.js";
 import { insertEnviosLogisticaInversa } from "../../functions/insertLogisticaInversa.js";
+import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
 
 /// Esta funcion busca las logisticas vinculadas
 /// Reviso si el envío ya fue colectado cancelado o entregado en la logística externa
@@ -101,11 +102,11 @@ export async function handleExternalFlex(
         externalClientId = rowsEnvios[0].didCliente;
 
         logCyan("Encontré el envío en la logística externa");
-        /*  const check = await checkearEstadoEnvio(
-            externalDbConnection,
-            externalShipmentId
-          );
-          if (check) return check;*/
+        const check = await checkearEstadoEnvio(
+          externalDbConnection,
+          externalShipmentId
+        );
+        if (check) return check;
 
       } else {
         logCyan("No encontré el envío en la logística externa");
@@ -121,7 +122,7 @@ export async function handleExternalFlex(
           [senderid], true
         );
 
-        console.log(rowsCuentas, " rowsCuentasSSSSSSSSSSSSSSSSSSSSSSS");
+        console.log(rowsCuentas, " rowsCuentasS");
 
         if (rowsCuentas.length == 0) {
           continue;
@@ -156,6 +157,8 @@ export async function handleExternalFlex(
         logCyan("Inserté el envío en la logística externa");
         externalShipmentId = rowsEnvios[0].did;
       }
+
+
 
       logCyan("El envío no fue colectado, cancelado ni entregado");
 
