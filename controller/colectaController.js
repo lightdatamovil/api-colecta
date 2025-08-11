@@ -1,42 +1,16 @@
-import { executeQuery, getAccountBySenderId, getProdDbConfig } from "../db.js";
+
+import { getAccountBySenderId, getProdDbConfig } from "../db.js";
 import { handleInternalFlex } from "./colectaController/handlers/flex/handleInternalFlex.js";
 import { handleExternalFlex } from "./colectaController/handlers/flex/handleExternalFlex.js";
 import { handleExternalNoFlex } from "./colectaController/handlers/noflex/handleExternalNoFlex.js";
 import { handleInternalNoFlex } from "./colectaController/handlers/noflex/handleInternalNoFlex.js";
 import mysql from "mysql";
-import { logCyan, logRed } from "../src/funciones/logsCustom.js";
 import { parseIfJson } from "../src/funciones/isValidJson.js";
 import axios from "axios";
-import LogisticaConf from "../classes/logisticas_conf.js";
+import { executeQuery, logCyan, LogisticaConfig, logRed, getShipmentIdFromQr } from "lightdata-tools";
 
-async function getShipmentIdFromQr(companyId, dataQr) {
-    const payload = {
-        companyId: Number(companyId),
-        userId: 0,
-        profile: 0,
-        deviceId: "null",
-        brand: "null",
-        model: "null",
-        androidVersion: "null",
-        deviceFrom: "getShipmentIdFromQr de Colecta",
-        appVersion: "null",
-        dataQr: dataQr
-    };
 
-    try {
-        const result = await axios.post('https://apimovil2.lightdata.app/api/qr/get-shipment-id', payload);
-        if (result.status == 200) {
-            return result.data.body;
-        } else {
-            logRed("Error al obtener el shipmentId");
-            throw new Error("Error al obtener el shipmentId");
-        }
-    } catch (error) {
-        logRed(`Error al obtener el shipmentId: ${error.message}`);
-        throw new Error("Error al obtener el shipmentId");
-    }
 
-}
 export async function colectar(company, dataQr, userId, profile, autoAssign, latitude, longitude) {
     const dbConfig = getProdDbConfig(company);
     const dbConnection = mysql.createConnection(dbConfig);
@@ -47,7 +21,7 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
         dataQr = parseIfJson(dataQr);
         //es barcode
         if (
-            LogisticaConf.hasBarcodeEnabled(company.did) &&
+            LogisticaConfig.hasBarcodeEnabled(company.did) &&
             // mejor usar Object.hasOwn para chequear sólo properties propias
             !Object.hasOwn(dataQr, 'local') &&
             !Object.hasOwn(dataQr, 'sender_id')
@@ -55,7 +29,7 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
             try {
                 // obtenemos el envío
                 const shipmentId = await getShipmentIdFromQr(company.did, dataQr);
-                const cliente = LogisticaConf.getSenderId(company.did);
+                const cliente = LogisticaConfig.getSenderId(company.did);
 
                 dataQr = {
                     local: '1',
@@ -66,8 +40,10 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
 
             } catch (error) {
 
-                const cliente = LogisticaConf.getSenderId(company.did);
-                const empresaVinculada = LogisticaConf.getEmpresaVinculada(company.did);
+                //agregar verficar todo
+
+                const cliente = LogisticaConfig.getSenderId(company.did);
+                const empresaVinculada = LogisticaConfig.getEmpresaVinculada(company.did);
                 // que pasa si es 211 o  55 que no tienen empresa vinculada
                 if (empresaVinculada === null) {
                     // preguntar a cris 
