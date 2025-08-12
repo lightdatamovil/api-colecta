@@ -1,13 +1,11 @@
-import { executeQuery, getClientsByCompany, getCompanyById, getProdDbConfig } from "../../../../db.js";
-import { assign } from "../../functions/assign.js";
-import { sendToShipmentStateMicroService } from "../../functions/sendToShipmentStateMicroService.js";
-import mysql from "mysql";
+import { clientsService, companiesService, executeQuery, hostProductionDb, portProductionDb, queueEstados, rabbitUrl } from "../../../../db.js";
+import mysql2 from "mysql2";
 import { insertEnvios } from "../../functions/insertEnvios.js";
 import { insertEnviosExteriores } from "../../functions/insertEnviosExteriores.js";
 import { checkIfExistLogisticAsDriverInExternalCompany } from "../../functions/checkIfExistLogisticAsDriverInExternalCompany.js";
 import { informe } from "../../functions/informe.js";
-import { logCyan } from "../../../../src/funciones/logsCustom.js";
 import { insertEnviosLogisticaInversa } from "../../functions/insertLogisticaInversa.js";
+import { assign, getProductionDbConfig, logCyan, sendShipmentStateToStateMicroservice } from "lightdata-tools";
 
 /// Esta funcion se conecta a la base de datos de la empresa externa
 /// Checkea si el envio ya fue colectado, entregado o cancelado
@@ -22,12 +20,14 @@ export async function handleExternalNoFlex(dbConnection, dataQr, company, userId
     const clientIdFromDataQr = dataQr.cliente;
 
     /// Busco la empresa externa
-    const externalCompany = await getCompanyById(dataQr.empresa);
+    const externalCompany = await companiesService.getById(dataQr.empresa);
 
     /// Conecto a la base de datos de la empresa externa
-    const dbConfigExt = getProdDbConfig(externalCompany);
-    const externalDbConnection = mysql.createConnection(dbConfigExt);
+    const dbConfigExt = getProductionDbConfig(externalCompany, hostProductionDb, portProductionDb);
+    const externalDbConnection = mysql2.createConnection(dbConfigExt);
     externalDbConnection.connect();
+
+
 
     /// Chequeo si el envio ya fue colectado, entregado o cancelado
     //! Se comento porque si el paquete estaba colectado en la empresa que da el paquete, no se podia ingresar en la que se lo recibe
@@ -39,11 +39,10 @@ export async function handleExternalNoFlex(dbConnection, dataQr, company, userId
     // }
     logCyan("El envio no es colectado, entregado o cancelado");
 
-    const companyClientList = await getClientsByCompany(externalDbConnection, externalCompany.did);
-
+    const companyClientList = await clientsService.getByCompany(externalDbConnection, externalCompany.did);
     const client = companyClientList[clientIdFromDataQr];
 
-    const internalCompany = await getCompanyById(companyId);
+    const internalCompany = await companiesService.getById(companyId);
 
     /// Busco el chofer que se crea en la vinculacion de logisticas
     const driver = await checkIfExistLogisticAsDriverInExternalCompany(externalDbConnection, internalCompany.codigo);
@@ -56,7 +55,7 @@ export async function handleExternalNoFlex(dbConnection, dataQr, company, userId
 
     const queryClient = `SELECT did  FROM clientes WHERE codigoVinculacionLogE = ?`;
 
-    const externalClient = await executeQuery(dbConnection, queryClient, [externalCompany.codigo]);
+    const externalClient = await executeQuery(dbConnection, queryClient, [externalCompany.codigo], true);
     let internalShipmentId;
 
     const consulta = 'SELECT didLocal FROM envios_exteriores WHERE didExterno = ? and superado = 0 and elim = 0 LIMIT 1';
@@ -124,18 +123,18 @@ export async function handleExternalNoFlex(dbConnection, dataQr, company, userId
         );
     }
 
-
-    await sendToShipmentStateMicroService(companyId, userId, internalShipmentId, latitude, longitude);
+    await sendShipmentStateToStateMicroservice(queueEstados, rabbitUrl, 'colecta', company, String(userId), 0, String(internalShipmentId), latitude, longitude);
     logCyan("Actualicé el estado del envio a colectado y envié el estado del envio en los microservicios internos");
 
 
-    await sendToShipmentStateMicroService(dataQr.empresa, driver, shipmentIdFromDataQr, latitude, longitude);
+    await sendShipmentStateToStateMicroservice(queueEstados, rabbitUrl, 'colecta', externalCompany, String(driver), 0, String(shipmentIdFromDataQr), latitude, longitude);
     logCyan("Actualicé el estado del envio a colectado y envié el estado del envio en los microservicios externos");
 
 
     const body = await informe(dbConnection, company, externalClient[0].did, userId, internalShipmentId);
 
     externalDbConnection.end();
+    console.log('cerre la conexion');
 
 
     return { success: true, message: "Paquete colectado con exito", body: body };

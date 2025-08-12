@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { clientList } from "../db.js";
+// import { clientList } from "../db.js";
 
 const clear = Router();
 

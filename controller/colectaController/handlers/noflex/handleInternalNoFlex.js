@@ -1,9 +1,9 @@
-import { executeQuery } from "../../../../db.js";
+import { executeQuery, queueEstados, rabbitUrl } from "../../../../db.js";
 import { assign } from "../../functions/assign.js";
 import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
-import { sendToShipmentStateMicroService } from "../../functions/sendToShipmentStateMicroService.js";
 import { informe } from "../../functions/informe.js";
-import { logCyan } from "../../../../src/funciones/logsCustom.js";
+import { logCyan, logYellow } from "../../../../src/funciones/logsCustom.js";
+import { sendShipmentStateToStateMicroservice } from "lightdata-tools";
 
 
 /// Esta funcion checkea si el envio ya fue colectado, entregado o cancelado
@@ -14,6 +14,7 @@ import { logCyan } from "../../../../src/funciones/logsCustom.js";
 export async function handleInternalNoFlex(dbConnection, dataQr, company, userId, profile, autoAssign, latitude, longitude) {
     const shipmentId = dataQr.did;
     const companyId = company.did;
+    logYellow(`entre a interno No flex`);
 
     /// Chequeo si el envio ya fue colectado, entregado o cancelado
     const check = await checkearEstadoEnvio(dbConnection, shipmentId);
@@ -43,7 +44,8 @@ export async function handleInternalNoFlex(dbConnection, dataQr, company, userId
     }
 
     /// Actualizamos el estado del envio en el micro servicio
-    await sendToShipmentStateMicroService(companyId, userId, shipmentId, latitude, longitude);
+    logYellow(`voy a actualizar`);
+    await sendShipmentStateToStateMicroservice(queueEstados, rabbitUrl, 'colecta', company, String(userId), 0, String(shipmentId), latitude, longitude);
     logCyan("Se actualizo el estado del envio en el micro servicio");
 
     const body = await informe(dbConnection, company, dataQr.cliente, userId, shipmentId);

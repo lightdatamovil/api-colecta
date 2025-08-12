@@ -1,6 +1,9 @@
 import redis from 'redis';
 import dotenv from 'dotenv';
-import { logRed, logYellow } from './src/funciones/logsCustom.js';
+import mysql2 from 'mysql2';
+import { logRed } from './src/funciones/logsCustom.js';
+import { AccountsService, ClientsService, CompaniesService, DriversService, logYellow } from "lightdata-tools";
+
 
 dotenv.config({ path: process.env.ENV_FILE || ".env" });
 
@@ -18,9 +21,11 @@ const colectaDbUserForLogs = process.env.COLECTA_DB_USER_FOR_LOGS;
 const colectaDbPasswordForLogs = process.env.COLECTA_DB_PASSWORD_FOR_LOGS;
 const colectaDbNameForLogs = process.env.COLECTA_DB_NAME_FOR_LOGS;
 
+export const rabbitUrl = process.env.RABBIT_URL;
+export const queueEstados = process.env.QUEUE_ESTADOS;
 // Produccion
-const hostProductionDb = process.env.PRODUCTION_DB_HOST;
-const portProductionDb = process.env.PRODUCTION_DB_PORT;
+export const hostProductionDb = process.env.PRODUCTION_DB_HOST;
+export const portProductionDb = process.env.PRODUCTION_DB_PORT;
 
 export const redisClient = redis.createClient({
     socket: {
@@ -34,12 +39,71 @@ redisClient.on('error', (err) => {
     logRed(`Error al conectar con Redis: ${err.message}`);
 });
 
+
+
+export let companiesService = new CompaniesService({ redisClient });
+export let clientsService = new ClientsService();
+export let accountsService = new AccountsService();
+export let driversService = new DriversService();
+
+export const poolLocal = mysql2.createPool({
+    host: colectaDBHost,
+    user: colectaDbUserForLogs,
+    password: colectaDbPasswordForLogs,
+    database: colectaDbNameForLogs,
+    port: colectaDBPort,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+});
+
+export async function executeQuery(connection, query, values, log) {
+    // Utilizamos connection.format para obtener la query completa con valores
+    //const formattedQuery = connection.format(query, values);
+    const formattedQuery = mysql2.format(query, values);
+
+    return new Promise((resolve, reject) => {
+        connection.query(query, values, (err, results) => {
+            if (log) {
+                logYellow(`Ejecutando query: ${formattedQuery}`);
+            }
+            if (err) {
+                if (log) {
+                    logRed(`Error en executeQuery: ${err.message} en query: ${formattedQuery}`);
+                }
+                reject(err);
+            } else {
+                if (log) {
+                    logYellow(`Query ejecutado con éxito: ${formattedQuery} - Resultados: ${JSON.stringify(results)}`);
+                }
+                resolve(results);
+            }
+        });
+    });
+}
+
+
+
+/** 
+export async function getClientsByCompany(dbConnection, companyId) {
+    let companyClients = clientList[companyId];
+
+    if (companyClients == undefined || Object.keys(clientList).length === 0) {
+        await loadClients(dbConnection, companyId);
+
+        companyClients = clientList[companyId];
+    }
+
+    return companyClients;
+}
+
+ 
 let companiesList = {};
 export let clientList = {};
 let accountList = {};
 let driverList = {};
 
-export function getProdDbConfig(company) {
+/**export function getProdDbConfig(company) {
     return {
         host: hostProductionDb,
         user: company.dbuser,
@@ -168,17 +232,7 @@ async function loadClients(dbConnection, companyId) {
     });
 }
 
-export async function getClientsByCompany(dbConnection, companyId) {
-    let companyClients = clientList[companyId];
 
-    if (companyClients == undefined || Object.keys(clientList).length === 0) {
-        await loadClients(dbConnection, companyId);
-
-        companyClients = clientList[companyId];
-    }
-
-    return companyClients;
-}
 
 async function loadDrivers(dbConnection, companyId) {
     if (!driverList[companyId]) {
@@ -230,26 +284,6 @@ export async function getDriversByCompany(dbConnection, companyId) {
     return companyDrivers;
 }
 
-export async function executeQuery(connection, query, values, log) {
-    // Utilizamos connection.format para obtener la query completa con valores
-    const formattedQuery = connection.format(query, values);
 
-    return new Promise((resolve, reject) => {
-        connection.query(query, values, (err, results) => {
-            if (log) {
-                logYellow(`Ejecutando query: ${formattedQuery}`);
-            }
-            if (err) {
-                if (log) {
-                    logRed(`Error en executeQuery: ${err.message} en query: ${formattedQuery}`);
-                }
-                reject(err);
-            } else {
-                if (log) {
-                    logYellow(`Query ejecutado con éxito: ${formattedQuery} - Resultados: ${JSON.stringify(results)}`);
-                }
-                resolve(results);
-            }
-        });
-    });
-}
+
+*/

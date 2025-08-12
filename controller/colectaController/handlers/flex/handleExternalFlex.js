@@ -1,14 +1,15 @@
-import { executeQuery, getProdDbConfig, getCompanyByCode } from "../../../../db.js";
+import { executeQuery, hostProductionDb, portProductionDb, companiesService, queueEstados, rabbitUrl } from "../../../../db.js";
 import { assign } from "../../functions/assign.js";
 import mysql from "mysql";
 import { insertEnvios } from "../../functions/insertEnvios.js";
 import { insertEnviosExteriores } from "../../functions/insertEnviosExteriores.js";
-import { sendToShipmentStateMicroService } from "../../functions/sendToShipmentStateMicroService.js";
+// import { sendToShipmentStateMicroService } from "../../functions/sendToShipmentStateMicroService.js";
 import { checkIfExistLogisticAsDriverInExternalCompany } from "../../functions/checkIfExistLogisticAsDriverInExternalCompany.js";
 import { informe } from "../../functions/informe.js";
 import { logCyan, logRed } from "../../../../src/funciones/logsCustom.js";
 import { insertEnviosLogisticaInversa } from "../../functions/insertLogisticaInversa.js";
 import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
+import { getProductionDbConfig, sendShipmentStateToStateMicroservice } from "lightdata-tools";
 
 /// Esta funcion busca las logisticas vinculadas
 /// Reviso si el envío ya fue colectado cancelado o entregado en la logística externa
@@ -18,6 +19,7 @@ import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
 /// Inserto el envio en la tabla envios y envios exteriores de la logística interna
 /// Actualizo el estado del envío y lo envío al microservicio de estados en la logística interna
 /// Actualizo el estado del envío y lo envío al microservicio de estados en la logística externa
+
 export async function handleExternalFlex(
   dbConnection,
   company,
@@ -60,10 +62,10 @@ export async function handleExternalFlex(
     const nombreFantasia = logistica.nombre_fantasia;
     const syncCode = logistica.codigoVinculacionLogE;
 
-    const externalCompany = await getCompanyByCode(syncCode);
+    const externalCompany = await companiesService.getByCode(syncCode);
     const externalCompanyId = externalCompany.did;
 
-    const dbConfigExt = getProdDbConfig(externalCompany);
+    const dbConfigExt = getProductionDbConfig(externalCompany, hostProductionDb, portProductionDb);
     const externalDbConnection = mysql.createConnection(dbConfigExt);
     externalDbConnection.connect();
 
@@ -214,23 +216,32 @@ export async function handleExternalFlex(
       );
       logCyan("Inserté el envío en envíos exteriores");
 
-      await sendToShipmentStateMicroService(
+      await sendShipmentStateToStateMicroservice(
+        queueEstados,
+        rabbitUrl,
+        'colecta',
         company.did,
         userId,
         internalShipmentId,
         latitude,
         longitude
       );
+      await sendShipmentStateToStateMicroservice(queueEstados, rabbitUrl, 'colecta', company, String(userId), 0, String(internalShipmentId), latitude, longitude);
       logCyan("Actualicé el estado del envío interno");
 
-      await sendToShipmentStateMicroService(
+      await sendShipmentStateToStateMicroservice(
+        queueEstados,
+        rabbitUrl,
+        'colecta',
         externalCompanyId,
         externalClientId,
         externalShipmentId,
         latitude,
         longitude
       );
+      await sendShipmentStateToStateMicroservice(queueEstados, rabbitUrl, 'colecta', externalCompany, String(externalClientId), 0, String(externalShipmentId), latitude, longitude);
       logCyan("Actualicé el estado del envío externo");
+
 
       if (autoAssign) {
         const dqr = {

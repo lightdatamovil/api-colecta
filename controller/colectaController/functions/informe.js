@@ -1,4 +1,4 @@
-import { executeQuery, getClientsByCompany } from "../../../db.js";
+import { clientsService, executeQuery } from "../../../db.js";
 import { getFechaLocalDePais } from "../../../src/funciones/getFechaLocalByPais.js";
 import { logCyan } from "../../../src/funciones/logsCustom.js";
 
@@ -66,7 +66,8 @@ export async function informe(dbConnection, company, clientId, userId) {
   let colectadosHoyPorMi = cache[cacheKey];
 
 
-  const companyClients = await getClientsByCompany(dbConnection, company.did);
+  //const companyClients = await getClientsByCompany(dbConnection, company.did);
+  const companyClients = await clientsService.getByCompany(dbConnection, company.did);
 
   if (companyClients[clientId] === undefined) {
     throw new Error("Cliente no encontrado");
