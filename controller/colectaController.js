@@ -37,6 +37,8 @@ async function getShipmentIdFromQr(companyId, dataQr) {
     }
 
 }
+
+
 export async function colectar(company, dataQr, userId, profile, autoAssign, latitude, longitude) {
     const dbConfig = getProdDbConfig(company);
     const dbConnection = mysql.createConnection(dbConfig);
@@ -99,7 +101,7 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
             if (isCollectShipmentML) {
                 //! Esto quiere decir que es un envio de colecta de ML
                 const querySeller = `SELECT ml_vendedor_id FROM envios WHERE ml_shipment_id = ? AND flex = 1 AND superado=0 AND elim=0`;
-                const result = await executeQuery(dbConnection, querySeller, [dataQr.id]);
+                const result = await executeQuery(dbConnection, querySeller, [dataQr.id], true);
 
                 senderId = result[0].ml_vendedor_id;
                 account = await getAccountBySenderId(dbConnection, company.did, senderId);
@@ -107,6 +109,11 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
             } else {
                 account = await getAccountBySenderId(dbConnection, company.did, dataQr.sender_id);
                 senderId = dataQr.sender_id;
+                console.log('llegue aca ')
+                if (company.did == 167 && account == undefined) {
+                    logCyan("Es JSL");
+                    return await handleInternalFlex(dbConnection, company, userId, profile, dataQr, autoAssign, 0, latitude, longitude, senderId);
+                }
             }
 
             if (account) {
@@ -135,8 +142,7 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
                     logCyan("🌐 Es externo (empresa 144 sin coincidencia)");
                     response = await handleExternalFlex(dbConnection, company, userId, profile, dataQr, autoAssign, latitude, longitude);
                 }
-            }
-            else {
+            } else {
                 logCyan("Es externo");
                 response = await handleExternalFlex(dbConnection, company, userId, profile, dataQr, autoAssign, latitude, longitude);
             }
