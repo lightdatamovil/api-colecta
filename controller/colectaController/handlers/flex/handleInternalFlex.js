@@ -32,13 +32,13 @@ export async function handleInternalFlex(
             SELECT did,didCliente
             FROM envios 
             WHERE ml_shipment_id = ? AND ml_vendedor_id = ? and elim = 0 and superado = 0
-            LIMIT 1
+         
         `;
 
   let resultBuscarEnvio = await executeQuery(dbConnection, sql, [
     mlShipmentId,
     senderId,
-  ]);
+  ], true);
   shipmentId = resultBuscarEnvio.length > 0 ? resultBuscarEnvio[0].did : null;
   let didCLiente = resultBuscarEnvio.length > 0 ? resultBuscarEnvio[0].didCliente : null;
   /// Si no existe, lo inserto y tomo el did
