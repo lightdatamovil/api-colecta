@@ -106,7 +106,7 @@ export async function handleInternalFlex(
     );
     return {
       success: true,
-      message: "Paquete insertado y puesto a planta  - FLEX",
+      message: "Paquete puesto a planta  - FLEX",
       body: body,
     };
   }

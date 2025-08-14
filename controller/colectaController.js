@@ -110,10 +110,10 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
                 account = await getAccountBySenderId(dbConnection, company.did, dataQr.sender_id);
                 senderId = dataQr.sender_id;
                 console.log('llegue aca ')
-                if (company.did == 167 && account == undefined) {
-                    logCyan("Es JSL");
-                    return await handleInternalFlex(dbConnection, company, userId, profile, dataQr, autoAssign, 0, latitude, longitude, senderId);
-                }
+                /** if (company.did == 167 && account == undefined) {
+                     logCyan("Es JSL");
+                     return await handleInternalFlex(dbConnection, company, userId, profile, dataQr, autoAssign, 0, latitude, longitude, senderId);
+                 } */
             }
 
             if (account) {
@@ -122,7 +122,7 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
 
                 /// Si la cuenta no existe, es externo
             }
-            else if (company.did == 144) {
+            else if (company.did == 144 || company.did == 167) {
                 logCyan("⚠️ Cuenta nula, verificando envío interno por empresa 144");
 
                 const queryCheck = `
