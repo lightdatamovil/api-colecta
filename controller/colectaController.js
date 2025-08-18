@@ -121,19 +121,19 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
                 response = await handleInternalFlex(dbConnection, company, userId, profile, dataQr, autoAssign, account, latitude, longitude, senderId);
 
                 /// Si la cuenta no existe, es externo
-            }
-            else if (company.did == 144 || company.did == 167) {
+            } else if (company.did == 144 || company.did == 167) {
                 logCyan("⚠️ Cuenta nula, verificando envío interno por empresa 144");
 
                 const queryCheck = `
                   SELECT did
                   FROM envios
                   WHERE ml_vendedor_id = ?
+                  AND ml_shipment_id = ?
                   AND superado = 0
                   AND elim = 0
                   LIMIT 1
                 `;
-                const resultCheck = await executeQuery(dbConnection, queryCheck, [dataQr.sender_id]);
+                const resultCheck = await executeQuery(dbConnection, queryCheck, [dataQr.sender_id, dataQr.id]);
 
                 if (resultCheck.length > 0) {
                     senderId = dataQr.sender_id;
