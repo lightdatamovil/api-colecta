@@ -3,12 +3,12 @@ import { assign } from "../../functions/assign.js";
 import mysql from "mysql";
 import { insertEnvios } from "../../functions/insertEnvios.js";
 import { insertEnviosExteriores } from "../../functions/insertEnviosExteriores.js";
-import { sendToShipmentStateMicroService } from "../../functions/sendToShipmentStateMicroService.js";
 import { checkIfExistLogisticAsDriverInExternalCompany } from "../../functions/checkIfExistLogisticAsDriverInExternalCompany.js";
 import { informe } from "../../functions/informe.js";
 import { logCyan, logRed } from "../../../../src/funciones/logsCustom.js";
 import { insertEnviosLogisticaInversa } from "../../functions/insertLogisticaInversa.js";
 import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
+import { sendToShipmentStateMicroServiceAPI } from "../../functions/sendToShipmentStateMicroServiceAPI.js";
 
 /// Esta funcion busca las logisticas vinculadas
 /// Reviso si el envío ya fue colectado cancelado o entregado en la logística externa
@@ -212,7 +212,7 @@ export async function handleExternalFlex(
       );
       logCyan("Inserté el envío en envíos exteriores");
 
-      await sendToShipmentStateMicroService(
+      await sendToShipmentStateMicroServiceAPI(
         company.did,
         userId,
         internalShipmentId,
@@ -221,7 +221,7 @@ export async function handleExternalFlex(
       );
       logCyan("Actualicé el estado del envío interno");
 
-      await sendToShipmentStateMicroService(
+      await sendToShipmentStateMicroServiceAPI(
         externalCompanyId,
         externalClientId,
         externalShipmentId,
