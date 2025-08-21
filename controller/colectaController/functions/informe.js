@@ -21,7 +21,6 @@ export async function informe(dbConnection, company, clientId, userId) {
         `;
   const resultsql2 = await executeQuery(dbConnection, sql2, [clientId, `${hoy} 00:00:00`], true);
   let totalARetirarCliente = resultsql2.length > 0 ? resultsql2[0].total : 0;
-  console.log('entre informe 2');
 
   // -------2----------------
 
@@ -47,7 +46,6 @@ export async function informe(dbConnection, company, clientId, userId) {
   const cacheKey = `${hoy}>${company.did}>${userId}`;
 
   if (!(cacheKey in cache)) {
-    console.log('entre informe 3');
     const sql4 = `
                 SELECT COUNT(id) as total
                 FROM envios_historial 
@@ -66,15 +64,12 @@ export async function informe(dbConnection, company, clientId, userId) {
   }
 
   let colectadosHoyPorMi = cache[cacheKey];
-  console.log('entre informe 4');
 
   const companyClients = await getClientsByCompany(dbConnection, company.did);
 
   if (companyClients[clientId] === undefined) {
     logCyan("El cliente fue encontrado");
-    //throw new Error("Cliente no encontrado");
   }
-  console.log('entre informe 5');
 
   logCyan("Se generó el informe");
   return {

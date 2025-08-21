@@ -122,8 +122,6 @@ export async function handleExternalFlex(
           [senderid], true
         );
 
-        console.log(rowsCuentas, " rowsCuentasS");
-
         if (rowsCuentas.length == 0) {
           continue;
         }

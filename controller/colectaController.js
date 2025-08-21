@@ -109,7 +109,6 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
             } else {
                 account = await getAccountBySenderId(dbConnection, company.did, dataQr.sender_id);
                 senderId = dataQr.sender_id;
-                console.log('llegue aca ')
                 /** if (company.did == 167 && account == undefined) {
                      logCyan("Es JSL");
                      return await handleInternalFlex(dbConnection, company, userId, profile, dataQr, autoAssign, 0, latitude, longitude, senderId);
