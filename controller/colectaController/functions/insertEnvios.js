@@ -11,7 +11,7 @@ export async function insertEnvios(
   externo,
   userId
 ) {
-  const lote = Math.random().toString(36).substring(2, 15);
+  const lote = "colecta";
   const fecha_actual = new Date();
   fecha_actual.setHours(fecha_actual.getHours() - 3);
 
