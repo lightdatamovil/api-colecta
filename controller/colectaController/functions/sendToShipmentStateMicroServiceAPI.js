@@ -25,6 +25,7 @@ export async function sendToShipmentStateMicroServiceAPI(
         operacion: 'colecta',
         latitud,
         longitud,
+        desde: "colectaAPP",
         tkn: generarTokenFechaHoy(),
     };
     logCyan(`Enviando mensaje a RabbitMQ: ${JSON.stringify(message)}`);
