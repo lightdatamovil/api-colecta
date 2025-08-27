@@ -1,5 +1,6 @@
 import { executeQuery } from "../../../db.js";
 import axios from "axios";
+import { senToDataML } from "./sendToDataML.js";
 
 export async function insertEnvios(
   dbConnection,
@@ -55,6 +56,19 @@ export async function insertEnvios(
       result.insertId,
       result.insertId,
     ]);
+
+    // mensaje por rabbitMQ
+    if (companyId == 12) {
+
+      await senToDataML(
+        companyId,
+        result.insertId,
+        senderid,
+        idshipment
+      );
+    }
+
+
     await axios.post(
       "https://altaenvios.lightdata.com.ar/api/enviosMLredis",
       {
