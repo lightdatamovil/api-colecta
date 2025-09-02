@@ -5,7 +5,7 @@ import { informe } from "../../functions/informe.js";
 import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
 import { logCyan } from "../../../../src/funciones/logsCustom.js";
 import { sendToShipmentStateMicroServiceAPI } from "../../functions/sendToShipmentStateMicroServiceAPI.js";
-import { csheckIfFulfillment } from "../../../../src/funciones/checkIfFulfillment.js";
+
 
 /// Busco el envio
 /// Si no existe, lo inserto y tomo el did
@@ -27,7 +27,7 @@ export async function handleInternalFlex(
   const mlShipmentId = dataQr.id;
 
   let shipmentId;
-  await csheckIfFulfillment(dbConnection, shipmentId);
+  // await csheckIfFulfillment(dbConnection, shipmentId);
 
   //
 
