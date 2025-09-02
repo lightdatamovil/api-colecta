@@ -5,6 +5,7 @@ import { informe } from "../../functions/informe.js";
 import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
 import { logCyan } from "../../../../src/funciones/logsCustom.js";
 import { sendToShipmentStateMicroServiceAPI } from "../../functions/sendToShipmentStateMicroServiceAPI.js";
+import { checkIfFulfillment } from "../../../../src/funciones/checkIfFulfillment.js";
 
 
 /// Busco el envio
@@ -27,16 +28,13 @@ export async function handleInternalFlex(
   const mlShipmentId = dataQr.id;
 
   let shipmentId;
-  // await csheckIfFulfillment(dbConnection, shipmentId);
-
-  //
+  await checkIfFulfillment(dbConnection, mlShipmentId);
 
   /// Busco el envio
   const sql = `
             SELECT did,didCliente
             FROM envios 
-            WHERE ml_shipment_id = ? AND ml_vendedor_id = ? and elim = 0 and superado = 0
-         
+            WHERE ml_shipment_id = ? AND ml_vendedor_id = ? and elim = 0 and superado = 0       
         `;
 
   let resultBuscarEnvio = await executeQuery(dbConnection, sql, [
