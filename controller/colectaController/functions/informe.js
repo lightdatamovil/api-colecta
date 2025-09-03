@@ -49,10 +49,11 @@ export async function informe(dbConnection, company, clientId, userId) {
     const sql4 = `
                 SELECT COUNT(id) as total
                 FROM envios_historial 
-                WHERE elim=0
+                WHERE elim = 0 
+                AND superado = 0
                 AND quien = ? 
                 AND autofecha > ? 
-                AND estado=0
+                AND estado = 0
             `;
     const resultsql4 = await executeQuery(dbConnection, sql4, [userId, `${hoy} 00:00:00`]);
     cache[cacheKey] =
