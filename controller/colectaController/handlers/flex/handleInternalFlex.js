@@ -1,12 +1,8 @@
-import { executeQuery } from "../../../../db.js";
-import { assign } from "../../functions/assign.js";
 import { insertEnvios } from "../../functions/insertEnvios.js";
 import { informe } from "../../functions/informe.js";
 import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
-import { logCyan } from "../../../../src/funciones/logsCustom.js";
-import { sendToShipmentStateMicroServiceAPI } from "../../functions/sendToShipmentStateMicroServiceAPI.js";
-import { checkIfFulfillment } from "../../../../src/funciones/checkIfFulfillment.js";
-
+import { assign, checkIfFulfillment, executeQuery, logCyan, sendShipmentStateToStateMicroserviceAPI } from "lightdata-tools";
+import { urlEstadosMicroservice } from "../../../../db.js";
 
 /// Busco el envio
 /// Si no existe, lo inserto y tomo el did
@@ -89,7 +85,7 @@ export async function handleInternalFlex(
 
   /// Actualizo el estado del envío y lo envío al microservicio de estados
 
-  await sendToShipmentStateMicroServiceAPI(companyId, userId, shipmentId, latitude, longitude);
+  await sendShipmentStateToStateMicroserviceAPI(urlEstadosMicroservice, company, userId, shipmentId, latitude, longitude);
   logCyan(
     "Actualice el estado del envio y lo envie al microservicio de estados"
   );

@@ -1,4 +1,4 @@
-import { executeQuery } from "../../../db.js";
+import { executeQuery } from "lightdata-tools";
 
 export async function insertEnviosExteriores(dbConnection, internoShipmentId, externalShipmentId, flex, externalName, externalCompanyId) {
 

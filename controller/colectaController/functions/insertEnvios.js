@@ -1,6 +1,6 @@
-import { executeQuery } from "../../../db.js";
 import axios from "axios";
 import { senToDataML } from "./sendToDataML.js";
+import { executeQuery } from "lightdata-tools";
 
 export async function insertEnvios(
   dbConnection,

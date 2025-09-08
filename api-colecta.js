@@ -1,9 +1,9 @@
 import express, { json, urlencoded } from 'express';
 import colecta from './routes/colecta.js';
 import { redisClient } from './db.js';
-import { logBlue, logPurple } from './src/funciones/logsCustom.js';
 import cors from 'cors';
 import clear from './routes/clearClient.js';
+import { logBlue, logPurple } from 'lightdata-tools';
 
 const app = express();
 
@@ -38,6 +38,7 @@ app.get('/ping', (req, res) => {
     hora: formattedTime
   });
 });
+
 await redisClient.connect();
 
 app.listen(PORT, () => {

@@ -1,13 +1,17 @@
 import { Router } from "express";
-import { clientList } from "../db.js";
+import { companiesService } from "../db.js";
+import { buildHandler } from "../routes/_handler.js";
 
-const clear = Router();
+const clients = Router();
 
+clients.get(
+    '/clear-client-list',
+    buildHandler({
+        needsDb: false,
+        controller: async () => {
+            companiesService.clearClientsCache();
+        },
+    })
+);
 
-clear.post("/clear", async (req, res) => {
-    for (const key in clientList) {
-        delete clientList[key];
-    }
-    res.status(200).json({ message: "Cache limpiada" });
-})
-export default clear;
+export default clients;

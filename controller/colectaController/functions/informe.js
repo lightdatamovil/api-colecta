@@ -1,6 +1,5 @@
-import { executeQuery, getClientsByCompany } from "../../../db.js";
-import { getFechaLocalDePais } from "../../../src/funciones/getFechaLocalByPais.js";
-import { logCyan, logRed } from "../../../src/funciones/logsCustom.js";
+import { executeQuery, getFechaLocalDePais, logCyan, logRed } from "lightdata-tools";
+import { companiesService } from "../../../db.js";
 
 const cache = {};
 
@@ -69,7 +68,7 @@ export async function informe(dbConnection, company, clientId, userId) {
 
   let colectadosHoyPorMi = cache[cacheKey];
 
-  const companyClients = await getClientsByCompany(dbConnection, company.did);
+  const companyClients = await companiesService.getClientsByCompany(dbConnection, company.did);
 
   if (companyClients[clientId] === undefined) {
     logCyan("El cliente fue encontrado");
