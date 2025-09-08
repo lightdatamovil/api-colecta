@@ -103,7 +103,7 @@ export async function handleInternalFlex(
   if (companyId == 144) {
     const body = await informe(
       dbConnection,
-      companyId,
+      company,
       didCLiente,
       userId,
       shipmentId
