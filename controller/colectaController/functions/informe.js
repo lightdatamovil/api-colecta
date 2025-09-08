@@ -1,12 +1,15 @@
 import { executeQuery, getClientsByCompany } from "../../../db.js";
 import { getFechaLocalDePais } from "../../../src/funciones/getFechaLocalByPais.js";
-import { logCyan } from "../../../src/funciones/logsCustom.js";
+import { logCyan, logRed } from "../../../src/funciones/logsCustom.js";
 
 const cache = {};
 
 export async function informe(dbConnection, company, clientId, userId) {
   const hoy = getFechaLocalDePais(company.pais);
-
+  if (!hoy) {
+    const msg = `Pais (${company?.pais}) no soportado en configPaises`;
+    logRed(msg);
+  }
 
   const sql2 = `
             SELECT count(e.id) as total
