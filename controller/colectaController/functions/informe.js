@@ -22,7 +22,7 @@ export async function informe(dbConnection, company, clientId, userId) {
             AND e.didCliente = ?
             AND eh.fecha > ?
         `;
-  const resultsql2 = await executeQuery(dbConnection, sql2, [clientId, `${hoy} 00:00:00`], true);
+  const resultsql2 = await executeQuery(dbConnection, sql2, [clientId, `${hoy} 00:00:00`]);
   let totalARetirarCliente = resultsql2.length > 0 ? resultsql2[0].total : 0;
 
   // -------2----------------
@@ -33,7 +33,7 @@ export async function informe(dbConnection, company, clientId, userId) {
                       AND estado_envio=7
                       AND autofecha > ?
                       AND choferAsignado = ?`;
-  const resultsql3 = await executeQuery(dbConnection, sql3, [`${hoy} 00:00:00`, userId], true);
+  const resultsql3 = await executeQuery(dbConnection, sql3, [`${hoy} 00:00:00`, userId]);
   let aColectarHoy = resultsql3.length > 0 ? resultsql3[0].total : 0;
 
 

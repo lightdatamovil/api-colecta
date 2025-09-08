@@ -101,7 +101,7 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
             if (isCollectShipmentML) {
                 //! Esto quiere decir que es un envio de colecta de ML
                 const querySeller = `SELECT ml_vendedor_id FROM envios WHERE ml_shipment_id = ? AND flex = 1 AND superado=0 AND elim=0`;
-                const result = await executeQuery(dbConnection, querySeller, [dataQr.id], true);
+                const result = await executeQuery(dbConnection, querySeller, [dataQr.id]);
 
                 senderId = result[0].ml_vendedor_id;
                 account = await getAccountBySenderId(dbConnection, company.did, senderId);

@@ -119,7 +119,7 @@ export async function handleExternalFlex(
         const rowsCuentas = await executeQuery(
           externalDbConnection,
           sqlCuentas,
-          [senderid], true
+          [senderid]
         );
 
         if (rowsCuentas.length == 0) {
