@@ -5,6 +5,8 @@ import { informe } from "../../functions/informe.js";
 import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
 import { logCyan } from "../../../../src/funciones/logsCustom.js";
 import { sendToShipmentStateMicroServiceAPI } from "../../functions/sendToShipmentStateMicroServiceAPI.js";
+import { checkIfFulfillment } from "../../../../src/funciones/checkIfFulfillment.js";
+
 
 /// Busco el envio
 /// Si no existe, lo inserto y tomo el did
@@ -26,19 +28,19 @@ export async function handleInternalFlex(
   const mlShipmentId = dataQr.id;
 
   let shipmentId;
+  await checkIfFulfillment(dbConnection, mlShipmentId);
 
   /// Busco el envio
   const sql = `
             SELECT did,didCliente
             FROM envios 
-            WHERE ml_shipment_id = ? AND ml_vendedor_id = ? and elim = 0 and superado = 0
-         
+            WHERE ml_shipment_id = ? AND ml_vendedor_id = ? and elim = 0 and superado = 0       
         `;
 
   let resultBuscarEnvio = await executeQuery(dbConnection, sql, [
     mlShipmentId,
     senderId,
-  ], true);
+  ]);
   shipmentId = resultBuscarEnvio.length > 0 ? resultBuscarEnvio[0].did : null;
   let didCLiente = resultBuscarEnvio.length > 0 ? resultBuscarEnvio[0].didCliente : null;
   /// Si no existe, lo inserto y tomo el did
@@ -59,6 +61,8 @@ export async function handleInternalFlex(
     ]);
     logCyan("Inserte el envio");
   } else {
+
+
     /// Checkeo si el envío ya fue colectado cancelado o entregado
     const check = await checkearEstadoEnvio(dbConnection, shipmentId);
     if (check) return check;
@@ -99,7 +103,7 @@ export async function handleInternalFlex(
   if (companyId == 144) {
     const body = await informe(
       dbConnection,
-      companyId,
+      company,
       didCLiente,
       userId,
       shipmentId

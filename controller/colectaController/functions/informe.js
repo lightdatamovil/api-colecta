@@ -1,12 +1,15 @@
 import { executeQuery, getClientsByCompany } from "../../../db.js";
 import { getFechaLocalDePais } from "../../../src/funciones/getFechaLocalByPais.js";
-import { logCyan } from "../../../src/funciones/logsCustom.js";
+import { logCyan, logRed } from "../../../src/funciones/logsCustom.js";
 
 const cache = {};
 
 export async function informe(dbConnection, company, clientId, userId) {
   const hoy = getFechaLocalDePais(company.pais);
-
+  if (!hoy) {
+    const msg = `Pais (${company?.pais}) no soportado en configPaises`;
+    logRed(msg);
+  }
 
   const sql2 = `
             SELECT count(e.id) as total
@@ -19,7 +22,7 @@ export async function informe(dbConnection, company, clientId, userId) {
             AND e.didCliente = ?
             AND eh.fecha > ?
         `;
-  const resultsql2 = await executeQuery(dbConnection, sql2, [clientId, `${hoy} 00:00:00`], true);
+  const resultsql2 = await executeQuery(dbConnection, sql2, [clientId, `${hoy} 00:00:00`]);
   let totalARetirarCliente = resultsql2.length > 0 ? resultsql2[0].total : 0;
 
   // -------2----------------
@@ -30,7 +33,7 @@ export async function informe(dbConnection, company, clientId, userId) {
                       AND estado_envio=7
                       AND autofecha > ?
                       AND choferAsignado = ?`;
-  const resultsql3 = await executeQuery(dbConnection, sql3, [`${hoy} 00:00:00`, userId], true);
+  const resultsql3 = await executeQuery(dbConnection, sql3, [`${hoy} 00:00:00`, userId]);
   let aColectarHoy = resultsql3.length > 0 ? resultsql3[0].total : 0;
 
 
@@ -49,10 +52,11 @@ export async function informe(dbConnection, company, clientId, userId) {
     const sql4 = `
                 SELECT COUNT(id) as total
                 FROM envios_historial 
-                WHERE elim=0
+                WHERE elim = 0 
+                AND superado = 0
                 AND quien = ? 
                 AND autofecha > ? 
-                AND estado=0
+                AND estado = 0
             `;
     const resultsql4 = await executeQuery(dbConnection, sql4, [userId, `${hoy} 00:00:00`]);
     cache[cacheKey] =
