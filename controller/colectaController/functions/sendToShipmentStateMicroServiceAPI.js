@@ -3,6 +3,7 @@ import { logCyan, logGreen, logRed } from '../../../src/funciones/logsCustom.js'
 import { formatFechaUTC3 } from '../../../src/funciones/formatFechaUTC3.js';
 import axios from 'axios';
 import { generarTokenFechaHoy } from '../../../src/funciones/generarTokenFechaHoy.js';
+import { sendToShipmentStateMicroService } from './sendToShipmentStateMicroService.js';
 dotenv.config({ path: process.env.ENV_FILE || '.env' });
 
 const BACKUP_ENDPOINT = "https://serverestado.lightdata.app/estados"
@@ -33,7 +34,14 @@ export async function sendToShipmentStateMicroServiceAPI(
         const response = await axios.post(BACKUP_ENDPOINT, message);
         logGreen(`✅ Enviado por HTTP con status ${response.status}`);
     } catch (httpError) {
-        logRed(`❌ Falló el envío por HTTP también: ${httpError.message}`);
-        throw httpError;
+        try {
+            await sendToShipmentStateMicroService(
+                companyId, userId, shipmentId, latitud, longitud
+            );
+            logGreen("↩️ Enviado por RabbitMQ (fallback)");
+        } catch (mqError) {
+            logRed(`❌ Falló HTTP y también MQ: ${httpError.message} | ${mqError.message}`);
+            throw mqError; // cortás sólo si fallan ambos
+        }
     }
 }
