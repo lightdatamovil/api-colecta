@@ -1,13 +1,12 @@
 import { Router } from "express";
 import { companiesService } from "../db.js";
-import { buildHandler } from "../routes/_handler.js";
+import { buildHandlerWrapper } from "../src/funciones/build_handler_wrapper.js";
 
 const clients = Router();
 
 clients.get(
     '/clear-client-list',
-    buildHandler({
-        needsDb: false,
+    buildHandlerWrapper({
         controller: async () => {
             companiesService.clearClientsCache();
         },

@@ -1,11 +1,11 @@
 import { Router } from "express";
 import { colectar } from "../controller/colectaController.js";
-import { buildHandler } from "./_handler.js";
+import { buildHandlerWrapper } from "../src/funciones/build_handler_wrapper.js";
 
 const colecta = Router();
 colecta.get(
   '/aplanta',
-  buildHandler({
+  buildHandlerWrapper({
     required: [
       "dataQr",
       "autoAssign",
