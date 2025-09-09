@@ -58,7 +58,7 @@ export async function insertEnvios(
     ]);
 
     // mensaje por rabbitMQ
-    if (companyId == 12) {
+    if (companyId == 12 || companyId == 79) {
 
       await senToDataML(
         companyId,
