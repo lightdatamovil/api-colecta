@@ -4,7 +4,7 @@ import { buildHandlerWrapper } from "../src/funciones/build_handler_wrapper.js";
 
 const colecta = Router();
 colecta.get(
-  '/aplanta',
+  '/colecta',
   buildHandlerWrapper({
     required: [
       "dataQr",
