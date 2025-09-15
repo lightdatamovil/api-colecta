@@ -33,6 +33,9 @@ export const portProductionDb = process.env.PRODUCTION_DB_PORT;
 
 // JWT
 export const jwtSecret = process.env.JWT_SECRET;
+export const jwtIssuer = process.env.JWT_ISSUER;
+export const jwtAudience = process.env.JWT_AUDIENCE;
+export const jwtExpiresIn = process.env.JWT_EXPIRES_IN || '1h';
 
 // Servicio de empresas
 export const companiesService = new CompaniesService({ redisClient, redisKey: "empresasData" })

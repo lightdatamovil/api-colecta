@@ -3,6 +3,7 @@ import { colectar } from "../controller/colectaController.js";
 import { buildHandlerWrapper } from "../src/funciones/build_handler_wrapper.js";
 
 const colecta = Router();
+
 colecta.post(
   '/colecta',
   buildHandlerWrapper({

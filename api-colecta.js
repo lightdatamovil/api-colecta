@@ -1,9 +1,9 @@
 import express, { json, urlencoded } from 'express';
 import colecta from './routes/colecta.js';
-import { redisClient } from './db.js';
+import { jwtAudience, jwtIssuer, jwtSecret, redisClient } from './db.js';
 import cors from 'cors';
 import clear from './routes/clearClient.js';
-import { logBlue, logPurple } from 'lightdata-tools';
+import { logBlue, logPurple, verifyToken } from 'lightdata-tools';
 
 const app = express();
 
@@ -14,7 +14,7 @@ app.use(cors());
 
 const PORT = process.env.PORT;
 
-app.use("/api", colecta);
+app.use("/api", verifyToken({ jwtSecret, jwtIssuer, jwtAudience }), colecta);
 app.use("/client", clear);
 app.post('/api/testapi', async (req, res) => {
   const startTime = performance.now();
