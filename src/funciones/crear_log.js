@@ -14,7 +14,7 @@ export async function crearLog(req, tiempo, resultado, exito) {
     companyId,
     userId,
     profile,
-    req.body,
+    JSON.stringify(req.body),
     resultado,
     tiempo,
     exito,
