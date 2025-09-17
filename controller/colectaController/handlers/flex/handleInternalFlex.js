@@ -85,7 +85,7 @@ export async function handleInternalFlex(
 
   /// Actualizo el estado del envío y lo envío al microservicio de estados
 
-  await sendShipmentStateToStateMicroserviceAPI(urlEstadosMicroservice, company, userId, shipmentId, latitude, longitude);
+  await sendShipmentStateToStateMicroserviceAPI(urlEstadosMicroservice, company, userId, shipmentId, 0, latitude, longitude);
   logCyan(
     "Actualice el estado del envio y lo envie al microservicio de estados"
   );

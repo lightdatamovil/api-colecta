@@ -3,7 +3,7 @@ import colecta from './routes/colecta.js';
 import { jwtAudience, jwtIssuer, jwtSecret, redisClient } from './db.js';
 import cors from 'cors';
 import clear from './routes/clearClient.js';
-import { logBlue, logPurple, verifyToken } from 'lightdata-tools';
+import { logBlue, verifyToken } from 'lightdata-tools';
 
 const app = express();
 
@@ -14,14 +14,9 @@ app.use(cors());
 
 const PORT = process.env.PORT;
 
-app.use("/api", verifyToken({ jwtSecret, jwtIssuer, jwtAudience }), colecta);
 app.use("/client", clear);
-app.post('/api/testapi', async (req, res) => {
-  const startTime = performance.now();
-  const endTime = performance.now();
-  logPurple(`Tiempo de ejecución: ${endTime - startTime} ms`)
-  res.status(200).json({ message: 'API funcionando correctamente' });
-});
+app.use(verifyToken({ jwtSecret, jwtIssuer, jwtAudience }));
+app.use("/api", colecta);
 
 app.get('/ping', (req, res) => {
   const currentDate = new Date();

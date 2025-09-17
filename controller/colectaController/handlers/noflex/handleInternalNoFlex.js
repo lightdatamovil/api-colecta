@@ -40,7 +40,7 @@ export async function handleInternalNoFlex(dbConnection, dataQr, company, userId
     }
 
     /// Actualizamos el estado del envio en el micro servicio
-    await sendShipmentStateToStateMicroserviceAPI(urlEstadosMicroservice, company, userId, shipmentId, latitude, longitude);
+    await sendShipmentStateToStateMicroserviceAPI(urlEstadosMicroservice, company, userId, shipmentId, 0, latitude, longitude);
     logCyan("Se actualizo el estado del envio en el micro servicio");
 
     const body = await informe(dbConnection, company, dataQr.cliente, userId, shipmentId);
