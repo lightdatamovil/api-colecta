@@ -1,7 +1,7 @@
 import redis from 'redis';
 import dotenv from 'dotenv';
 import { CompaniesService, logRed } from 'lightdata-tools';
-import mysql2 from 'mysql2';
+import mysql2 from 'mysql2/promise';
 
 dotenv.config({ path: process.env.ENV_FILE || ".env" });
 
