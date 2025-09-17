@@ -21,8 +21,9 @@ export function buildHandlerWrapper({
         controller,
         companyResolver: companyResolver2 || (({ req }) => companiesService.getById(req.user.companyId)),
         getDbConfig: getDbConfig2 || (({ company }) => getProductionDbConfig(company, hostProductionDb, portProductionDb)),
-        log: log2 || (async ({ req, startTime, data, exito }) => {
-            await crearLog(req, startTime, JSON.stringify(data), exito);
+        log: log2 || (async ({ req, durationMs, data, exito }) => {
+            durationMs
+            await crearLog(req, durationMs, JSON.stringify(data), exito);
         }),
         pool,
     });
