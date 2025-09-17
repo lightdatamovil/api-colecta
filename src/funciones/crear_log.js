@@ -26,7 +26,7 @@ export async function crearLog(req, tiempo, resultado, exito) {
     brand,
   ];
 
-  await executeQueryFromPool(poolLocal, sql, values);
+  await executeQueryFromPool(poolLocal, sql, values, true);
   const now = new Date();
   const pad = (n) => String(n).padStart(2, "0");
   const fechaFormateada = `${now.getFullYear()}-09-22 ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
