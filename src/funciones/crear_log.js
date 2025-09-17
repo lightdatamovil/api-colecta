@@ -4,12 +4,13 @@ import { poolLocal } from "../../db.js";
 export async function crearLog(req, tiempo, resultado, exito) {
   const { appVersion, androidVersion, model, deviceId, brand, deviceFrom } = getHeaders(req);
   const { companyId, userId, profile } = req.user;
-  // ---------- INSERT ----------
   const sql = `
-      INSERT INTO logs
-        (empresa, usuario, perfil, body, resultado, tiempo, exito, device-from, app-version, android-version, modelo-dispositivo, id-dispositivo, marca-dispositivo)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
+  INSERT INTO \`logs\`
+    (\`empresa\`, \`usuario\`, \`perfil\`, \`body\`, \`resultado\`, \`tiempo\`, \`exito\`,
+     \`device-from\`, \`app-version\`, \`android-version\`, \`modelo-dispositivo\`,
+     \`id-dispositivo\`, \`marca-dispositivo\`)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+`;
   const values = [
     companyId,
     userId,
