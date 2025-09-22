@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { logGreen, logRed } from '../../../src/funciones/logsCustom.js';
 
-export async function assign(companyId, userId, profile, dataQr, driverId) {
+export async function assign(companyId, userId, profile, dataQr, driverId, deviceFrom) {
 
     const payload = {
         companyId: Number(companyId),
@@ -14,7 +14,7 @@ export async function assign(companyId, userId, profile, dataQr, driverId) {
         deviceId: "null",
         dataQr: dataQr,
         driverId: driverId,
-        deviceFrom: "Autoasignado de colecta"
+        deviceFrom: deviceFrom
     };
 
     const result = await axios.post('https://asignaciones.lightdata.app/api/asignaciones/asignar', payload);

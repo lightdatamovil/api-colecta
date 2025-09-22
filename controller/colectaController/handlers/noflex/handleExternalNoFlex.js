@@ -91,7 +91,7 @@ export async function handleExternalNoFlex(dbConnection, dataQr, company, userId
     logCyan("Inserté en envios exteriores");
 
     // Asigno a la empresa externa
-    await assign(dataQr.empresa, userId, profile, dataQr, driver);
+    await assign(dataQr.empresa, userId, profile, dataQr, driver, "Autoasignado de colecta");
     logCyan("Asigné a la empresa externa");
 
     if (autoAssign) {
@@ -103,7 +103,7 @@ export async function handleExternalNoFlex(dbConnection, dataQr, company, userId
         };
 
         // Asigno a la empresa interna
-        await assign(companyId, userId, profile, dqr, userId);
+        await assign(companyId, userId, profile, dqr, userId, "Autoasignado de colecta");
         logCyan("Asigné a la empresa interna");
     }
 

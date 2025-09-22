@@ -96,7 +96,7 @@ export async function handleInternalFlex(
 
   /// Asigno el envío al usuario si es necesario
   if (autoAssign) {
-    await assign(companyId, userId, profile, dataQr, userId);
+    await assign(companyId, userId, profile, dataQr, userId, "Autoasignado de colecta");
     logCyan("Asigne el envio");
   }
 

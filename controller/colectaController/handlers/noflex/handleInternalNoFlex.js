@@ -38,7 +38,7 @@ export async function handleInternalNoFlex(dbConnection, dataQr, company, userId
 
     /// Si el envio no esta asignado y se quiere autoasignar, lo asigno
     if (!isAlreadyAssigned && autoAssign) {
-        await assign(companyId, userId, profile, dataQr, userId);
+        await assign(companyId, userId, profile, dataQr, userId, "Autoasignado de colecta");
         logCyan("Se asigno el envio");
     }
 

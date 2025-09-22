@@ -237,10 +237,10 @@ export async function handleExternalFlex(
           local: 1,
           cliente: externalLogisticId,
         };
-        await assign(company.did, userId, profile, dqr, userId);
+        await assign(company.did, userId, profile, dqr, userId, "Autoasignado de colecta");
         logCyan("Asigné el envío en la logística interna");
 
-        await assign(externalCompany.did, userId, profile, dataQr, driver);
+        await assign(externalCompany.did, userId, profile, dataQr, driver, "");
         logCyan("Asigné el envío en la logística externa");
       }
 
@@ -251,7 +251,7 @@ export async function handleExternalFlex(
         cliente: externalLogisticId,
       };
       logCyan("Voy a asignar el envío en la logística externa");
-      await assign(externalCompanyId, userId, profile, dqrext, driver);
+      await assign(externalCompanyId, userId, profile, dqrext, driver, '');
 
       const queryInternalClient = `
         SELECT didCliente 
