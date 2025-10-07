@@ -164,6 +164,7 @@ export async function handleExternalFlex(
       const consulta = "SELECT didLocal FROM envios_exteriores WHERE didExterno = ? and superado = 0 and elim=0";
       internalShipmentId = await executeQuery(
         dbConnection,
+
         consulta,
         [externalShipmentId],
         true
@@ -251,7 +252,8 @@ export async function handleExternalFlex(
         cliente: externalLogisticId,
       };
       logCyan("Voy a asignar el envío en la logística externa");
-      await assign(externalCompanyId, userId, profile, dqrext, driver, '');
+      //tira error aca
+      await assign(externalCompanyId, userId, profile, dqrext, driver, 'colecta');
 
       const queryInternalClient = `
         SELECT didCliente 

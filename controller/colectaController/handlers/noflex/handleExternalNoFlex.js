@@ -47,26 +47,29 @@ export async function handleExternalNoFlex(dbConnection, dataQr, company, userId
 
     /// Busco el chofer que se crea en la vinculacion de logisticas
     const driver = await checkIfExistLogisticAsDriverInExternalCompany(externalDbConnection, internalCompany.codigo);
+
     if (!driver) {
         externalDbConnection.end();
 
         return { success: false, message: "No se encontró chofer asignado" };
     }
+
     logCyan("Se encontró la logistica como chofer en la logistica externa");
 
     const queryClient = `SELECT did  FROM clientes WHERE codigoVinculacionLogE = ?`;
-
-    const externalClient = await executeQuery(dbConnection, queryClient, [externalCompany.codigo]);
+    const externalClient = await executeQuery(dbConnection, queryClient, [externalCompany.codigo], true);
     let internalShipmentId;
 
     const consulta = 'SELECT didLocal FROM envios_exteriores WHERE didExterno = ? and superado = 0 and elim = 0 LIMIT 1';
 
-    internalShipmentId = await executeQuery(dbConnection, consulta, [shipmentIdFromDataQr]);
+    internalShipmentId = await executeQuery(dbConnection, consulta, [shipmentIdFromDataQr], true);
 
     if (internalShipmentId.length > 0 && internalShipmentId[0]?.didLocal) {
+
         internalShipmentId = internalShipmentId[0].didLocal;
         logCyan("Se encontró el didLocal en envios_exteriores");
     } else {
+
         internalShipmentId = await insertEnvios(
             dbConnection,
             companyId,
@@ -79,6 +82,8 @@ export async function handleExternalNoFlex(dbConnection, dataQr, company, userId
         );
         logCyan("Inserté en envios");
     }
+
+
     /// Inserto en envios exteriores en la empresa interna
     await insertEnviosExteriores(
         dbConnection,
