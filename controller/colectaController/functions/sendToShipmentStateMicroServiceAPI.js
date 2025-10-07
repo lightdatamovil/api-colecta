@@ -29,7 +29,7 @@ export async function sendToShipmentStateMicroServiceAPI(
         desde: "colectaAPP",
         tkn: generarTokenFechaHoy(),
     };
-    console.log(`mensaje: ${message}`);
+
     logCyan(`Enviando mensaje a RabbitMQ: ${JSON.stringify(message)}`);
     try {
         const response = await axios.post(BACKUP_ENDPOINT, message);
