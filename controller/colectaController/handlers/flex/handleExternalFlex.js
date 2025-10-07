@@ -156,15 +156,12 @@ export async function handleExternalFlex(
         externalShipmentId = rowsEnvios[0].did;
       }
 
-
-
       logCyan("El envío no fue colectado, cancelado ni entregado");
 
       let internalShipmentId;
       const consulta = "SELECT didLocal FROM envios_exteriores WHERE didExterno = ? and superado = 0 and elim=0";
       internalShipmentId = await executeQuery(
         dbConnection,
-
         consulta,
         [externalShipmentId],
         true
@@ -224,7 +221,7 @@ export async function handleExternalFlex(
 
       await sendToShipmentStateMicroServiceAPI(
         externalCompanyId,
-        externalClientId,
+        driver,
         externalShipmentId,
         latitude,
         longitude
@@ -241,7 +238,7 @@ export async function handleExternalFlex(
         await assign(company.did, userId, profile, dqr, userId, "Autoasignado de colecta");
         logCyan("Asigné el envío en la logística interna");
 
-        await assign(externalCompany.did, userId, profile, dataQr, driver, "");
+        await assign(externalCompany.did, userId, profile, dataQr, driver, "colecta");
         logCyan("Asigné el envío en la logística externa");
       }
 
