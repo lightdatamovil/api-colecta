@@ -37,7 +37,7 @@ export async function sendToShipmentStateMicroServiceAPI(
     } catch (httpError) {
         try {
             await sendToShipmentStateMicroService(
-                companyId, userId, shipmentId, latitud, longitud
+                companyId, quien, shipmentId, latitud, longitud
             );
             logGreen("↩️ Enviado por RabbitMQ (fallback)");
         } catch (mqError) {
