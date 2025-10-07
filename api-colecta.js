@@ -42,4 +42,5 @@ await redisClient.connect();
 
 app.listen(PORT, () => {
   logBlue(`Servidor corriendo en el puerto ${PORT}`);
+
 });
