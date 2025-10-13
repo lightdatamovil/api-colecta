@@ -12,19 +12,19 @@ export async function crearLog(
   metodo,
   exito
 ) {
-  // const sqlLog = `INSERT INTO logs_v2 (empresa, usuario, perfil, body, tiempo, resultado, metodo, exito) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+  const sqlLog = `INSERT INTO logs_v2 (empresa, usuario, perfil, body, tiempo, resultado, metodo, exito) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
 
-  // const values = [
-  //   empresa,
-  //   usuario,
-  //   perfil,
-  //   JSON.stringify(body),
-  //   tiempo,
-  //   JSON.stringify(resultado),
-  //   metodo,
-  //   exito,
-  // ];
+  const values = [
+    empresa,
+    usuario,
+    perfil,
+    JSON.stringify(body),
+    tiempo,
+    JSON.stringify(resultado),
+    metodo,
+    exito,
+  ];
 
-  // await executeQuery(dbConnection, sqlLog, values);
-  // logGreen(`Log creado: ${JSON.stringify(values)}`);
+  await executeQuery(dbConnection, sqlLog, values);
+  logGreen(`Log creado: ${JSON.stringify(values)}`);
 }
