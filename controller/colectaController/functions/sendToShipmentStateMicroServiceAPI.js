@@ -10,7 +10,7 @@ const BACKUP_ENDPOINT = "https://serverestado.lightdata.app/estados"
 
 export async function sendToShipmentStateMicroServiceAPI(
     companyId,
-    userId,
+    quien,
     shipmentId,
     latitud,
     longitud
@@ -22,13 +22,14 @@ export async function sendToShipmentStateMicroServiceAPI(
         subestado: null,
         estadoML: null,
         fecha: formatFechaUTC3(),
-        quien: userId,
+        quien: quien,
         operacion: 'colecta',
         latitud,
         longitud,
         desde: "colectaAPP",
         tkn: generarTokenFechaHoy(),
     };
+
     logCyan(`Enviando mensaje a RabbitMQ: ${JSON.stringify(message)}`);
     try {
         const response = await axios.post(BACKUP_ENDPOINT, message);
@@ -36,7 +37,7 @@ export async function sendToShipmentStateMicroServiceAPI(
     } catch (httpError) {
         try {
             await sendToShipmentStateMicroService(
-                companyId, userId, shipmentId, latitud, longitud
+                companyId, quien, shipmentId, latitud, longitud
             );
             logGreen("↩️ Enviado por RabbitMQ (fallback)");
         } catch (mqError) {

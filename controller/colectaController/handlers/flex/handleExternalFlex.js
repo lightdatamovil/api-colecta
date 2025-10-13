@@ -156,8 +156,6 @@ export async function handleExternalFlex(
         externalShipmentId = rowsEnvios[0].did;
       }
 
-
-
       logCyan("El envío no fue colectado, cancelado ni entregado");
 
       let internalShipmentId;
@@ -223,7 +221,7 @@ export async function handleExternalFlex(
 
       await sendToShipmentStateMicroServiceAPI(
         externalCompanyId,
-        externalClientId,
+        driver,
         externalShipmentId,
         latitude,
         longitude
@@ -240,7 +238,7 @@ export async function handleExternalFlex(
         await assign(company.did, userId, profile, dqr, userId, "Autoasignado de colecta");
         logCyan("Asigné el envío en la logística interna");
 
-        await assign(externalCompany.did, userId, profile, dataQr, driver, "");
+        await assign(externalCompany.did, userId, profile, dataQr, driver, "colecta");
         logCyan("Asigné el envío en la logística externa");
       }
 
@@ -251,7 +249,8 @@ export async function handleExternalFlex(
         cliente: externalLogisticId,
       };
       logCyan("Voy a asignar el envío en la logística externa");
-      await assign(externalCompanyId, userId, profile, dqrext, driver, '');
+      //tira error aca
+      await assign(externalCompanyId, userId, profile, dqrext, driver, 'colecta');
 
       const queryInternalClient = `
         SELECT didCliente 

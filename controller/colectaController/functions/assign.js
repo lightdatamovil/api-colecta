@@ -17,11 +17,30 @@ export async function assign(companyId, userId, profile, dataQr, driverId, devic
         deviceFrom: deviceFrom
     };
 
-    const result = await axios.post('https://asignaciones.lightdata.app/api/asignaciones/asignar', payload);
-    if (result.status == 200) {
-        logGreen("Asignado correctamente");
-    } else {
+    // console.log("[assign] payload:", JSON.stringify(payload));
+    try {
+        const result = await axios.post('https://asignaciones.lightdata.app/api/asignaciones/asignar', payload);
+        if (result.status == 200) {
+            logGreen("Asignado correctamente");
+        }
+    } catch (err) {
         logRed("Error al asignar");
+        //  debugHttpError(err, "assign");
         throw new Error("Error al asignar");
+
     }
+}
+
+
+export function debugHttpError(err, ctx = "http") {
+    const status = err.response?.status;
+    const statusText = err.response?.statusText;
+    const body = err.response?.data;
+
+    console.error(`[${ctx}] AxiosError ${status ?? "(sin status)"} ${statusText ?? ""}`.trim());
+    if (body !== undefined) {
+        console.error(`[${ctx}] body:`, typeof body === "string" ? body : JSON.stringify(body));
+    }
+    console.error(`[${ctx}] message:`, err.message);
+
 }
