@@ -1,6 +1,7 @@
 import redis from 'redis';
 import dotenv from 'dotenv';
 import { logRed, logYellow } from './src/funciones/logsCustom.js';
+import mysql2 from 'mysql2/promise';
 
 dotenv.config({ path: process.env.ENV_FILE || ".env" });
 
@@ -21,6 +22,19 @@ const colectaDbNameForLogs = process.env.COLECTA_DB_NAME_FOR_LOGS;
 // Produccion
 const hostProductionDb = process.env.PRODUCTION_DB_HOST;
 const portProductionDb = process.env.PRODUCTION_DB_PORT;
+
+
+// pool
+export const poolColecta = mysql2.createPool({
+    host: process.env.DB_COLECTA_HOST,
+    user: process.env.DB_COLECTA_USER,
+    password: process.env.DB_COLECTA_PASS,
+    database: process.env.DB_COLECTA_NAME,
+    port: process.env.DB_COLECTA_PORT || 3306,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+});
 
 export const redisClient = redis.createClient({
     socket: {

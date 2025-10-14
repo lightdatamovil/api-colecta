@@ -1,15 +1,12 @@
 import { Router } from "express";
 import { colectar } from "../controller/colectaController.js";
-import { getCompanyById, getLocalDbConfig } from "../db.js";
+import { getCompanyById } from "../db.js";
 import { verifyParameters } from "../src/funciones/verifyParameters.js";
 import { logPurple } from "../src/funciones/logsCustom.js";
-import mysql from "mysql";
+
 import { crearLog } from "../src/funciones/crear_log.js";
 
 const colecta = Router();
-const dbConfigLocal = getLocalDbConfig();
-const dbConnectionLocal = mysql.createConnection(dbConfigLocal);
-dbConnectionLocal.connect();
 
 colecta.post("/colecta", async (req, res) => {
   const startTime = performance.now();
@@ -43,7 +40,6 @@ colecta.post("/colecta", async (req, res) => {
     );
     const endTime = performance.now();
     crearLog(
-      dbConnectionLocal,
       companyId,
       userId,
       profile || 0,
@@ -57,7 +53,6 @@ colecta.post("/colecta", async (req, res) => {
   } catch (error) {
     const endTime = performance.now();
     crearLog(
-      dbConnectionLocal,
       companyId,
       userId,
       profile || 0,
