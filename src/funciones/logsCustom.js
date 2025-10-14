@@ -3,10 +3,10 @@
 const isLocal = true;
 
 export function logGreen(message) {
-    // if (isLocal) {
-    //     console.log(`\x1b[32m%s\x1b[0m`, `✅ ${message}
-    // --------------------------------------------------`);
-    // }
+    if (isLocal) {
+        console.log(`\x1b[32m%s\x1b[0m`, `✅ ${message}
+    --------------------------------------------------`);
+    }
 }
 
 export function logRed(message) {
@@ -17,17 +17,17 @@ export function logRed(message) {
 }
 
 export function logBlue(message) {
-    // if (isLocal) {
-    //     console.log(`\x1b[34m%s\x1b[0m`, `🔵 ${message}
-    // --------------------------------------------------`);
-    // }
+    if (isLocal) {
+        console.log(`\x1b[34m%s\x1b[0m`, `🔵 ${message}
+    --------------------------------------------------`);
+    }
 }
 
 export function logYellow(message) {
-    // if (isLocal) {
-    //     console.log(`\x1b[33m%s\x1b[0m`, `⚠️  ${message}
-    // --------------------------------------------------`);
-    // }
+    if (isLocal) {
+        console.log(`\x1b[33m%s\x1b[0m`, `⚠️  ${message}
+    --------------------------------------------------`);
+    }
 }
 
 export function logPurple(message) {
@@ -38,8 +38,8 @@ export function logPurple(message) {
 }
 
 export function logCyan(message) {
-    // if (isLocal) {
-    //     console.log(`\x1b[36m%s\x1b[0m`, `💎 ${message}
-    // --------------------------------------------------`);
-    // }
+    if (isLocal) {
+        console.log(`\x1b[36m%s\x1b[0m`, `💎 ${message}
+    --------------------------------------------------`);
+    }
 }
