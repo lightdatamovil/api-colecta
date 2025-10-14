@@ -4,6 +4,7 @@ import { redisClient } from './db.js';
 import { logBlue, logPurple } from './src/funciones/logsCustom.js';
 import cors from 'cors';
 import clear from './routes/clearClient.js';
+import { getAllActiveLocal } from './src/funciones/dbList.js';
 
 const app = express();
 
@@ -16,6 +17,14 @@ const PORT = process.env.PORT;
 
 app.use("/api", colecta);
 app.use("/client", clear);
+
+app.get('/active-db', (req, res) => {
+  try {
+    res.status(200).json(getAllActiveLocal());
+  } catch (e) {
+    res.status(500).json({ error: 'No se pudo obtener el estado local' });
+  }
+});
 app.post('/api/testapi', async (req, res) => {
   const startTime = performance.now();
   const endTime = performance.now();

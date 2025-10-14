@@ -7,6 +7,7 @@ import mysql from "mysql";
 import { logCyan, logRed } from "../src/funciones/logsCustom.js";
 import { parseIfJson } from "../src/funciones/isValidJson.js";
 import LogisticaConf from "../classes/logisticas_conf.js";
+import { decrActiveLocal, incrActiveLocal } from "../src/funciones/dbList.js";
 
 async function getShipmentIdFromQr(companyId, dataQr) {
     const payload = {
@@ -42,6 +43,7 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
     const dbConfig = getProdDbConfig(company);
     const dbConnection = mysql.createConnection(dbConfig);
     dbConnection.connect();
+    incrActiveLocal(company.did);
 
     try {
         let response;
@@ -164,6 +166,7 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
         throw error;
 
     } finally {
+        decrActiveLocal(company.did);
         dbConnection.end();
     }
 }
