@@ -26,11 +26,11 @@ const portProductionDb = process.env.PRODUCTION_DB_PORT;
 
 // pool
 export const poolColecta = mysql2.createPool({
-    host: process.env.DB_COLECTA_HOST,
-    user: process.env.DB_COLECTA_USER,
-    password: process.env.DB_COLECTA_PASS,
-    database: process.env.DB_COLECTA_NAME,
-    port: process.env.DB_COLECTA_PORT || 3306,
+    host: process.env.COLECTA_DB_HOST,
+    user: process.env.COLECTA_DB_USER_FOR_LOGS,
+    password: process.env.COLECTA_DB_PASSWORD_FOR_LOGS,
+    database: process.env.COLECTA_DB_NAME_FOR_LOGS,
+    port: process.env.COLECTA_DB_PORT || 3306,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0

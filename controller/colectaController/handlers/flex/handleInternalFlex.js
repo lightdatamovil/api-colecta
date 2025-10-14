@@ -6,7 +6,6 @@ import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
 import { logCyan } from "../../../../src/funciones/logsCustom.js";
 import { sendToShipmentStateMicroServiceAPI } from "../../functions/sendToShipmentStateMicroServiceAPI.js";
 import { checkIfFulfillment } from "../../../../src/funciones/checkIfFulfillment.js";
-import { is } from "zod/locales";
 
 
 /// Busco el envio
