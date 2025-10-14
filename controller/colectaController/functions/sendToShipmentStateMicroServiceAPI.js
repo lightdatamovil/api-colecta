@@ -1,16 +1,16 @@
 import dotenv from 'dotenv';
 import { logCyan, logGreen, logRed } from '../../../src/funciones/logsCustom.js';
 import { formatFechaUTC3 } from '../../../src/funciones/formatFechaUTC3.js';
-import axios from 'axios';
 import { generarTokenFechaHoy } from '../../../src/funciones/generarTokenFechaHoy.js';
 import { sendToShipmentStateMicroService } from './sendToShipmentStateMicroService.js';
+import { axiosInstance } from '../../../db.js';
 dotenv.config({ path: process.env.ENV_FILE || '.env' });
 
 const BACKUP_ENDPOINT = "https://serverestado.lightdata.app/estados"
 
 export async function sendToShipmentStateMicroServiceAPI(
     companyId,
-    userId,
+    quien,
     shipmentId,
     latitud,
     longitud
@@ -22,21 +22,22 @@ export async function sendToShipmentStateMicroServiceAPI(
         subestado: null,
         estadoML: null,
         fecha: formatFechaUTC3(),
-        quien: userId,
+        quien: quien,
         operacion: 'colecta',
         latitud,
         longitud,
         desde: "colectaAPP",
         tkn: generarTokenFechaHoy(),
     };
+
     logCyan(`Enviando mensaje a RabbitMQ: ${JSON.stringify(message)}`);
     try {
-        const response = await axios.post(BACKUP_ENDPOINT, message);
+        const response = await axiosInstance.post(BACKUP_ENDPOINT, message);
         logGreen(`✅ Enviado por HTTP con status ${response.status}`);
     } catch (httpError) {
         try {
             await sendToShipmentStateMicroService(
-                companyId, userId, shipmentId, latitud, longitud
+                companyId, quien, shipmentId, latitud, longitud
             );
             logGreen("↩️ Enviado por RabbitMQ (fallback)");
         } catch (mqError) {

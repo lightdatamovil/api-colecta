@@ -1,4 +1,4 @@
-import { executeQuery, getAccountBySenderId, getProdDbConfig } from "../db.js";
+import { axiosInstance, executeQuery, getAccountBySenderId, getProdDbConfig } from "../db.js";
 import { handleInternalFlex } from "./colectaController/handlers/flex/handleInternalFlex.js";
 import { handleExternalFlex } from "./colectaController/handlers/flex/handleExternalFlex.js";
 import { handleExternalNoFlex } from "./colectaController/handlers/noflex/handleExternalNoFlex.js";
@@ -6,7 +6,6 @@ import { handleInternalNoFlex } from "./colectaController/handlers/noflex/handle
 import mysql from "mysql";
 import { logCyan, logRed } from "../src/funciones/logsCustom.js";
 import { parseIfJson } from "../src/funciones/isValidJson.js";
-import axios from "axios";
 import LogisticaConf from "../classes/logisticas_conf.js";
 
 async function getShipmentIdFromQr(companyId, dataQr) {
@@ -24,7 +23,7 @@ async function getShipmentIdFromQr(companyId, dataQr) {
     };
 
     try {
-        const result = await axios.post('https://apimovil2.lightdata.app/api/qr/get-shipment-id', payload);
+        const result = await axiosInstance.post('https://apimovil2.lightdata.app/api/qr/get-shipment-id', payload);
         if (result.status == 200) {
             return result.data.body;
         } else {
