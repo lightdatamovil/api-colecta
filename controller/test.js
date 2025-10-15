@@ -6,8 +6,8 @@ const client = axios.create({
 });
 
 const clientAnterior = axios.create({
-    baseURL: "https://serverestado.lightdata.app/test",
-    timeout: 100,
+    baseURL: "https://serverestado.lightdata.app",
+    timeout: 10000,
 });
 
 export async function obtenerEstado() {
