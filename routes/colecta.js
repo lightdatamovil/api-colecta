@@ -4,7 +4,7 @@ import { getCompanyById } from "../db.js";
 import { verifyParameters } from "../src/funciones/verifyParameters.js";
 import { logPurple } from "../src/funciones/logsCustom.js";
 import { crearLog } from "../src/funciones/crear_log.js";
-import { obtenerEstado } from "../controller/test.js";
+import { obtenerEstadoComparado } from "../controller/test.js";
 
 const colecta = Router();
 
@@ -73,7 +73,7 @@ colecta.post("/colecta", async (req, res) => {
 
 colecta.get("/test", async (_req, res) => {
   try {
-    const { data, status } = await obtenerEstado();
+    const { data, status } = await obtenerEstadoComparado();
     res.status(status).json(data);        // o res.status(200).json(data) si querés forzar 200
   } catch (e) {
     res.status(e.status || 502).json({
