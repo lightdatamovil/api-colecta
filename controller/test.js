@@ -1,8 +1,8 @@
 import axios from "axios";
 
 const client = axios.create({
-    baseURL: "https://serverestado.lightdata.app",
-    timeout: 5000,
+    baseURL: "http://10.70.0.69",
+    timeout: 44336,
 });
 
 export async function obtenerEstado() {
