@@ -3,8 +3,8 @@ import { colectar } from "../controller/colectaController.js";
 import { getCompanyById } from "../db.js";
 import { verifyParameters } from "../src/funciones/verifyParameters.js";
 import { logPurple } from "../src/funciones/logsCustom.js";
-
 import { crearLog } from "../src/funciones/crear_log.js";
+import { obtenerEstado } from "../controller/test.js";
 
 const colecta = Router();
 
@@ -67,6 +67,20 @@ colecta.post("/colecta", async (req, res) => {
     const endTime = performance.now();
 
     logPurple(`Tiempo de ejecución: ${endTime - startTime} ms`);
+  }
+});
+
+
+colecta.get("/test", async (_req, res) => {
+  try {
+    const { data, status } = await obtenerEstado();
+    res.status(status).json(data);        // o res.status(200).json(data) si querés forzar 200
+  } catch (e) {
+    res.status(e.status || 502).json({
+      ok: false,
+      error: "No se pudo obtener el estado",
+      detalle: e.message,
+    });
   }
 });
 
