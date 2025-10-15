@@ -61,7 +61,12 @@ export async function obtenerEstadoComparado() {
 
     // devolver ambos resultados
     return {
-        ip: ipResult,
-        anterior: anteriorResult,
+        data: {
+
+            ip: ipResult,
+            anterior: anteriorResult,
+
+        },
+        status: 200
     };
 }
