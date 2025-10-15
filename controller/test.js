@@ -11,7 +11,7 @@ const clientAnterior = axios.create({
 });
 
 export async function obtenerEstado() {
-    const resp = await client.get("/test");
+    const resp = await clientAnterior.get("/test");
     return { data: resp.data, status: resp.status };
 }
 
