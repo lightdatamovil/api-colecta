@@ -1,8 +1,8 @@
 import axios from "axios";
 
 const client = axios.create({
-    baseURL: "https://10.70.0.69:44336",
-    timeout: 100,
+    baseURL: "http://10.70.0.69:44336",
+    timeout: 10000,
 });
 
 const clientAnterior = axios.create({
@@ -11,7 +11,7 @@ const clientAnterior = axios.create({
 });
 
 export async function obtenerEstado() {
-    const resp = await clientAnterior.get("/test");
+    const resp = await client.get("/test");
     return { data: resp.data, status: resp.status };
 }
 
