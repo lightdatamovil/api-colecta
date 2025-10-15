@@ -1,5 +1,5 @@
-import axios from 'axios';
 import { logGreen, logRed } from '../../../src/funciones/logsCustom.js';
+import { axiosInstance } from '../../../db.js';
 
 export async function assign(companyId, userId, profile, dataQr, driverId, deviceFrom) {
 
@@ -19,7 +19,7 @@ export async function assign(companyId, userId, profile, dataQr, driverId, devic
 
     // console.log("[assign] payload:", JSON.stringify(payload));
     try {
-        const result = await axios.post('https://asignaciones.lightdata.app/api/asignaciones/asignar', payload);
+        const result = await axiosInstance.post('https://asignaciones.lightdata.app/api/asignaciones/asignar', payload);
         if (result.status == 200) {
             logGreen("Asignado correctamente");
         }
