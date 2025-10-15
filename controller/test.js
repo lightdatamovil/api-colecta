@@ -1,8 +1,8 @@
 import axios from "axios";
 
 const client = axios.create({
-    baseURL: "http://10.70.0.69",
-    timeout: 44336,
+    baseURL: "http://10.70.0.69:44336",
+    timeout: 100,
 });
 
 export async function obtenerEstado() {
