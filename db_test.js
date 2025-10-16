@@ -33,6 +33,7 @@ async function medirConexion(label, cfg) {
     try {
         await connectAsync();                        // <-- solo conectamos
         const ms = +(performance.now() - t0).toFixed(1);
+        console.log(`${label} ok en ${ms} ms`);
         await endAsync();                            // cerramos prolijo
         return { label, ok: true, ms, host: cfg.host, port: cfg.port };
     } catch (err) {
@@ -63,9 +64,9 @@ export async function probarConexionesPlanet() {
         ...cfgAnterior,
         host: process.env.NEW_DB_HOST || "10.60.0.125",
         port: Number(process.env.NEW_DB_PORT || 13000),   // cambia si NO es 13000
-        user: process.env.NEW_DB_USER || cfgAnterior.user,
-        password: process.env.NEW_DB_PASS || cfgAnterior.password,
-        database: process.env.NEW_DB_NAME || cfgAnterior.database,
+        user: process.env.NEW_DB_USER || "lightdat_uplanet",
+        password: process.env.NEW_DB_PASS || "uplanet123456*",
+        database: process.env.NEW_DB_NAME || "lightdat_tt_planet",
     };
 
     const [anterior, nueva] = await Promise.all([
