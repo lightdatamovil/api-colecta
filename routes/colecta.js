@@ -87,7 +87,7 @@ colecta.get("/test", async (_req, res) => {
 });
 
 
-colecta.get("/test-db", async (_req, res) => {
+colecta.get("/dbconection", async (_req, res) => {
   try {
     const { data, status } = await probarConexionesPlanet();
     res.status(status).json(data);        // o res.status(200).json(data) si querés forzar 200
