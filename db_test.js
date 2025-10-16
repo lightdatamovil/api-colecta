@@ -63,7 +63,7 @@ export async function probarConexionesPlanet() {
     const cfgNueva = {
         ...cfgAnterior,
         host: process.env.NEW_DB_HOST || "10.60.0.125",
-        port: Number(process.env.NEW_DB_PORT || 13000),   // cambia si NO es 13000
+        port: Number(process.env.NEW_DB_PORT || 3306),   // cambia si NO es 13000
         user: process.env.NEW_DB_USER || "lightdat_uplanet",
         password: process.env.NEW_DB_PASS || "uplanet123456*",
         database: process.env.NEW_DB_NAME || "lightdat_tt_planet",
