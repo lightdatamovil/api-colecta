@@ -55,6 +55,7 @@ async function medirConexion(label, cfg) {
 export async function probarConexionesPlanet() {
     // company: asegurate que este helper devuelve el objeto empresa
     const company = await getCompanyById(12);
+    console.log("Probando conexiones para company:");
 
     // Config ANTERIOR (tal como hoy)
     const cfgAnterior = getProdDbConfig(company);
