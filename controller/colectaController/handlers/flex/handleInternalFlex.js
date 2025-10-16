@@ -25,10 +25,8 @@ export async function handleInternalFlex(
 ) {
   const companyId = company.did;
   const mlShipmentId = dataQr.id;
-  const startTime = performance.now();
   let shipmentId;
   await checkIfFulfillment(dbConnection, mlShipmentId);
-  logBlue(`Tiempo de espera en checkIfFulfillment: ${performance.now() - startTime} ms`);
   /// Busco el envio
   const sql = `
             SELECT did , didCliente, ml_qr_seguridad 
@@ -40,7 +38,6 @@ export async function handleInternalFlex(
     mlShipmentId,
     senderId,
   ]);
-  logBlue(`Tiempo de espera en executeQuery: ${performance.now() - startTime} ms`);
   shipmentId = resultBuscarEnvio.length > 0 ? resultBuscarEnvio[0].did : null;
   let didCLiente = resultBuscarEnvio.length > 0 ? resultBuscarEnvio[0].didCliente : null;
   let mlQrSeguridad = resultBuscarEnvio.length > 0 ? resultBuscarEnvio[0].ml_qr_seguridad : null;
@@ -56,19 +53,16 @@ export async function handleInternalFlex(
       0,
       userId
     );
-    logBlue(`Tiempo de espera en insertEnvios: ${performance.now() - startTime} ms`);
     resultBuscarEnvio = await executeQuery(dbConnection, sql, [
       mlShipmentId,
       senderId,
     ]);
-    logBlue(`Tiempo de espera en executeQuery: ${performance.now() - startTime} ms`);
     logCyan("Inserte el envio");
   } else {
 
 
     /// Checkeo si el envío ya fue colectado cancelado o entregado
     const check = await checkearEstadoEnvio(dbConnection, shipmentId);
-    logBlue(`Tiempo de espera en checkearEstadoEnvio: ${performance.now() - startTime} ms`);
     if (check) return check;
     logCyan("Encontre el envio");
   }
@@ -90,12 +84,12 @@ export async function handleInternalFlex(
       JSON.stringify(dataQr),
       shipmentId,
     ]);
-    logBlue(`Tiempo de espera en executeQuery: ${performance.now() - startTime} ms`);
     logCyan("Actualice el ml_qr_seguridad del envio");
   }
 
   /// Actualizo el estado del envío y lo envío al microservicio de estados
 
+  const startTime = performance.now();
   await sendToShipmentStateMicroServiceAPI(companyId, userId, shipmentId, latitude, longitude);
   logBlue(`Tiempo de espera en sendToShipmentStateMicroServiceAPI: ${performance.now() - startTime} ms`);
   logCyan(
@@ -105,7 +99,6 @@ export async function handleInternalFlex(
   /// Asigno el envío al usuario si es necesario
   if (autoAssign) {
     await assign(companyId, userId, profile, dataQr, userId, "Autoasignado de colecta");
-    logBlue(`Tiempo de espera en assign: ${performance.now() - startTime} ms`);
     logCyan("Asigne el envio");
   }
 
@@ -117,7 +110,6 @@ export async function handleInternalFlex(
       userId,
       shipmentId
     );
-    logBlue(`Tiempo de espera en informe2: ${performance.now() - startTime} ms`);
     return {
       success: true,
       message: "Paquete puesto a planta  - FLEX",
@@ -132,7 +124,7 @@ export async function handleInternalFlex(
     userId,
     shipmentId
   );
-  logBlue(`Tiempo de espera en informe: ${performance.now() - startTime} ms`);
+
   return {
     success: true,
     message: "Paquete insertado y colectado - FLEX",
