@@ -25,7 +25,7 @@ const hostProductionDb = process.env.PRODUCTION_DB_HOST;
 const portProductionDb = process.env.PRODUCTION_DB_PORT;
 
 // 🔹 Agente HTTPS con keep-alive y hasta 100 conexiones simultáneas
-const httpsAgent = new https.Agent({
+export const httpsAgent = new https.Agent({
     keepAlive: true,
     maxSockets: 100,
     timeout: 10000, // tiempo máximo de socket en ms

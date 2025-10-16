@@ -6,7 +6,8 @@ import { sendToShipmentStateMicroService } from './sendToShipmentStateMicroServi
 import { axiosInstance } from '../../../db.js';
 dotenv.config({ path: process.env.ENV_FILE || '.env' });
 
-const BACKUP_ENDPOINT = "https://serverestado.lightdata.app/estados"
+const BACKUP_ENDPOINT = "http://10.70.0.69:13000/estados"
+
 
 export async function sendToShipmentStateMicroServiceAPI(
     companyId,
