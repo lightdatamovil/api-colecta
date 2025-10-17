@@ -19,13 +19,13 @@ export async function assign(companyId, userId, profile, dataQr, driverId, devic
 
     // console.log("[assign] payload:", JSON.stringify(payload));
     try {
-        const result = await axiosInstance.post('https://asignaciones.lightdata.app/api/asignaciones/asignar', payload);
+        const result = await axiosInstance.post('http://10.70.0.71:13000/asignar', payload);
         if (result.status == 200) {
             logGreen("Asignado correctamente");
         }
     } catch (err) {
         logRed("Error al asignar");
-        //  debugHttpError(err, "assign");
+        debugHttpError(err, "assign");
         throw new Error("Error al asignar");
 
     }
