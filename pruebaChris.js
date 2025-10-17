@@ -6,7 +6,7 @@ export async function conectarMySQL() {
         const t0 = Date.now();
 
         connection = await mysql.createConnection({
-            host: 'http://bhsmysql1.lightdata.com.ar/',
+            host: 'http://bhsmysql1.lightdata.com.ar',
             port: 3306,
             user: 'lightdat_uplanet',
             password: 'uplanet123456*',
