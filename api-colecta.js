@@ -5,6 +5,7 @@ import { logBlue, logPurple } from './src/funciones/logsCustom.js';
 import cors from 'cors';
 import clear from './routes/clearClient.js';
 import { getAllActiveLocal } from './src/funciones/dbList.js';
+import { conectarMySQLip, conectarMySQLUrl } from './pruebaChris.js';
 
 const app = express();
 
@@ -30,6 +31,17 @@ app.post('/api/testapi', async (req, res) => {
   const endTime = performance.now();
   logPurple(`Tiempo de ejecución: ${endTime - startTime} ms`)
   res.status(200).json({ message: 'API funcionando correctamente' });
+});
+
+app.get('/db-url', async (_req, res) => {
+  const result = await conectarMySQLUrl();
+  res.status(result.ok ? 200 : 500).json({ when: new Date().toISOString(), result });
+});
+
+// GET #2 — IP
+app.get('/db-ip', async (_req, res) => {
+  const result = await conectarMySQLip();
+  res.status(result.ok ? 200 : 500).json({ when: new Date().toISOString(), result });
 });
 
 app.get('/ping', (req, res) => {
