@@ -53,7 +53,7 @@ export async function handleInternalNoFlex({
     /// Actualizamos el estado del envio en el micro servicio
     await sendShipmentStateToStateMicroserviceAPI(urlEstadosMicroservice, company, userId, shipmentId, 0, latitude, longitude);
 
-    const body = await informe(db, company, dataQr.cliente, userId, shipmentId);
+    const body = await informe({ db, company, clientId: dataQr.cliente, userId });
 
     return { success: true, message: "Paquete colectado correctamente", body: body };
 }

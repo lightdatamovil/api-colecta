@@ -5,7 +5,7 @@ import { companiesService } from "../../../db.js";
 const cache = {};
 const CACHE_TTL_MS = 14 * 24 * 60 * 60 * 1000; // 14 días
 
-export async function informe({ dbConnection, company, clientId = 0, userId }) {
+export async function informe({ db, company, clientId = 0, userId }) {
   const hoy = getFechaLocalDePais(company.pais);
   if (!hoy) {
     const msg = `País (${company?.pais}) no soportado en configPaises`;
@@ -49,9 +49,9 @@ export async function informe({ dbConnection, company, clientId = 0, userId }) {
 
   // 🔹 Ejecutar las tres consultas en paralelo
   const [resTotalCliente, resColectarHoy, resRetiradosHoy] = await Promise.all([
-    executeQuery({ dbConnection, query: q1, values: [clientId, hoyInicio] }),
-    executeQuery({ dbConnection, query: q2, values: [hoyInicio, userId] }),
-    executeQuery({ dbConnection, query: q3, values: [hoyInicio] }),
+    executeQuery({ dbConnection: db, query: q1, values: [clientId, hoyInicio] }),
+    executeQuery({ dbConnection: db, query: q2, values: [hoyInicio, userId] }),
+    executeQuery({ dbConnection: db, query: q3, values: [hoyInicio] }),
   ]);
 
   const totalARetirarCliente = resTotalCliente[0]?.total ?? 0;
@@ -72,7 +72,7 @@ export async function informe({ dbConnection, company, clientId = 0, userId }) {
         AND autofecha > ? 
         AND estado = 0
     `;
-    const res = await executeQuery({ dbConnection, query: q4, values: [userId, hoyInicio] });
+    const res = await executeQuery({ dbConnection: db, query: q4, values: [userId, hoyInicio] });
     cache[cacheKey] = {
       timestamp: now,
       total: res[0]?.total > 0 ? res[0].total : 1,
@@ -83,7 +83,7 @@ export async function informe({ dbConnection, company, clientId = 0, userId }) {
 
   const colectadosHoyPorMi = cache[cacheKey].total;
 
-  const companyClients = await companiesService.getClientsByCompany(dbConnection, company.did);
+  const companyClients = await companiesService.getClientsByCompany(db, company.did);
 
   const cliente = companyClients?.[clientId]?.nombre ?? "Sin información";
 

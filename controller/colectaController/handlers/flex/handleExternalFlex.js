@@ -248,13 +248,12 @@ export async function handleExternalFlex({
         };
       }
 
-      const body = await informe(
+      const body = await informe({
         db,
         company,
-        internalClient[0].didCliente,
-        userId,
-        internalShipmentId
-      );
+        clientId: internalClient[0].didCliente,
+        userId
+      });
 
       return {
         success: true,

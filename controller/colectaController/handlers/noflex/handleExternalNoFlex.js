@@ -131,9 +131,9 @@ export async function handleExternalNoFlex({
     const dataQrCompany = await companiesService.getCompanyById(dataQr.empresa);
     await sendShipmentStateToStateMicroserviceAPI(urlEstadosMicroservice, dataQrCompany, driver, shipmentIdFromDataQr, 0, latitude, longitude);
 
-    const body = await informe(db, company, externalClient[0].did, userId, internalShipmentId);
+    const body = await informe({ db, company, clientId: externalClient[0].did, userId });
 
     externalDbConnection.end();
 
-    return { success: true, message: "Paquete colectado con exito", body: body };
+    return { success: true, message: "Paquete colectado con exito", body };
 }

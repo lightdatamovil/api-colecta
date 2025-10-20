@@ -101,27 +101,25 @@ export async function handleInternalFlex({
   }
 
   if (companyId == 144) {
-    const body = await informe(
+    const body = await informe({
       db,
       company,
-      didCLiente,
-      userId,
-      shipmentId
-    );
+      clientId: didCLiente,
+      userId
+    });
     return {
       success: true,
       message: "Paquete puesto a planta  - FLEX",
-      body: body,
+      body,
     };
   }
 
-  const body = await informe(
+  const body = await informe({
     db,
     company,
-    account.didCliente || 0,
-    userId,
-    shipmentId
-  );
+    clientId: account.didCliente || 0,
+    userId
+  });
 
   return {
     success: true,
