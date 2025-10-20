@@ -1,25 +1,18 @@
-import { executeQuery } from "lightdata-tools";
+import { LightdataORM } from "lightdata-tools";
 
 export async function insertEnviosExteriores({ dbConnection, internoShipmentId, externalShipmentId, flex, externalName, externalCompanyId }) {
-
-    const q = `UPDATE envios_exteriores SET superado = 1 WHERE didExterno = ?`;
-    await executeQuery(dbConnection, q, [externalShipmentId]);
-    const queryInsertEnviosExteriores = `
-            INSERT INTO envios_exteriores (didLocal, didExterno, flex, cliente, didEmpresa)
-            VALUES (?, ?, ?, ?, ?)
-        `;
-
-    const result = await executeQuery(
+    const result = await LightdataORM.update({
         dbConnection,
-        queryInsertEnviosExteriores,
-        [
-            internoShipmentId,
-            externalShipmentId,
+        table: 'envios_exteriores',
+        data: {
+            didLocal: internoShipmentId,
+            didExterno: externalShipmentId,
             flex,
-            externalName,
-            externalCompanyId,
-        ],
-    );
+            cliente: externalName,
+            didEmpresa: externalCompanyId,
+        },
+        where: { didExterno: externalShipmentId },
+    });
 
     return result.insertId;
 }

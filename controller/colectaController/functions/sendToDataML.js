@@ -1,6 +1,6 @@
 import { connect } from 'amqplib';
 import dotenv from 'dotenv';
-import { logGreen, logRed, logYellow } from 'lightdata-tools';
+import { logGreen, logRed } from 'lightdata-tools';
 
 dotenv.config({ path: process.env.ENV_FILE || '.env' });
 
@@ -53,12 +53,10 @@ export async function senToDataML({
         if (sent) {
             logGreen('✅ Mensaje enviado correctamente al microservicio de dataML');
         } else {
-            logYellow('⚠️ Mensaje no pudo encolarse (buffer lleno)');
             throw new Error('Buffer lleno en RabbitMQ');
         }
     } catch (error) {
         logRed(`❌ Falló RabbitMQ, intentando enviar por HTTP: ${error.message}`);
-
 
     }
 }

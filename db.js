@@ -20,6 +20,13 @@ export const redisClient = redis.createClient({
     password: redisPassword,
 });
 
+redisClient.on('error', (err) => {
+    logRed(`Error al conectar con Redis: ${err.message}`);
+});
+
+// Servicio de empresas
+export const companiesService = new CompaniesService({ redisClient, redisKey: "empresasData" })
+
 /// Base de datos de colecta
 const colectaDBHost = process.env.COLECTA_DB_HOST;
 const colectaDBPort = process.env.COLECTA_DB_PORT;
@@ -28,42 +35,6 @@ const colectaDBPort = process.env.COLECTA_DB_PORT;
 const colectaDbUserForLogs = process.env.COLECTA_DB_USER_FOR_LOGS;
 const colectaDbPasswordForLogs = process.env.COLECTA_DB_PASSWORD_FOR_LOGS;
 const colectaDbNameForLogs = process.env.COLECTA_DB_NAME_FOR_LOGS;
-
-// Produccion
-export const hostProductionDb = process.env.PRODUCTION_DB_HOST;
-export const portProductionDb = process.env.PRODUCTION_DB_PORT;
-
-// JWT
-export const jwtSecret = process.env.JWT_SECRET;
-export const jwtIssuer = process.env.JWT_ISSUER;
-export const jwtAudience = process.env.JWT_AUDIENCE;
-export const jwtExpiresIn = process.env.JWT_EXPIRES_IN || '1h';
-
-// Servicio de empresas
-export const companiesService = new CompaniesService({ redisClient, redisKey: "empresasData" })
-
-
-/// MICROSERVICIO DE ESTADOS
-export const rabbitUrl = process.env.RABBIT_URL;
-export const queueEstados = process.env.QUEUE_ESTADOS;
-export const urlEstadosMicroservice = process.env.URL_ESTADOS_MICROSERVICE;
-// 🔹 Agente HTTPS con keep-alive y hasta 100 conexiones simultáneas
-export const httpsAgent = new https.Agent({
-    keepAlive: true,
-    maxSockets: 100,
-    timeout: 10000, // tiempo máximo de socket en ms
-    family: 4, // fuerza IPv4, evita delay IPv6
-});
-
-// 🔹 Axios preconfigurado (usa el agente y timeout)
-export const axiosInstance = axios.create({
-    httpsAgent,
-    timeout: 5000, // 5 segundos máximo por request
-});
-
-redisClient.on('error', (err) => {
-    logRed(`Error al conectar con Redis: ${err.message}`);
-});
 
 export const poolLocal = mysql2.createPool({
     host: colectaDBHost,
@@ -75,3 +46,33 @@ export const poolLocal = mysql2.createPool({
     connectionLimit: 10,
     queueLimit: 0
 });
+
+export const httpsAgent = new https.Agent({
+    keepAlive: true,
+    maxSockets: 100,
+    timeout: 10000,
+    family: 4,
+});
+
+export const axiosInstance = axios.create({
+    httpsAgent,
+    timeout: 5000,
+});
+
+// Produccion
+export const hostProductionDb = process.env.PRODUCTION_DB_HOST;
+export const portProductionDb = process.env.PRODUCTION_DB_PORT;
+
+// JWT
+export const jwtSecret = process.env.JWT_SECRET;
+export const jwtIssuer = process.env.JWT_ISSUER;
+export const jwtAudience = process.env.JWT_AUDIENCE;
+export const jwtExpiresIn = process.env.JWT_EXPIRES_IN || '1h';
+
+/// Microservicios y colas
+export const rabbitUrl = process.env.RABBIT_URL;
+export const queueEstados = process.env.QUEUE_ESTADOS;
+export const urlEstadosMicroservice = process.env.URL_ESTADOS_MICROSERVICE;
+
+/// Microservicio de asignacion
+export const urlAsignacionMicroservice = process.env.URL_ASIGNACION_MICROSERVICE;

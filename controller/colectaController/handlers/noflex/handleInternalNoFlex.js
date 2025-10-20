@@ -1,7 +1,7 @@
 import { assign, executeQuery, sendShipmentStateToStateMicroserviceAPI } from "lightdata-tools";
 import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
 import { informe } from "../../functions/informe.js";
-import { urlEstadosMicroservice } from "../../../../db.js";
+import { urlAsignacionMicroservice, urlEstadosMicroservice } from "../../../../db.js";
 
 /// Esta funcion checkea si el envio ya fue colectado, entregado o cancelado
 /// Busca el chofer asignado al envio
@@ -31,7 +31,14 @@ export async function handleInternalNoFlex(dbConnection, dataQr, company, userId
 
     /// Si el envio no esta asignado y se quiere autoasignar, lo asigno
     if (!isAlreadyAssigned && autoAssign) {
-        await assign(companyId, userId, profile, dataQr, userId, "Autoasignado de colecta");
+        await assign({
+            url: urlAsignacionMicroservice,
+            companyId,
+            userId,
+            profile,
+            dataQr,
+            deviceFrom: "Autoasignado de colecta",
+        });
     }
 
     /// Actualizamos el estado del envio en el micro servicio

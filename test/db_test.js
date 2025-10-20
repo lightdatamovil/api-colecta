@@ -1,7 +1,7 @@
 // prueba con base de datos de planet desde local
 
 import { getProductionDbConfig } from "lightdata-tools";
-import { companiesService } from "./db.js";
+import { companiesService } from "../db.js";
 import mysql from "mysql";
 import { performance } from "node:perf_hooks";
 import { util } from "zod";

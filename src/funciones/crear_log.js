@@ -1,7 +1,7 @@
 import { executeQueryFromPool, getHeaders, logGreen, logPurple } from "lightdata-tools";
 import { poolLocal } from "../../db.js";
 
-export async function crearLog(req, tiempo, resultado, exito) {
+export async function crearLog({ req, tiempo, resultado, exito }) {
   const { appVersion, androidVersion, model, deviceId, brand, deviceFrom } = getHeaders(req);
   const { companyId, userId, profile } = req.user;
   const sql = `

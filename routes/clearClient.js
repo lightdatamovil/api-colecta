@@ -7,9 +7,7 @@ const clients = Router();
 clients.get(
     '/clear-client-list',
     buildHandlerWrapper({
-        controller: async () => {
-            companiesService.clearClientsCache();
-        },
+        controller: async () => companiesService.clearClientsCache(),
     })
 );
 

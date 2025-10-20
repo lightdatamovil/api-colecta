@@ -35,15 +35,9 @@ export async function handleExternalFlex(
     FROM clientes 
     WHERE superado = 0 AND elim = 0 AND codigoVinculacionLogE != ''
   `;
-  const logisticasExternas = await executeQuery(
-    dbConnection,
-    queryLogisticasExternas,
-    [],
-    true
-  );
+  const logisticasExternas = await executeQuery(dbConnection, queryLogisticasExternas, []);
 
   if (logisticasExternas.length === 0) {
-    logRed("No hay logisticas externas");
     throw new Error(`La cuenta de ML: ${dataQr.sender_id} no está vinculada`);
   }
 
@@ -70,19 +64,15 @@ export async function handleExternalFlex(
         WHERE ml_shipment_id = ? AND ml_vendedor_id = ? and elim = 0 and superado = 0
         LIMIT 1
       `;
-      let rowsEnvios = await executeQuery(
-        externalDbConnection,
-        sqlEnvios,
-        [shipmentId, senderid]
-      );
+      let rowsEnvios = await executeQuery(externalDbConnection, sqlEnvios, [shipmentId, senderid]);
 
       let externalShipmentId;
       let externalClientId;
 
-      const driver = await checkIfExistLogisticAsDriverInExternalCompany(
-        externalDbConnection,
-        codLocal
-      );
+      const driver = await checkIfExistLogisticAsDriverInExternalCompany({
+        dbConnection: externalDbConnection,
+        syncCode: codLocal
+      });
 
       if (!driver) {
         return {

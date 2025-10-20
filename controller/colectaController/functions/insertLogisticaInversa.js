@@ -1,8 +1,14 @@
-import { executeQuery } from "lightdata-tools";
+import { LightdataORM } from "lightdata-tools";
 
 export async function insertEnviosLogisticaInversa({ dbConnection, shipmentId, valor, userId }) {
-    const sqlInsertEnviosLogisticaInversa = `
-        INSERT INTO envios_logisticainversa (didEnvio,didCampoLogistica,valor,quien) VALUES (?,?,?,?)
-    `
-    await executeQuery(dbConnection, sqlInsertEnviosLogisticaInversa, [shipmentId, 1, valor, userId]);
+    await LightdataORM.insert({
+        dbConnection,
+        table: 'envios_logisticainversa',
+        data: {
+            didEnvio: shipmentId,
+            didCampoLogistica: 1,
+            valor
+        },
+        quien: userId
+    });
 }
