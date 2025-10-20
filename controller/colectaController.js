@@ -5,7 +5,7 @@ import { handleInternalNoFlex } from "./colectaController/handlers/noflex/handle
 import { executeQuery, getShipmentIdFromQr, LogisticaConfig, parseIfJson } from "lightdata-tools";
 import { companiesService } from "../db.js";
 
-export async function colectar(dbConnection, req, company) {
+export async function colectar({ db, req, company }) {
     let { dataQr, autoAssign, latitude, longitude } = req.body;
     const { userId, profile } = req.user;
     let response;
@@ -19,7 +19,7 @@ export async function colectar(dbConnection, req, company) {
     ) {
         try {
             // obtenemos el envío
-            const shipmentId = await getShipmentIdFromQr(company.did, dataQr);
+            const shipmentId = await getShipmentIdFromQr({ companyId: company.did, dataQr });
             const cliente = LogisticaConfig.getSenderId(company.did);
 
             dataQr = {
@@ -39,7 +39,7 @@ export async function colectar(dbConnection, req, company) {
                 throw new Error("El envio no esta igresado en su sistema");
             };
 
-            const shipmentIdExterno = await getShipmentIdFromQr(empresaVinculada, dataQr);
+            const shipmentIdExterno = await getShipmentIdFromQr({ companyId: empresaVinculada, dataQr });
 
             //no encontre shipmentiD : cambiar en el qr la empresa x la externa --- si no esta lo inserta 
             dataQr = {
@@ -63,17 +63,16 @@ export async function colectar(dbConnection, req, company) {
         if (isCollectShipmentML) {
             //! Esto quiere decir que es un envio de colecta de ML
             const querySeller = `SELECT ml_vendedor_id FROM envios WHERE ml_shipment_id = ? AND flex = 1 AND superado=0 AND elim=0`;
-            const result = await executeQuery(dbConnection, querySeller, [dataQr.id]);
-
+            const result = await executeQuery({ dbConnection: db, query: querySeller, values: [dataQr.id] });
             senderId = result[0].ml_vendedor_id;
-            account = await companiesService.getAccountBySenderId(dbConnection, company.did, senderId);
+            account = await companiesService.getAccountBySenderId(db, company.did, senderId);
         } else {
-            account = await companiesService.getAccountBySenderId(dbConnection, company.did, dataQr.sender_id);
+            account = await companiesService.getAccountBySenderId(db, company.did, dataQr.sender_id);
             senderId = dataQr.sender_id;
         }
 
         if (account) {
-            response = await handleInternalFlex(dbConnection, company, userId, profile, dataQr, autoAssign, account, latitude, longitude, senderId);
+            response = await handleInternalFlex({ db, company, userId, profile, dataQr, autoAssign, account, latitude, longitude, senderId });
 
             /// Si la cuenta no existe, es externo
         } else if (company.did == 144 || company.did == 167) {
@@ -87,23 +86,23 @@ export async function colectar(dbConnection, req, company) {
                   AND elim = 0
                   LIMIT 1
                 `;
-            const resultCheck = await executeQuery(dbConnection, queryCheck, [dataQr.sender_id, dataQr.id]);
+            const resultCheck = await executeQuery({ dbConnection: db, query: queryCheck, values: [dataQr.sender_id, dataQr.id] });
 
             if (resultCheck.length > 0) {
                 senderId = dataQr.sender_id;
-                response = await handleInternalFlex(dbConnection, company, userId, profile, dataQr, autoAssign, account, latitude, longitude, senderId);
+                response = await handleInternalFlex({ db, company, userId, profile, dataQr, autoAssign, account, latitude, longitude, senderId });
             } else {
-                response = await handleExternalFlex(dbConnection, company, userId, profile, dataQr, autoAssign, latitude, longitude);
+                response = await handleExternalFlex({ db, company, userId, profile, dataQr, autoAssign, latitude, longitude });
             }
         } else {
-            response = await handleExternalFlex(dbConnection, company, userId, profile, dataQr, autoAssign, latitude, longitude);
+            response = await handleExternalFlex({ db, company, userId, profile, dataQr, autoAssign, latitude, longitude });
         }
 
     } else {
         if (company.did == dataQr.empresa) {
-            response = await handleInternalNoFlex(dbConnection, dataQr, company, userId, profile, autoAssign, latitude, longitude);
+            response = await handleInternalNoFlex({ db, dataQr, company, userId, profile, autoAssign, latitude, longitude });
         } else {
-            response = await handleExternalNoFlex(dbConnection, dataQr, company, userId, profile, autoAssign, latitude, longitude);
+            response = await handleExternalNoFlex({ db, dataQr, company, userId, profile, autoAssign, latitude, longitude });
         }
     }
 

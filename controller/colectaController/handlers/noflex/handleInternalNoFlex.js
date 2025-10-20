@@ -8,19 +8,28 @@ import { urlAsignacionMicroservice, urlEstadosMicroservice } from "../../../../d
 /// Si el envio no esta asignado y se quiere autoasignar, lo asigna
 /// Actualiza el estado del envio en el micro servicio
 /// Actualiza el estado del envio en la base de datos
-export async function handleInternalNoFlex(dbConnection, dataQr, company, userId, profile, autoAssign, latitude, longitude) {
+export async function handleInternalNoFlex({
+    db,
+    dataQr,
+    company,
+    userId,
+    profile,
+    autoAssign,
+    latitude,
+    longitude
+}) {
     const shipmentId = dataQr.did;
     const companyId = company.did;
 
     /// Chequeo si el envio ya fue colectado, entregado o cancelado
-    const check = await checkearEstadoEnvio(dbConnection, shipmentId);
+    const check = await checkearEstadoEnvio(db, shipmentId);
     if (check) {
         return check;
     }
 
     /// Busco el estado del envio y el chofer asignado
     const querySelectEnvios = `SELECT choferAsignado FROM envios WHERE superado = 0 AND elim = 0 AND did = ? LIMIT 1`;
-    const resultChoferAsignado = await executeQuery(dbConnection, querySelectEnvios, [shipmentId]);
+    const resultChoferAsignado = await executeQuery({ dbConnection: db, query: querySelectEnvios, values: [shipmentId] });
 
     /// Si no encuentro el envio mando error
     if (resultChoferAsignado.length === 0) {
@@ -44,7 +53,7 @@ export async function handleInternalNoFlex(dbConnection, dataQr, company, userId
     /// Actualizamos el estado del envio en el micro servicio
     await sendShipmentStateToStateMicroserviceAPI(urlEstadosMicroservice, company, userId, shipmentId, 0, latitude, longitude);
 
-    const body = await informe(dbConnection, company, dataQr.cliente, userId, shipmentId);
+    const body = await informe(db, company, dataQr.cliente, userId, shipmentId);
 
     return { success: true, message: "Paquete colectado correctamente", body: body };
 }

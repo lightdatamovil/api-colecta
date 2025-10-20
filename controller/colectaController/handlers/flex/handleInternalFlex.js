@@ -9,8 +9,8 @@ import { urlEstadosMicroservice } from "../../../../db.js";
 /// Checkeo si el envío ya fue colectado cancelado o entregado
 /// Actualizo el estado del envío y lo envío al microservicio de estados
 /// Asigno el envío al usuario si es necesario
-export async function handleInternalFlex(
-  dbConnection,
+export async function handleInternalFlex({
+  db,
   company,
   userId,
   profile,
@@ -19,11 +19,11 @@ export async function handleInternalFlex(
   account,
   latitude,
   longitude, senderId,
-) {
+}) {
   const companyId = company.did;
   const mlShipmentId = dataQr.id;
   let shipmentId;
-  await checkIfFulfillment(dbConnection, mlShipmentId);
+  await checkIfFulfillment(db, mlShipmentId);
   /// Busco el envio
   const sql = `
             SELECT did , didCliente, ml_qr_seguridad 
@@ -31,34 +31,41 @@ export async function handleInternalFlex(
             WHERE ml_shipment_id = ? AND ml_vendedor_id = ? and elim = 0 and superado = 0 LIMIT 1    
         `;
 
-  let resultBuscarEnvio = await executeQuery(dbConnection, sql, [
-    mlShipmentId,
-    senderId,
-  ]);
+  let resultBuscarEnvio = await executeQuery({
+    dbConnection: db,
+    query: sql,
+    values: [
+      mlShipmentId,
+      senderId,
+    ]
+  });
   shipmentId = resultBuscarEnvio.length > 0 ? resultBuscarEnvio[0].did : null;
   let didCLiente = resultBuscarEnvio.length > 0 ? resultBuscarEnvio[0].didCliente : null;
   let mlQrSeguridad = resultBuscarEnvio.length > 0 ? resultBuscarEnvio[0].ml_qr_seguridad : null;
   /// Si no existe, lo inserto y tomo el did
   if (resultBuscarEnvio.length === 0) {
-    shipmentId = await insertEnvios(
-      dbConnection,
-      companyId,
-      account.didCliente,
-      account.didCuenta,
+    shipmentId = await insertEnvios({
+      company,
+      accountId: account.didCliente,
+      clientId: account.didCuenta,
       dataQr,
-      1,
-      0,
+      flex: 1,
+      externo: 0,
       userId
-    );
-    resultBuscarEnvio = await executeQuery(dbConnection, sql, [
-      mlShipmentId,
-      senderId,
-    ]);
+    });
+    resultBuscarEnvio = await executeQuery({
+      dbConnection: db,
+      query: sql,
+      values: [
+        mlShipmentId,
+        senderId,
+      ]
+    });
   } else {
 
 
     /// Checkeo si el envío ya fue colectado cancelado o entregado
-    const check = await checkearEstadoEnvio(dbConnection, shipmentId);
+    const check = await checkearEstadoEnvio(db, shipmentId);
     if (check) return check;
   }
 
@@ -74,10 +81,14 @@ export async function handleInternalFlex(
                     WHERE superado = 0 AND elim = 0 AND did = ?
                     LIMIT 1`;
 
-    await executeQuery(dbConnection, queryUpdateEnvios, [
-      JSON.stringify(dataQr),
-      shipmentId,
-    ]);
+    await executeQuery({
+      dbConnection: db,
+      query: queryUpdateEnvios,
+      values: [
+        JSON.stringify(dataQr),
+        shipmentId,
+      ]
+    });
   }
 
   /// Actualizo el estado del envío y lo envío al microservicio de estados
@@ -91,7 +102,7 @@ export async function handleInternalFlex(
 
   if (companyId == 144) {
     const body = await informe(
-      dbConnection,
+      db,
       company,
       didCLiente,
       userId,
@@ -105,7 +116,7 @@ export async function handleInternalFlex(
   }
 
   const body = await informe(
-    dbConnection,
+    db,
     company,
     account.didCliente || 0,
     userId,

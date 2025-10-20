@@ -1,91 +1,77 @@
 import { axiosInstance } from "../../../db.js";
 import { senToDataML } from "./sendToDataML.js";
-import { executeQuery } from "lightdata-tools";
+import { getFechaConHoraLocalDePais } from "lightdata-tools";
 
 export async function insertEnvios({
-  dbConnection,
-  companyId,
+  company,
   clientId,
   accountId,
   dataQr,
   flex,
   externo,
-  userId
+  userId,
+  driverId
 }) {
   const lote = "colecta";
-  const fecha_actual = new Date();
-  fecha_actual.setHours(fecha_actual.getHours() - 3);
 
-  const fecha_inicio = fecha_actual
-    .toISOString()
-    .slice(0, 19)
-    .replace("T", " ");
-  const idshipment = dataQr.id;
-  const senderid = dataQr.sender_id;
+  const fecha_inicio = getFechaConHoraLocalDePais(company.pais);
   const fechaunix = Math.floor(Date.now() / 1000);
 
-  const queryInsertEnvios = `
-            INSERT INTO envios (did, ml_shipment_id, ml_vendedor_id, didCliente, quien, lote, didCuenta, ml_qr_seguridad, fecha_inicio, flex, exterior, fechaunix)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `;
+  const idshipment = dataQr.id;
+  const senderid = dataQr.sender_id;
 
-  const result = await executeQuery(dbConnection, queryInsertEnvios, [
-    0,
-    idshipment,
-    senderid,
-    clientId,
-    userId,
-    lote,
-    accountId,
-    JSON.stringify(dataQr),
-    fecha_inicio,
-    flex,
-    externo,
-    fechaunix,
-  ]);
-
-  if (result.insertId) {
-    const updateSql = `
-                UPDATE envios 
-                SET did = ? 
-                WHERE superado = 0 AND elim = 0 AND id = ? 
-                LIMIT 1
-            `;
-
-    await executeQuery(dbConnection, updateSql, [
-      result.insertId,
-      result.insertId,
-    ]);
-
-    // mensaje por rabbitMQ
-    if (companyId == 12 || companyId == 79 || companyId == 167) {
-
-      await senToDataML(
-        companyId,
-        result.insertId,
-        senderid,
-        idshipment
-      );
-    }
-
-
-    await axiosInstance.post(
-      "https://altaenvios.lightdata.com.ar/api/enviosMLredis",
-      {
-        idEmpresa: companyId,
-        estado: 0,
-        did: result.insertId,
+  const response = await axiosInstance.post(
+    "https://altaenvios.lightdata.com.ar/api/altaenvio",
+    {
+      data: {
+        didCuenta: accountId,
+        didCliente: clientId,
+        idEmpresa: company.did,
+        flex,
         ml_shipment_id: idshipment,
         ml_vendedor_id: senderid,
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
+        driverId,
+        userId,
+        externo,
+        fecha_inicio,
+        fechaunix,
+        dataQr,
+        lote
       }
-    );
+    },
+    {
+      headers: {
+        "Content-Type": "application/json",
+      }
+    }
+  );
+  const did = response.data.did;
+  if (company.did == 12 || company.did == 79 || company.did == 167) {
 
+    await senToDataML({
+      companyId: company.did,
+      didEnvio: did,
+      sellerId: senderid,
+      shipmentId: idshipment
+    });
   }
 
-  return result.insertId;
+
+  await axiosInstance.post(
+    "https://altaenvios.lightdata.com.ar/api/enviosMLredis",
+    {
+      idEmpresa: company.did,
+      estado: 0,
+      did: did,
+      ml_shipment_id: idshipment,
+      ml_vendedor_id: senderid,
+    },
+    {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  return did;
 }

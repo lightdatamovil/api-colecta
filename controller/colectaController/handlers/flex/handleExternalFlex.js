@@ -16,8 +16,8 @@ import { companiesService, urlEstadosMicroservice } from "../../../../db.js";
 /// Inserto el envio en la tabla envios y envios exteriores de la logística interna
 /// Actualizo el estado del envío y lo envío al microservicio de estados en la logística interna
 /// Actualizo el estado del envío y lo envío al microservicio de estados en la logística externa
-export async function handleExternalFlex(
-  dbConnection,
+export async function handleExternalFlex({
+  db,
   company,
   userId,
   profile,
@@ -25,7 +25,7 @@ export async function handleExternalFlex(
   autoAssign,
   latitude,
   longitude
-) {
+}) {
   const senderid = dataQr.sender_id;
   const shipmentId = dataQr.id;
   const codLocal = company.codigo;
@@ -35,7 +35,10 @@ export async function handleExternalFlex(
     FROM clientes 
     WHERE superado = 0 AND elim = 0 AND codigoVinculacionLogE != ''
   `;
-  const logisticasExternas = await executeQuery(dbConnection, queryLogisticasExternas, []);
+  const logisticasExternas = await executeQuery({
+    dbConnection: db,
+    query: queryLogisticasExternas
+  });
 
   if (logisticasExternas.length === 0) {
     throw new Error(`La cuenta de ML: ${dataQr.sender_id} no está vinculada`);
@@ -64,7 +67,11 @@ export async function handleExternalFlex(
         WHERE ml_shipment_id = ? AND ml_vendedor_id = ? and elim = 0 and superado = 0
         LIMIT 1
       `;
-      let rowsEnvios = await executeQuery(externalDbConnection, sqlEnvios, [shipmentId, senderid]);
+      let rowsEnvios = await executeQuery({
+        dbConnection: externalDbConnection,
+        query: sqlEnvios,
+        values: [shipmentId, senderid]
+      });
 
       let externalShipmentId;
       let externalClientId;
@@ -97,11 +104,11 @@ export async function handleExternalFlex(
           FROM clientes_cuentas 
           WHERE superado = 0 AND elim = 0 AND tipoCuenta = 1 AND ML_id_vendedor = ?
         `;
-        const rowsCuentas = await executeQuery(
+        const rowsCuentas = await executeQuery({
           externalDbConnection,
-          sqlCuentas,
-          [senderid]
-        );
+          query: sqlCuentas,
+          values: [senderid]
+        });
 
         if (rowsCuentas.length == 0) {
           continue;
@@ -110,16 +117,16 @@ export async function handleExternalFlex(
         externalClientId = rowsCuentas[0].didCliente;
         const didcuenta_ext = rowsCuentas[0].did;
 
-        const result = await insertEnvios(
-          externalDbConnection,
-          externalCompanyId,
-          externalClientId,
-          didcuenta_ext,
+        const result = await insertEnvios({
+          company: externalCompany,
+          clientId: externalClientId,
+          accountId: didcuenta_ext,
           dataQr,
-          1,
-          0,
-          userId
-        );
+          flex: 1,
+          externo: 0,
+          userId,
+          driverId: driver,
+        });
 
         const sqlEnvios2 = `
           SELECT did, didCliente
@@ -127,48 +134,46 @@ export async function handleExternalFlex(
           WHERE did = ? AND ml_vendedor_id = ? and elim = 0 and superado = 0
           LIMIT 1
         `;
-        rowsEnvios = await executeQuery(
-          externalDbConnection,
-          sqlEnvios2,
-          [result, senderid]
-        );
+        rowsEnvios = await executeQuery({
+          dbConnection: externalDbConnection,
+          query: sqlEnvios2,
+          values: [result, senderid]
+        });
 
         externalShipmentId = rowsEnvios[0].did;
       }
 
       let internalShipmentId;
       const consulta = "SELECT didLocal FROM envios_exteriores WHERE didExterno = ? and superado = 0 and elim=0";
-      internalShipmentId = await executeQuery(
-        dbConnection,
-        consulta,
-        [externalShipmentId],
-        true
-      );
+      internalShipmentId = await executeQuery({
+        dbConnection: db,
+        query: consulta,
+        values: [externalShipmentId]
+      });
 
       if (internalShipmentId.length > 0 && internalShipmentId[0]?.didLocal) {
         internalShipmentId = internalShipmentId[0].didLocal;
       } else {
-        internalShipmentId = await insertEnvios(
-          dbConnection,
-          company.did,
-          externalLogisticId,
-          0,
+        internalShipmentId = await insertEnvios({
+          company,
+          accountId: externalLogisticId,
+          clientId: 0,
           dataQr,
-          1,
-          1,
-          userId
-        );
+          flex: 1,
+          externo: 1,
+          userId,
+          driverId: 0
+        });
 
         const check = "SELECT valor FROM envios_logisticainversa WHERE didEnvio = ?";
-        const rows = await executeQuery(
-          externalDbConnection,
-          check,
-          [externalShipmentId],
-          true
-        );
+        const rows = await executeQuery({
+          dbConnection: externalDbConnection,
+          query: check,
+          values: [externalShipmentId]
+        });
         if (rows.length > 0) {
           await insertEnviosLogisticaInversa(
-            dbConnection,
+            db,
             internalShipmentId,
             rows[0].valor,
             userId
@@ -177,7 +182,7 @@ export async function handleExternalFlex(
       }
 
       await insertEnviosExteriores(
-        dbConnection,
+        db,
         internalShipmentId,
         externalShipmentId,
         1,
@@ -231,12 +236,11 @@ export async function handleExternalFlex(
         FROM envios 
         WHERE did = ? and elim = 0 and superado=0
       `;
-      const internalClient = await executeQuery(
-        dbConnection,
-        queryInternalClient,
-        [internalShipmentId],
-        true
-      );
+      const internalClient = await executeQuery({
+        dbConnection: db,
+        query: queryInternalClient,
+        values: [internalShipmentId]
+      });
       if (internalClient.length == 0) {
         return {
           success: false,
@@ -245,7 +249,7 @@ export async function handleExternalFlex(
       }
 
       const body = await informe(
-        dbConnection,
+        db,
         company,
         internalClient[0].didCliente,
         userId,

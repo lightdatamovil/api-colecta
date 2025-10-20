@@ -49,9 +49,9 @@ export async function informe({ dbConnection, company, clientId = 0, userId }) {
 
   // 🔹 Ejecutar las tres consultas en paralelo
   const [resTotalCliente, resColectarHoy, resRetiradosHoy] = await Promise.all([
-    executeQuery(dbConnection, q1, [clientId, hoyInicio]),
-    executeQuery(dbConnection, q2, [hoyInicio, userId]),
-    executeQuery(dbConnection, q3, [hoyInicio]),
+    executeQuery({ dbConnection, query: q1, values: [clientId, hoyInicio] }),
+    executeQuery({ dbConnection, query: q2, values: [hoyInicio, userId] }),
+    executeQuery({ dbConnection, query: q3, values: [hoyInicio] }),
   ]);
 
   const totalARetirarCliente = resTotalCliente[0]?.total ?? 0;
@@ -72,7 +72,7 @@ export async function informe({ dbConnection, company, clientId = 0, userId }) {
         AND autofecha > ? 
         AND estado = 0
     `;
-    const res = await executeQuery(dbConnection, q4, [userId, hoyInicio]);
+    const res = await executeQuery({ dbConnection, query: q4, values: [userId, hoyInicio] });
     cache[cacheKey] = {
       timestamp: now,
       total: res[0]?.total > 0 ? res[0].total : 1,

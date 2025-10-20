@@ -14,7 +14,16 @@ import { assign, executeQuery, getProductionDbConfig, sendShipmentStateToStateMi
 /// Asigno a la empresa externa
 /// Si es autoasignacion, asigno a la empresa interna
 /// Actualizo el estado del envio a colectado y envio el estado del envio en los microservicios
-export async function handleExternalNoFlex(dbConnection, dataQr, company, userId, profile, autoAssign, latitude, longitude) {
+export async function handleExternalNoFlex({
+    db,
+    dataQr,
+    company,
+    userId,
+    profile,
+    autoAssign,
+    latitude,
+    longitude,
+}) {
     const companyId = company.did;
     const shipmentIdFromDataQr = dataQr.did;
     const clientIdFromDataQr = dataQr.cliente;
@@ -52,34 +61,33 @@ export async function handleExternalNoFlex(dbConnection, dataQr, company, userId
     }
 
     const queryClient = `SELECT did  FROM clientes WHERE codigoVinculacionLogE = ?`;
-    const externalClient = await executeQuery(dbConnection, queryClient, [externalCompany.codigo], true);
+    const externalClient = await executeQuery({ dbConnection: db, query: queryClient, values: [externalCompany.codigo] });
     let internalShipmentId;
 
     const consulta = 'SELECT didLocal FROM envios_exteriores WHERE didExterno = ? and superado = 0 and elim = 0 LIMIT 1';
 
-    internalShipmentId = await executeQuery(dbConnection, consulta, [shipmentIdFromDataQr], true);
+    internalShipmentId = await executeQuery({ dbConnection: db, query: consulta, values: [shipmentIdFromDataQr] });
 
     if (internalShipmentId.length > 0 && internalShipmentId[0]?.didLocal) {
 
         internalShipmentId = internalShipmentId[0].didLocal;
     } else {
 
-        internalShipmentId = await insertEnvios(
-            dbConnection,
-            companyId,
-            externalClient[0].did,
-            0,
-            { id: "", sender_id: "" },
-            0,
-            1,
+        internalShipmentId = await insertEnvios({
+            company,
+            clientId: externalClient[0].did,
+            accountId: 0,
+            dataQr: { id: "", sender_id: "" },
+            externo: 1,
+            flex: 0,
             userId
-        );
+        });
     }
 
 
     /// Inserto en envios exteriores en la empresa interna
     await insertEnviosExteriores(
-        dbConnection,
+        db,
         internalShipmentId,
         shipmentIdFromDataQr,
         0,
@@ -104,15 +112,14 @@ export async function handleExternalNoFlex(dbConnection, dataQr, company, userId
 
     const check2 = "SELECT valor FROM envios_logisticainversa WHERE didEnvio = ?";
 
-    const rows = await executeQuery(
-        externalDbConnection,
-        check2,
-        [shipmentIdFromDataQr],
-        true
-    );
+    const rows = await executeQuery({
+        dbConnection: externalDbConnection,
+        query: check2,
+        values: [shipmentIdFromDataQr]
+    });
     if (rows.length > 0) {
         await insertEnviosLogisticaInversa(
-            dbConnection,
+            db,
             internalShipmentId,
             rows[0].valor,
             userId,
@@ -124,7 +131,7 @@ export async function handleExternalNoFlex(dbConnection, dataQr, company, userId
     const dataQrCompany = await companiesService.getCompanyById(dataQr.empresa);
     await sendShipmentStateToStateMicroserviceAPI(urlEstadosMicroservice, dataQrCompany, driver, shipmentIdFromDataQr, 0, latitude, longitude);
 
-    const body = await informe(dbConnection, company, externalClient[0].did, userId, internalShipmentId);
+    const body = await informe(db, company, externalClient[0].did, userId, internalShipmentId);
 
     externalDbConnection.end();
 
