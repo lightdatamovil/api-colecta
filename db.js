@@ -2,6 +2,8 @@ import redis from 'redis';
 import dotenv from 'dotenv';
 import { CompaniesService, logRed } from 'lightdata-tools';
 import mysql2 from 'mysql2/promise';
+import https from 'https';
+import axios from 'axios';
 
 dotenv.config({ path: process.env.ENV_FILE || ".env" });
 
@@ -45,6 +47,19 @@ export const companiesService = new CompaniesService({ redisClient, redisKey: "e
 export const rabbitUrl = process.env.RABBIT_URL;
 export const queueEstados = process.env.QUEUE_ESTADOS;
 export const urlEstadosMicroservice = process.env.URL_ESTADOS_MICROSERVICE;
+// 🔹 Agente HTTPS con keep-alive y hasta 100 conexiones simultáneas
+export const httpsAgent = new https.Agent({
+    keepAlive: true,
+    maxSockets: 100,
+    timeout: 10000, // tiempo máximo de socket en ms
+    family: 4, // fuerza IPv4, evita delay IPv6
+});
+
+// 🔹 Axios preconfigurado (usa el agente y timeout)
+export const axiosInstance = axios.create({
+    httpsAgent,
+    timeout: 5000, // 5 segundos máximo por request
+});
 
 redisClient.on('error', (err) => {
     logRed(`Error al conectar con Redis: ${err.message}`);

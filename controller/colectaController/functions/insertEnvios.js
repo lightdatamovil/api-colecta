@@ -1,4 +1,4 @@
-import axios from "axios";
+import { axiosInstance } from "../../../db.js";
 import { senToDataML } from "./sendToDataML.js";
 import { executeQuery } from "lightdata-tools";
 
@@ -58,7 +58,7 @@ export async function insertEnvios(
     ]);
 
     // mensaje por rabbitMQ
-    if (companyId == 12) {
+    if (companyId == 12 || companyId == 79 || companyId == 167) {
 
       await senToDataML(
         companyId,
@@ -69,7 +69,7 @@ export async function insertEnvios(
     }
 
 
-    await axios.post(
+    await axiosInstance.post(
       "https://altaenvios.lightdata.com.ar/api/enviosMLredis",
       {
         idEmpresa: companyId,

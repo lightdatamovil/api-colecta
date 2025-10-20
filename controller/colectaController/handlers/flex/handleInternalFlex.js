@@ -22,15 +22,13 @@ export async function handleInternalFlex(
 ) {
   const companyId = company.did;
   const mlShipmentId = dataQr.id;
-
   let shipmentId;
   await checkIfFulfillment(dbConnection, mlShipmentId);
-
   /// Busco el envio
   const sql = `
-            SELECT did,didCliente
+            SELECT did , didCliente, ml_qr_seguridad 
             FROM envios 
-            WHERE ml_shipment_id = ? AND ml_vendedor_id = ? and elim = 0 and superado = 0       
+            WHERE ml_shipment_id = ? AND ml_vendedor_id = ? and elim = 0 and superado = 0 LIMIT 1    
         `;
 
   let resultBuscarEnvio = await executeQuery(dbConnection, sql, [
@@ -39,6 +37,7 @@ export async function handleInternalFlex(
   ]);
   shipmentId = resultBuscarEnvio.length > 0 ? resultBuscarEnvio[0].did : null;
   let didCLiente = resultBuscarEnvio.length > 0 ? resultBuscarEnvio[0].didCliente : null;
+  let mlQrSeguridad = resultBuscarEnvio.length > 0 ? resultBuscarEnvio[0].ml_qr_seguridad : null;
   /// Si no existe, lo inserto y tomo el did
   if (resultBuscarEnvio.length === 0) {
     shipmentId = await insertEnvios(
@@ -70,18 +69,20 @@ export async function handleInternalFlex(
   shipmentId = row.did;
   logCyan("El envio no fue colectado cancelado o entregado");
 
-  const queryUpdateEnvios = `
+
+  if (!mlQrSeguridad) {
+    const queryUpdateEnvios = `
                     UPDATE envios 
                     SET ml_qr_seguridad = ?
                     WHERE superado = 0 AND elim = 0 AND did = ?
-                    LIMIT 1
-                `;
+                    LIMIT 1`;
 
-  await executeQuery(dbConnection, queryUpdateEnvios, [
-    JSON.stringify(dataQr),
-    shipmentId,
-  ]);
-  logCyan("Actualice el ml_qr_seguridad del envio");
+    await executeQuery(dbConnection, queryUpdateEnvios, [
+      JSON.stringify(dataQr),
+      shipmentId,
+    ]);
+    logCyan("Actualice el ml_qr_seguridad del envio");
+  }
 
   /// Actualizo el estado del envío y lo envío al microservicio de estados
 
@@ -92,7 +93,7 @@ export async function handleInternalFlex(
 
   /// Asigno el envío al usuario si es necesario
   if (autoAssign) {
-    await assign(companyId, userId, profile, dataQr, userId);
+    await assign(companyId, userId, profile, dataQr, userId, "Autoasignado de colecta");
     logCyan("Asigne el envio");
   }
 
