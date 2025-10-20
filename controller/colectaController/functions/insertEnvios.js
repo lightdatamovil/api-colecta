@@ -2,7 +2,7 @@ import { axiosInstance } from "../../../db.js";
 import { senToDataML } from "./sendToDataML.js";
 import { executeQuery } from "lightdata-tools";
 
-export async function insertEnvios(
+export async function insertEnvios({
   dbConnection,
   companyId,
   clientId,
@@ -11,7 +11,7 @@ export async function insertEnvios(
   flex,
   externo,
   userId
-) {
+}) {
   const lote = "colecta";
   const fecha_actual = new Date();
   fecha_actual.setHours(fecha_actual.getHours() - 3);

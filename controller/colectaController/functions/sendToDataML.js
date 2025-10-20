@@ -1,6 +1,6 @@
 import { connect } from 'amqplib';
 import dotenv from 'dotenv';
-import { logCyan, logGreen, logRed, logYellow } from 'lightdata-tools';
+import { logGreen, logRed, logYellow } from 'lightdata-tools';
 
 dotenv.config({ path: process.env.ENV_FILE || '.env' });
 
@@ -30,22 +30,19 @@ async function getChannel() {
     }
 }
 
-export async function senToDataML(
+export async function senToDataML({
     companyId,
     didEnvio,
     sellerId,
     shipmentId
-) {
+}) {
     const message = {
         idEmpresa: companyId,
         did: didEnvio,
         sellerId: sellerId,
         shipmentId: shipmentId
     };
-    logCyan(`Enviando mensaje a RabbitMQ: ${JSON.stringify(message)}`);
     try {
-
-        logCyan(`Enviando mensaje a RabbitMQ: ${JSON.stringify(message)}`);
         const ch = await getChannel();
         const sent = ch.sendToQueue(
             QUEUE_ESTADOS,

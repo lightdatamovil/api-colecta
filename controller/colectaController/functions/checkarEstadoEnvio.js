@@ -1,7 +1,7 @@
 import { executeQuery } from "lightdata-tools";
 
 /// Checkea si el envio ya fue colectado, entregado o cancelado
-export async function checkearEstadoEnvio(dbConnection, shipmentId) {
+export async function checkearEstadoEnvio({ dbConnection, shipmentId }) {
     const querySelectEstadoEnvio = 'SELECT estado_envio FROM envios WHERE did = ? and elim = 0 and superado = 0';
 
     const estado = await executeQuery(dbConnection, querySelectEstadoEnvio, [shipmentId]);

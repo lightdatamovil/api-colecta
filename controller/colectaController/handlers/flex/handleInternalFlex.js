@@ -1,7 +1,7 @@
 import { insertEnvios } from "../../functions/insertEnvios.js";
 import { informe } from "../../functions/informe.js";
 import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
-import { assign, checkIfFulfillment, executeQuery, logCyan, sendShipmentStateToStateMicroserviceAPI } from "lightdata-tools";
+import { assign, checkIfFulfillment, executeQuery, sendShipmentStateToStateMicroserviceAPI } from "lightdata-tools";
 import { urlEstadosMicroservice } from "../../../../db.js";
 
 /// Busco el envio
@@ -54,20 +54,17 @@ export async function handleInternalFlex(
       mlShipmentId,
       senderId,
     ]);
-    logCyan("Inserte el envio");
   } else {
 
 
     /// Checkeo si el envío ya fue colectado cancelado o entregado
     const check = await checkearEstadoEnvio(dbConnection, shipmentId);
     if (check) return check;
-    logCyan("Encontre el envio");
   }
 
   const row = resultBuscarEnvio[0];
 
   shipmentId = row.did;
-  logCyan("El envio no fue colectado cancelado o entregado");
 
 
   if (!mlQrSeguridad) {
@@ -81,20 +78,15 @@ export async function handleInternalFlex(
       JSON.stringify(dataQr),
       shipmentId,
     ]);
-    logCyan("Actualice el ml_qr_seguridad del envio");
   }
 
   /// Actualizo el estado del envío y lo envío al microservicio de estados
 
   await sendShipmentStateToStateMicroserviceAPI(urlEstadosMicroservice, company, userId, shipmentId, 0, latitude, longitude);
-  logCyan(
-    "Actualice el estado del envio y lo envie al microservicio de estados"
-  );
 
   /// Asigno el envío al usuario si es necesario
   if (autoAssign) {
     await assign(companyId, userId, profile, dataQr, userId, "Autoasignado de colecta");
-    logCyan("Asigne el envio");
   }
 
   if (companyId == 144) {

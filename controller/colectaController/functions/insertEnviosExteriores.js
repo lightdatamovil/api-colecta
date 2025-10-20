@@ -1,6 +1,6 @@
 import { executeQuery } from "lightdata-tools";
 
-export async function insertEnviosExteriores(dbConnection, internoShipmentId, externalShipmentId, flex, externalName, externalCompanyId) {
+export async function insertEnviosExteriores({ dbConnection, internoShipmentId, externalShipmentId, flex, externalName, externalCompanyId }) {
 
     const q = `UPDATE envios_exteriores SET superado = 1 WHERE didExterno = ?`;
     await executeQuery(dbConnection, q, [externalShipmentId]);

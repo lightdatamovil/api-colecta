@@ -1,11 +1,11 @@
-import { executeQuery, getFechaLocalDePais, logCyan, logRed } from "lightdata-tools";
+import { executeQuery, getFechaLocalDePais, logRed } from "lightdata-tools";
 import { companiesService } from "../../../db.js";
 
 // Cache en memoria con TTL simple
 const cache = {};
 const CACHE_TTL_MS = 14 * 24 * 60 * 60 * 1000; // 14 días
 
-export async function informe(dbConnection, company, clientId = 0, userId) {
+export async function informe({ dbConnection, company, clientId = 0, userId }) {
   const hoy = getFechaLocalDePais(company.pais);
   if (!hoy) {
     const msg = `País (${company?.pais}) no soportado en configPaises`;
@@ -86,11 +86,6 @@ export async function informe(dbConnection, company, clientId = 0, userId) {
   const companyClients = await companiesService.getClientsByCompany(dbConnection, company.did);
 
   const cliente = companyClients?.[clientId]?.nombre ?? "Sin información";
-  if (!companyClients[clientId]) {
-    logCyan(`[informe] Cliente no encontrado (ID: ${clientId})`);
-  }
-
-  logCyan(`[informe] Informe generado para empresa ${company.did}`);
 
   // ---------- Resultado ----------
   return {
