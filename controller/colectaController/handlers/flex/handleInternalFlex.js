@@ -2,7 +2,7 @@ import { insertEnvios } from "../../functions/insertEnvios.js";
 import { informe } from "../../functions/informe.js";
 import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
 import { assign, checkIfFulfillment, executeQuery, sendShipmentStateToStateMicroserviceAPI } from "lightdata-tools";
-import { urlEstadosMicroservice } from "../../../../db.js";
+import { urlEstadosMicroservice, axiosInstance } from "../../../../db.js";
 
 /// Busco el envio
 /// Si no existe, lo inserto y tomo el did
@@ -93,7 +93,16 @@ export async function handleInternalFlex({
 
   /// Actualizo el estado del envío y lo envío al microservicio de estados
 
-  await sendShipmentStateToStateMicroserviceAPI(urlEstadosMicroservice, company, userId, shipmentId, 0, latitude, longitude);
+  await sendShipmentStateToStateMicroserviceAPI({
+    urlEstadosMicroservice,
+    axiosInstance,
+    company,
+    userId,
+    shipmentId,
+    estado: 0,
+    latitude,
+    longitude
+  });
 
   /// Asigno el envío al usuario si es necesario
   if (autoAssign) {

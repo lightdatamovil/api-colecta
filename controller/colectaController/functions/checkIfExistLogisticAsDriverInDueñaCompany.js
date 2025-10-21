@@ -1,9 +1,9 @@
 import { LightdataORM } from "lightdata-tools";
 
-export async function checkIfExistLogisticAsDriverInExternalCompany({ dbConnection, syncCode }) {
+export async function checkIfExistLogisticAsDriverInDueñaCompany({ db, syncCode }) {
 
     const [chofer] = await LightdataORM.select({
-        dbConnection,
+        dbConnection: db,
         table: 'sistema_usuarios_accesos',
         where: { codvinculacion: syncCode },
         select: ['usuario'],

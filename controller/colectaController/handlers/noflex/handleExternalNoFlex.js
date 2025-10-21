@@ -1,19 +1,11 @@
-import mysql from "mysql";
 import { insertEnvios } from "../../functions/insertEnvios.js";
 import { insertEnviosExteriores } from "../../functions/insertEnviosExteriores.js";
-import { checkIfExistLogisticAsDriverInExternalCompany } from "../../functions/checkIfExistLogisticAsDriverInExternalCompany.js";
+import { checkIfExistLogisticAsDriverInDueñaCompany as checkIfExistLogisticAsDriverInDueñaCompany } from "../../functions/checkIfExistLogisticAsDriverInDueñaCompany.js";
 import { informe } from "../../functions/informe.js";
 import { insertEnviosLogisticaInversa } from "../../functions/insertLogisticaInversa.js";
-import { companiesService, urlEstadosMicroservice } from "../../../../db.js";
-import { assign, executeQuery, getProductionDbConfig, sendShipmentStateToStateMicroserviceAPI } from "lightdata-tools";
+import { companiesService, hostProductionDb, portProductionDb, urlAsignacionMicroservice, urlEstadosMicroservice, axiosInstance } from "../../../../db.js";
+import { assign, connectMySQL, CustomException, EstadosEnvio, getProductionDbConfig, LightdataORM, sendShipmentStateToStateMicroserviceAPI } from "lightdata-tools";
 
-/// Esta funcion se conecta a la base de datos de la empresa externa
-/// Checkea si el envio ya fue colectado, entregado o cancelado
-/// Busca el chofer que se crea en la vinculacion de logisticas
-/// Con ese chofer inserto en envios y envios exteriores de la empresa interna
-/// Asigno a la empresa externa
-/// Si es autoasignacion, asigno a la empresa interna
-/// Actualizo el estado del envio a colectado y envio el estado del envio en los microservicios
 export async function handleExternalNoFlex({
     db,
     dataQr,
@@ -24,116 +16,174 @@ export async function handleExternalNoFlex({
     latitude,
     longitude,
 }) {
-    const companyId = company.did;
     const shipmentIdFromDataQr = dataQr.did;
     const clientIdFromDataQr = dataQr.cliente;
 
-    /// Busco la empresa externa
-    const externalCompany = await companiesService.getCompanyById(dataQr.empresa);
+    /// Busco la empresa dueña del envio y la empresa encargada de la colecta
+    const companyDueña = await companiesService.getById(dataQr.empresa);
+    const companyEncargada = await companiesService.getById(company.did);
 
-    /// Conecto a la base de datos de la empresa externa
-    const dbConfigExt = getProductionDbConfig(externalCompany);
-    const externalDbConnection = mysql.createConnection(dbConfigExt);
-    externalDbConnection.connect();
+    /// Conecto a la base de datos de la empresa dueña del envío
+    const dbConfigExt = getProductionDbConfig({
+        host: hostProductionDb,
+        port: portProductionDb,
+        company: companyDueña
+    });
 
-    /// Chequeo si el envio ya fue colectado, entregado o cancelado
-    //! Se comento porque si el paquete estaba colectado en la empresa que da el paquete, no se podia ingresar en la que se lo recibe
-    // const check = await checkearEstadoEnvio(externalDbConnection, shipmentIdFromDataQr);
-    // if (check) {
-    //     externalDbConnection.end();
+    let dueñaDbConnection;
 
-    //     return check;
-    // }
+    try {
+        dueñaDbConnection = await connectMySQL(dbConfigExt);
 
-    const companyClientList = await companiesService.getClientsByCompany(externalDbConnection, externalCompany.did);
+        const companyClientList = await companiesService.getClientsByCompany({
+            db: dueñaDbConnection,
+            companyId: companyDueña.did
+        });
 
-    const client = companyClientList[clientIdFromDataQr];
+        const client = companyClientList[clientIdFromDataQr];
 
-    const internalCompany = await companiesService.getCompanyById(companyId);
+        /// Busco el chofer que se crea en la vinculacion de logisticas
+        const driver = await checkIfExistLogisticAsDriverInDueñaCompany({
+            db: dueñaDbConnection,
+            syncCode: companyEncargada.codigo
+        });
+        console.log("Driver encontrado en la empresa dueña del envío:", driver);
+        if (!driver) {
+            dueñaDbConnection.end();
+            return { success: false, message: "No se encontró chofer asignado" };
+        }
 
-    /// Busco el chofer que se crea en la vinculacion de logisticas
-    const driver = await checkIfExistLogisticAsDriverInExternalCompany(externalDbConnection, internalCompany.codigo);
+        const [rowDueñaClient] = await LightdataORM.select({
+            dbConnection: dueñaDbConnection,
+            table: 'clientes',
+            where: { codigoVinculacionLogE: company.codigo },
+            select: ['did'],
+            throwIfNotExists: true,
+        });
 
-    if (!driver) {
-        externalDbConnection.end();
+        let encargadaShipmentId;
 
-        return { success: false, message: "No se encontró chofer asignado" };
-    }
+        const [rowEncargadaShipmentId] = await LightdataORM.select({
+            dbConnection: db,
+            table: 'envios_exteriores',
+            where: { didExterno: shipmentIdFromDataQr },
+            select: ['didLocal'],
+        });
 
-    const queryClient = `SELECT did  FROM clientes WHERE codigoVinculacionLogE = ?`;
-    const externalClient = await executeQuery({ dbConnection: db, query: queryClient, values: [externalCompany.codigo] });
-    let internalShipmentId;
+        if (rowEncargadaShipmentId) {
+            encargadaShipmentId = rowEncargadaShipmentId.didLocal;
+        } else {
+            encargadaShipmentId = await insertEnvios({
+                company,
+                clientId: rowDueñaClient.did,
+                accountId: 0,
+                dataQr: { id: "", sender_id: "" },
+                externo: 1,
+                flex: 0,
+                userId,
+                driverId: driver,
+                cp: "",
+            });
+        }
 
-    const consulta = 'SELECT didLocal FROM envios_exteriores WHERE didExterno = ? and superado = 0 and elim = 0 LIMIT 1';
+        /// Inserto en envios exteriores en la empresa interna
+        await insertEnviosExteriores(
+            db,
+            encargadaShipmentId,
+            shipmentIdFromDataQr,
+            0,
+            client.nombre || "",
+            companyDueña.did,
+        );
 
-    internalShipmentId = await executeQuery({ dbConnection: db, query: consulta, values: [shipmentIdFromDataQr] });
+        // Asigno a la empresa dueña del envío
+        await assign({
+            url: urlAsignacionMicroservice,
+            companyId: dataQr.empresa,
+            userId,
+            profile,
+            dataQr,
+            driverId: driver,
+            deviceFrom: "Autoasignado de colecta"
+        });
 
-    if (internalShipmentId.length > 0 && internalShipmentId[0]?.didLocal) {
+        if (autoAssign) {
+            const dqr = {
+                interno: dataQr.interno,
+                did: encargadaShipmentId,
+                cliente: clientIdFromDataQr,
+                empresa: company.did,
+            };
 
-        internalShipmentId = internalShipmentId[0].didLocal;
-    } else {
+            // Asigno a la empresa interna
+            await assign({
+                url: urlAsignacionMicroservice,
+                companyId: company.did,
+                userId,
+                profile,
+                dqr,
+                driverId: userId,
+                deviceFrom: "Autoasignado de colecta"
+            });
+        }
 
-        internalShipmentId = await insertEnvios({
+        const [rowLogisticaInversa] = await LightdataORM.select({
+            dbConnection: dueñaDbConnection,
+            table: 'envios_logisticainversa',
+            where: { didEnvio: shipmentIdFromDataQr },
+            select: ['valor'],
+        });
+
+        if (rowLogisticaInversa) {
+            await insertEnviosLogisticaInversa({
+                db,
+                shipmentId: encargadaShipmentId,
+                valor: rowLogisticaInversa.valor,
+                userId,
+            });
+        }
+
+        await sendShipmentStateToStateMicroserviceAPI({
+            urlEstadosMicroservice,
+            axiosInstance,
             company,
-            clientId: externalClient[0].did,
-            accountId: 0,
-            dataQr: { id: "", sender_id: "" },
-            externo: 1,
-            flex: 0,
+            driverId: userId,
+            shipmentId: encargadaShipmentId,
+            estado: EstadosEnvio.value(EstadosEnvio.collected, company.did),
+            latitude,
+            longitude,
+            desde: "Colecta App",
+        });
+
+        await sendShipmentStateToStateMicroserviceAPI({
+            urlEstadosMicroservice,
+            axiosInstance,
+            company: companyDueña,
+            driverId: driver,
+            shipmentId: shipmentIdFromDataQr,
+            estado: EstadosEnvio.value(EstadosEnvio.collected, companyDueña.did),
+            latitude,
+            longitude,
+            desde: "Colecta App",
+        });
+
+        const body = await informe({
+            db,
+            company,
+            clientId: rowDueñaClient.did,
             userId
         });
+
+        return { success: true, message: "Paquete colectado con exito", body };
+    } catch (error) {
+        if (error.isAxiosError) {
+            throw error;
+        }
+        throw new CustomException({
+            title: "Error al procesar la colecta externa",
+            message: error.message || "Error desconocido al procesar la colecta externa.",
+        });
+    } finally {
+        if (dueñaDbConnection) await dueñaDbConnection.end();
     }
-
-
-    /// Inserto en envios exteriores en la empresa interna
-    await insertEnviosExteriores(
-        db,
-        internalShipmentId,
-        shipmentIdFromDataQr,
-        0,
-        client.nombre || "",
-        externalCompany.did,
-    );
-
-    // Asigno a la empresa externa
-    await assign(dataQr.empresa, userId, profile, dataQr, driver, "Autoasignado de colecta");
-
-    if (autoAssign) {
-        const dqr = {
-            interno: dataQr.interno,
-            did: internalShipmentId,
-            cliente: clientIdFromDataQr,
-            empresa: companyId,
-        };
-
-        // Asigno a la empresa interna
-        await assign(companyId, userId, profile, dqr, userId, "Autoasignado de colecta");
-    }
-
-    const check2 = "SELECT valor FROM envios_logisticainversa WHERE didEnvio = ?";
-
-    const rows = await executeQuery({
-        dbConnection: externalDbConnection,
-        query: check2,
-        values: [shipmentIdFromDataQr]
-    });
-    if (rows.length > 0) {
-        await insertEnviosLogisticaInversa(
-            db,
-            internalShipmentId,
-            rows[0].valor,
-            userId,
-        );
-    }
-
-    await sendShipmentStateToStateMicroserviceAPI(urlEstadosMicroservice, company, userId, internalShipmentId, 0, latitude, longitude);
-
-    const dataQrCompany = await companiesService.getCompanyById(dataQr.empresa);
-    await sendShipmentStateToStateMicroserviceAPI(urlEstadosMicroservice, dataQrCompany, driver, shipmentIdFromDataQr, 0, latitude, longitude);
-
-    const body = await informe({ db, company, clientId: externalClient[0].did, userId });
-
-    externalDbConnection.end();
-
-    return { success: true, message: "Paquete colectado con exito", body };
 }

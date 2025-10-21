@@ -1,7 +1,7 @@
-import { assign, executeQuery, sendShipmentStateToStateMicroserviceAPI } from "lightdata-tools";
+import { assign, LightdataORM, sendShipmentStateToStateMicroserviceAPI, EstadosEnvio } from "lightdata-tools";
 import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
 import { informe } from "../../functions/informe.js";
-import { urlAsignacionMicroservice, urlEstadosMicroservice } from "../../../../db.js";
+import { urlAsignacionMicroservice, urlEstadosMicroservice, axiosInstance } from "../../../../db.js";
 
 /// Esta funcion checkea si el envio ya fue colectado, entregado o cancelado
 /// Busca el chofer asignado al envio
@@ -22,21 +22,19 @@ export async function handleInternalNoFlex({
     const companyId = company.did;
 
     /// Chequeo si el envio ya fue colectado, entregado o cancelado
-    const check = await checkearEstadoEnvio(db, shipmentId);
-    if (check) {
-        return check;
-    }
+    const estado = await checkearEstadoEnvio({ db, shipmentId });
+    if (estado) return estado;
 
     /// Busco el estado del envio y el chofer asignado
-    const querySelectEnvios = `SELECT choferAsignado FROM envios WHERE superado = 0 AND elim = 0 AND did = ? LIMIT 1`;
-    const resultChoferAsignado = await executeQuery({ dbConnection: db, query: querySelectEnvios, values: [shipmentId] });
+    const [row] = await LightdataORM.select({
+        dbConnection: db,
+        table: 'envios',
+        where: { did: shipmentId },
+        select: ['choferAsignado'],
+        throwIfNotExists: true
+    });
 
-    /// Si no encuentro el envio mando error
-    if (resultChoferAsignado.length === 0) {
-        return { success: false, message: "Paquete no encontrado" };
-    }
-
-    const isAlreadyAssigned = resultChoferAsignado[0].choferAsignado == userId;
+    const isAlreadyAssigned = row.choferAsignado == userId;
 
     /// Si el envio no esta asignado y se quiere autoasignar, lo asigno
     if (!isAlreadyAssigned && autoAssign) {
@@ -51,9 +49,28 @@ export async function handleInternalNoFlex({
     }
 
     /// Actualizamos el estado del envio en el micro servicio
-    await sendShipmentStateToStateMicroserviceAPI(urlEstadosMicroservice, company, userId, shipmentId, 0, latitude, longitude);
+    await sendShipmentStateToStateMicroserviceAPI({
+        urlEstadosMicroservice,
+        axiosInstance,
+        company,
+        userId,
+        shipmentId,
+        estado: EstadosEnvio.value(EstadosEnvio.collected, companyId),
+        latitude,
+        longitude,
+        desde: "Colecta App",
+    });
 
-    const body = await informe({ db, company, clientId: dataQr.cliente, userId });
+    const body = await informe({
+        db,
+        company,
+        clientId: dataQr.cliente,
+        userId
+    });
 
-    return { success: true, message: "Paquete colectado correctamente", body: body };
+    return {
+        success: true,
+        message: "Paquete colectado correctamente",
+        body
+    };
 }

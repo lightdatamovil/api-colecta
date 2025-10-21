@@ -1,4 +1,4 @@
-import { executeQuery, getFechaLocalDePais, logRed } from "lightdata-tools";
+import { executeQuery, getFechaConHoraLocalDePais, getFechaLocalDePais, logRed } from "lightdata-tools";
 import { companiesService } from "../../../db.js";
 
 // Cache en memoria con TTL simple
@@ -7,14 +7,13 @@ const CACHE_TTL_MS = 14 * 24 * 60 * 60 * 1000; // 14 días
 
 export async function informe({ db, company, clientId = 0, userId }) {
   const hoy = getFechaLocalDePais(company.pais);
+  const hoyConhora = getFechaConHoraLocalDePais(company.pais);
+
   if (!hoy) {
     const msg = `País (${company?.pais}) no soportado en configPaises`;
     logRed(msg);
   }
 
-  const hoyInicio = `${hoy} 00:00:00`;
-
-  // --- 🔹 Consultas SQL definidas ---
   const q1 = `
     SELECT COUNT(e.id) AS total
     FROM envios AS e
@@ -47,18 +46,16 @@ export async function informe({ db, company, clientId = 0, userId }) {
       AND autofecha > ?
   `;
 
-  // 🔹 Ejecutar las tres consultas en paralelo
   const [resTotalCliente, resColectarHoy, resRetiradosHoy] = await Promise.all([
-    executeQuery({ dbConnection: db, query: q1, values: [clientId, hoyInicio] }),
-    executeQuery({ dbConnection: db, query: q2, values: [hoyInicio, userId] }),
-    executeQuery({ dbConnection: db, query: q3, values: [hoyInicio] }),
+    executeQuery({ dbConnection: db, query: q1, values: [clientId, hoyConhora] }),
+    executeQuery({ dbConnection: db, query: q2, values: [hoyConhora, userId] }),
+    executeQuery({ dbConnection: db, query: q3, values: [hoyConhora] }),
   ]);
 
   const totalARetirarCliente = resTotalCliente[0]?.total ?? 0;
   const aColectarHoy = resColectarHoy[0]?.total ?? 0;
   const retiradosHoy = resRetiradosHoy[0]?.total ?? 0;
 
-  // ---------- Cache local ----------
   const cacheKey = `${hoy}:${company.did}:${userId}`;
   const now = Date.now();
 
@@ -72,7 +69,7 @@ export async function informe({ db, company, clientId = 0, userId }) {
         AND autofecha > ? 
         AND estado = 0
     `;
-    const res = await executeQuery({ dbConnection: db, query: q4, values: [userId, hoyInicio] });
+    const res = await executeQuery({ dbConnection: db, query: q4, values: [userId, hoyConhora] });
     cache[cacheKey] = {
       timestamp: now,
       total: res[0]?.total > 0 ? res[0].total : 1,
@@ -83,11 +80,10 @@ export async function informe({ db, company, clientId = 0, userId }) {
 
   const colectadosHoyPorMi = cache[cacheKey].total;
 
-  const companyClients = await companiesService.getClientsByCompany(db, company.did);
+  const companyClients = await companiesService.getClientsByCompany({ db, companyId: company.did });
 
   const cliente = companyClients?.[clientId]?.nombre ?? "Sin información";
 
-  // ---------- Resultado ----------
   return {
     cliente,
     cliente_total: totalARetirarCliente,

@@ -1,11 +1,9 @@
 import { connect } from 'amqplib';
 import dotenv from 'dotenv';
 import { logGreen, logRed } from 'lightdata-tools';
+import { queueEstadosML, rabbitUrl } from '../../../db.js';
 
 dotenv.config({ path: process.env.ENV_FILE || '.env' });
-
-const RABBITMQ_URL = process.env.RABBITMQ_URL;
-const QUEUE_ESTADOS = "dataML";
 
 let connection = null;
 let channel = null;
@@ -14,9 +12,9 @@ async function getChannel() {
     if (channel) return channel;
 
     try {
-        connection = await connect(RABBITMQ_URL);
+        connection = await connect(rabbitUrl);
         channel = await connection.createChannel();
-        await channel.assertQueue(QUEUE_ESTADOS, { durable: true });
+        await channel.assertQueue(queueEstadosML, { durable: true });
 
         process.on('exit', () => {
             if (channel) channel.close();
@@ -42,21 +40,16 @@ export async function senToDataML({
         sellerId: sellerId,
         shipmentId: shipmentId
     };
-    try {
-        const ch = await getChannel();
-        const sent = ch.sendToQueue(
-            QUEUE_ESTADOS,
-            Buffer.from(JSON.stringify(message)),
-            { persistent: true }
-        );
+    const ch = await getChannel();
+    const sent = ch.sendToQueue(
+        queueEstadosML,
+        Buffer.from(JSON.stringify(message)),
+        { persistent: true }
+    );
 
-        if (sent) {
-            logGreen('✅ Mensaje enviado correctamente al microservicio de dataML');
-        } else {
-            throw new Error('Buffer lleno en RabbitMQ');
-        }
-    } catch (error) {
-        logRed(`❌ Falló RabbitMQ, intentando enviar por HTTP: ${error.message}`);
-
+    if (sent) {
+        logGreen('✅ Mensaje enviado correctamente al microservicio de dataML');
+    } else {
+        throw new Error('Buffer lleno en RabbitMQ');
     }
 }

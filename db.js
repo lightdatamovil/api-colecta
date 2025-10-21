@@ -70,9 +70,14 @@ export const jwtAudience = process.env.JWT_AUDIENCE;
 export const jwtExpiresIn = process.env.JWT_EXPIRES_IN || '1h';
 
 /// Microservicios y colas
-export const rabbitUrl = process.env.RABBIT_URL;
-export const queueEstados = process.env.QUEUE_ESTADOS;
+export const rabbitUrl = process.env.RABBITMQ_URL;
 export const urlEstadosMicroservice = process.env.URL_ESTADOS_MICROSERVICE;
+export const queueEstados = process.env.QUEUE_ESTADOS;
+export const queueEstadosML = process.env.QUEUE_ESTADOS_ML;
 
 /// Microservicio de asignacion
 export const urlAsignacionMicroservice = process.env.URL_ASIGNACION_MICROSERVICE;
+
+/// Microservicio de alta de envios
+export const urlAltaEnvioMicroservice = process.env.URL_ALTA_ENVIO_MICROSERVICE;
+export const urlAltaEnvioRedisMicroservice = process.env.URL_ALTA_ENVIO_REDIS_MICROSERVICE;

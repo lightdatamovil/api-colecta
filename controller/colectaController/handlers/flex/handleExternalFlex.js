@@ -1,7 +1,7 @@
 import mysql from "mysql";
 import { insertEnvios } from "../../functions/insertEnvios.js";
 import { insertEnviosExteriores } from "../../functions/insertEnviosExteriores.js";
-import { checkIfExistLogisticAsDriverInExternalCompany } from "../../functions/checkIfExistLogisticAsDriverInExternalCompany.js";
+import { checkIfExistLogisticAsDriverInDueñaCompany } from "../../functions/checkIfExistLogisticAsDriverInDueñaCompany.js";
 import { informe } from "../../functions/informe.js";
 import { insertEnviosLogisticaInversa } from "../../functions/insertLogisticaInversa.js";
 import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
@@ -76,7 +76,7 @@ export async function handleExternalFlex({
       let externalShipmentId;
       let externalClientId;
 
-      const driver = await checkIfExistLogisticAsDriverInExternalCompany({
+      const driver = await checkIfExistLogisticAsDriverInDueñaCompany({
         dbConnection: externalDbConnection,
         syncCode: codLocal
       });
