@@ -21,7 +21,6 @@ export async function handleExternalNoFlex({
 
     /// Busco la empresa dueña del envio y la empresa encargada de la colecta
     const companyDueña = await companiesService.getById(dataQr.empresa);
-    const companyEncargada = await companiesService.getById(company.did);
 
     /// Conecto a la base de datos de la empresa dueña del envío
     const dbConfigExt = getProductionDbConfig({
@@ -45,7 +44,7 @@ export async function handleExternalNoFlex({
         /// Busco el chofer que se crea en la vinculacion de logisticas
         const driver = await checkIfExistLogisticAsDriverInDueñaCompany({
             db: dueñaDbConnection,
-            syncCode: companyEncargada.codigo
+            syncCode: company.codigo
         });
         console.log("Driver encontrado en la empresa dueña del envío:", driver);
         if (!driver) {
