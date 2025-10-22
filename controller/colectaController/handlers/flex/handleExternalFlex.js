@@ -179,16 +179,16 @@ export async function handleExternalFlex({
             userId
           );
         }
-      }
 
-      await insertEnviosExteriores(
-        db,
-        internalShipmentId,
-        externalShipmentId,
-        1,
-        nombreFantasia,
-        externalCompanyId
-      );
+        await insertEnviosExteriores(
+          db,
+          internalShipmentId,
+          externalShipmentId,
+          1,
+          nombreFantasia,
+          externalCompanyId
+        );
+      }
 
       await sendShipmentStateToStateMicroserviceAPI(
         urlEstadosMicroservice,
