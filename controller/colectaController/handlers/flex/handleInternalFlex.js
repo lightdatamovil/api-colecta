@@ -1,8 +1,8 @@
 import { insertEnvios } from "../../functions/insertEnvios.js";
 import { informe } from "../../functions/informe.js";
 import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
-import { assign, checkIfFulfillment, executeQuery, sendShipmentStateToStateMicroserviceAPI } from "lightdata-tools";
-import { urlEstadosMicroservice, axiosInstance } from "../../../../db.js";
+import { assign, checkIfFulfillment, LightdataORM, sendShipmentStateToStateMicroserviceAPI } from "lightdata-tools";
+import { urlEstadosMicroservice, axiosInstance, urlAsignacionMicroservice } from "../../../../db.js";
 
 /// Busco el envio
 /// Si no existe, lo inserto y tomo el did
@@ -22,76 +22,64 @@ export async function handleInternalFlex({
 }) {
   const companyId = company.did;
   const mlShipmentId = dataQr.id;
-  let shipmentId;
-  await checkIfFulfillment(db, mlShipmentId);
-  /// Busco el envio
-  const sql = `
-            SELECT did , didCliente, ml_qr_seguridad 
-            FROM envios 
-            WHERE ml_shipment_id = ? AND ml_vendedor_id = ? and elim = 0 and superado = 0 LIMIT 1    
-        `;
 
-  let resultBuscarEnvio = await executeQuery({
+  let shipmentId;
+
+  await checkIfFulfillment(db, mlShipmentId);
+
+  let [rowEnvio] = LightdataORM.select({
     dbConnection: db,
-    query: sql,
-    values: [
-      mlShipmentId,
-      senderId,
-    ]
+    table: 'envios',
+    where: {
+      ml_shipment_id: mlShipmentId,
+      ml_vendedor_id: senderId,
+    },
   });
-  shipmentId = resultBuscarEnvio.length > 0 ? resultBuscarEnvio[0].did : null;
-  let didCLiente = resultBuscarEnvio.length > 0 ? resultBuscarEnvio[0].didCliente : null;
-  let mlQrSeguridad = resultBuscarEnvio.length > 0 ? resultBuscarEnvio[0].ml_qr_seguridad : null;
-  /// Si no existe, lo inserto y tomo el did
-  if (resultBuscarEnvio.length === 0) {
+
+  shipmentId = rowEnvio.length > 0 ? rowEnvio.did : null;
+  const didCliente = rowEnvio.length > 0 ? rowEnvio.didCliente : null;
+  const mlQrSeguridad = rowEnvio.length > 0 ? rowEnvio.ml_qr_seguridad : null;
+
+  if (rowEnvio) {
     shipmentId = await insertEnvios({
       company,
-      accountId: account.didCliente,
-      clientId: account.didCuenta,
+      clientId: account.didCliente,
+      accountId: account.didCuenta,
       dataQr,
       flex: 1,
       externo: 0,
-      userId
+      userId,
+      cp: "",
+      driverId: userId,
     });
-    resultBuscarEnvio = await executeQuery({
+
+    [rowEnvio] = await LightdataORM.select({
       dbConnection: db,
-      query: sql,
-      values: [
-        mlShipmentId,
-        senderId,
-      ]
+      table: 'envios',
+      where: {
+        ml_shipment_id: mlShipmentId,
+        ml_vendedor_id: senderId,
+      },
     });
   } else {
-
-
-    /// Checkeo si el envío ya fue colectado cancelado o entregado
     const check = await checkearEstadoEnvio(db, shipmentId);
     if (check) return check;
   }
 
-  const row = resultBuscarEnvio[0];
-
-  shipmentId = row.did;
-
+  shipmentId = rowEnvio.did;
 
   if (!mlQrSeguridad) {
-    const queryUpdateEnvios = `
-                    UPDATE envios 
-                    SET ml_qr_seguridad = ?
-                    WHERE superado = 0 AND elim = 0 AND did = ?
-                    LIMIT 1`;
-
-    await executeQuery({
+    await LightdataORM.update({
       dbConnection: db,
-      query: queryUpdateEnvios,
-      values: [
-        JSON.stringify(dataQr),
-        shipmentId,
-      ]
+      table: 'envios',
+      where: {
+        did: shipmentId
+      },
+      values: {
+        ml_qr_seguridad: JSON.stringify(dataQr)
+      }
     });
   }
-
-  /// Actualizo el estado del envío y lo envío al microservicio de estados
 
   await sendShipmentStateToStateMicroserviceAPI({
     urlEstadosMicroservice,
@@ -101,38 +89,32 @@ export async function handleInternalFlex({
     shipmentId,
     estado: 0,
     latitude,
-    longitude
+    longitude,
+    desde: "Colecta App",
   });
 
-  /// Asigno el envío al usuario si es necesario
   if (autoAssign) {
-    await assign(companyId, userId, profile, dataQr, userId, "Autoasignado de colecta");
-  }
-
-  if (companyId == 144) {
-    const body = await informe({
-      db,
-      company,
-      clientId: didCLiente,
-      userId
+    await assign({
+      url: urlAsignacionMicroservice,
+      companyId,
+      userId,
+      profile,
+      dataQr,
+      driverId: userId,
+      desde: "Autoasignado de colecta"
     });
-    return {
-      success: true,
-      message: "Paquete puesto a planta  - FLEX",
-      body,
-    };
   }
 
   const body = await informe({
     db,
     company,
-    clientId: account.didCliente || 0,
+    clientId: companyId == 144 ? didCliente : account.didCliente || 0,
     userId
   });
 
   return {
     success: true,
     message: "Paquete insertado y colectado - FLEX",
-    body: body,
+    body,
   };
 }

@@ -1,8 +1,4 @@
-import {
-  axiosInstance,
-  urlAltaEnvioMicroservice,
-  urlAltaEnvioRedisMicroservice
-} from "../../../db.js";
+import { axiosInstance, urlAltaEnvioMicroservice, urlAltaEnvioRedisMicroservice } from "../../../db.js";
 
 import { senToDataML } from "./sendToDataML.js";
 import { getFechaConHoraLocalDePais, CustomException, EstadosEnvio } from "lightdata-tools";
