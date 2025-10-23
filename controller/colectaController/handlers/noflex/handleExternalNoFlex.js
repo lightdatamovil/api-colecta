@@ -84,7 +84,7 @@ export async function handleExternalNoFlex({
                 driverId: driver,
                 lote: "colecta",
                 didExterno: shipmentIdFromDataQr,
-                nombreClienteEnEmpresaDueña: client.empresa,
+                nombreClienteEnEmpresaDueña: client.nombre,
                 empresaDueña: companyDueña.did,
             });
         }
