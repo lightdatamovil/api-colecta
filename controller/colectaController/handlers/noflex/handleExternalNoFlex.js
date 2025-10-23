@@ -126,6 +126,7 @@ export async function handleExternalNoFlex({
 
         /* 🧩 7. Asignar a empresa dueña */
         const startAssignDueña = performance.now();
+        logBlue(urlAsignacionMicroservice);
         await assign({
             url: urlAsignacionMicroservice,
             companyId: dataQr.empresa,
@@ -186,6 +187,7 @@ export async function handleExternalNoFlex({
         const endInv = performance.now();
         logGreen(`🔁 Logística inversa en ${(endInv - startInv).toFixed(2)} ms`);
 
+        logBlue(urlEstadosMicroservice);
         /* 🧩 10. Actualizar estado en microservicio */
         const startEstado = performance.now();
         await sendShipmentStateToStateMicroserviceAPI({
