@@ -7,6 +7,7 @@ import axios from 'axios';
 
 dotenv.config({ path: process.env.ENV_FILE || ".env" });
 
+const local = process.env.LOCAL;
 /// Redis para obtener las empresas
 const redisHost = process.env.REDIS_HOST;
 const redisPort = process.env.REDIS_PORT;
@@ -74,12 +75,12 @@ export const rabbitUrl = process.env.RABBITMQ_URL;
 
 export const rabbitService = new RabbitService(rabbitUrl);
 
-export const urlEstadosMicroservice = process.env.URL_ESTADOS_MICROSERVICE;
+export const urlEstadosMicroservice = local ? process.env.URL_ESTADOS_MICROSERVICE : process.env.URL_ESTADOS_MICROSERVICE_RED;
 export const queueEstados = process.env.QUEUE_ESTADOS;
 export const queueEstadosML = process.env.QUEUE_ESTADOS_ML;
 
 /// Microservicio de asignacion
-export const urlAsignacionMicroservice = process.env.URL_ASIGNACION_MICROSERVICE;
+export const urlAsignacionMicroservice = local ? process.env.URL_ASIGNACION_MICROSERVICE : process.env.URL_ASIGNACION_MICROSERVICE_RED;
 
 /// Microservicio de alta de envios
 export const urlAltaEnvioMicroservice = process.env.URL_ALTA_ENVIO_MICROSERVICE;
