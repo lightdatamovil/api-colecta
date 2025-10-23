@@ -8,6 +8,7 @@ import { companiesService } from "../db.js";
 export async function colectar({ db, req, company }) {
     let { dataQr, autoAssign, latitude, longitude } = req.body;
     const { userId, profile } = req.user;
+
     let response;
     dataQr = parseIfJson(dataQr);
     //es barcode

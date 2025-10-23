@@ -1,7 +1,7 @@
 import { checkIfExistLogisticAsDriverInDueñaCompany } from "../../functions/checkIfExistLogisticAsDriverInDueñaCompany.js";
 import { informe } from "../../functions/informe.js";
 import { companiesService, hostProductionDb, portProductionDb, urlAsignacionMicroservice, urlEstadosMicroservice, axiosInstance, rabbitService, queueEstadosML, urlAltaEnvioMicroservice, urlAltaEnvioRedisMicroservice } from "../../../../db.js";
-import { altaEnvioBasica, assign, connectMySQL, CustomException, EstadosEnvio, getProductionDbConfig, LightdataORM, logYellow, sendShipmentStateToStateMicroserviceAPI } from "lightdata-tools";
+import { altaEnvioBasica, assign, connectMySQL, CustomException, EstadosEnvio, getProductionDbConfig, LightdataORM, sendShipmentStateToStateMicroserviceAPI } from "lightdata-tools";
 
 export async function handleExternalNoFlex({
     db,
@@ -68,7 +68,6 @@ export async function handleExternalNoFlex({
         if (rowEncargadaShipmentId) {
             encargadaShipmentId = rowEncargadaShipmentId.didLocal;
         } else {
-            logYellow(`El envío externo ${shipmentIdFromDataQr} no existe en la empresa encargada ${company.did}, se dará de alta.`);
             encargadaShipmentId = await altaEnvioBasica({
                 urlAltaEnvioMicroservice,
                 urlAltaEnvioRedisMicroservice,
@@ -85,10 +84,9 @@ export async function handleExternalNoFlex({
                 driverId: driver,
                 lote: "colecta",
                 didExterno: shipmentIdFromDataQr,
-                nombreClienteEnEmpresaDueña: client.nombre,
+                nombreClienteEnEmpresaDueña: client.empresa,
                 empresaDueña: companyDueña.did,
             });
-            logYellow(`El envío externo ${shipmentIdFromDataQr} fue dado de alta en la empresa encargada ${company.nombre} con ID ${encargadaShipmentId}.`);
         }
 
         // Asigno a la empresa dueña del envío
@@ -146,6 +144,7 @@ export async function handleExternalNoFlex({
             urlEstadosMicroservice,
             axiosInstance,
             company,
+            userId,
             driverId: userId,
             shipmentId: encargadaShipmentId,
             estado: EstadosEnvio.value(EstadosEnvio.collected, company.did),
@@ -158,6 +157,7 @@ export async function handleExternalNoFlex({
             urlEstadosMicroservice,
             axiosInstance,
             company: companyDueña,
+            userId,
             driverId: driver,
             shipmentId: shipmentIdFromDataQr,
             estado: EstadosEnvio.value(EstadosEnvio.collected, companyDueña.did),
