@@ -1,11 +1,8 @@
 import mysql from "mysql";
-import { insertEnvios } from "../../functions/insertEnvios.js";
-import { insertEnviosExteriores } from "../../functions/insertEnviosExteriores.js";
 import { checkIfExistLogisticAsDriverInDueñaCompany } from "../../functions/checkIfExistLogisticAsDriverInDueñaCompany.js";
 import { informe } from "../../functions/informe.js";
-import { insertEnviosLogisticaInversa } from "../../functions/insertLogisticaInversa.js";
 import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
-import { assign, executeQuery, getProductionDbConfig, logRed, sendShipmentStateToStateMicroserviceAPI } from "lightdata-tools";
+import { assign, executeQuery, getProductionDbConfig, LightdataORM, logRed, sendShipmentStateToStateMicroserviceAPI } from "lightdata-tools";
 import { companiesService, urlEstadosMicroservice } from "../../../../db.js";
 
 /// Esta funcion busca las logisticas vinculadas
@@ -50,7 +47,7 @@ export async function handleExternalFlex({
     }
 
     const externalLogisticId = logistica.did;
-    const nombreFantasia = logistica.nombre_fantasia;
+    // const nombreFantasia = logistica.nombre_fantasia;
     const syncCode = logistica.codigoVinculacionLogE;
 
     const externalCompany = await companiesService.getCompanyByCode(syncCode);
@@ -74,7 +71,7 @@ export async function handleExternalFlex({
       });
 
       let externalShipmentId;
-      let externalClientId;
+      // let externalClientId;
 
       const driver = await checkIfExistLogisticAsDriverInDueñaCompany({
         dbConnection: externalDbConnection,
@@ -90,7 +87,7 @@ export async function handleExternalFlex({
 
       if (rowsEnvios.length > 0) {
         externalShipmentId = rowsEnvios[0].did;
-        externalClientId = rowsEnvios[0].didCliente;
+        // externalClientId = rowsEnvios[0].didCliente;
 
         const check = await checkearEstadoEnvio(
           externalDbConnection,
@@ -114,31 +111,31 @@ export async function handleExternalFlex({
           continue;
         }
 
-        externalClientId = rowsCuentas[0].didCliente;
-        const didcuenta_ext = rowsCuentas[0].did;
+        // externalClientId = rowsCuentas[0].didCliente;
+        // const didcuenta_ext = rowsCuentas[0].did;
 
-        const result = await insertEnvios({
-          company: externalCompany,
-          clientId: externalClientId,
-          accountId: didcuenta_ext,
-          dataQr,
-          flex: 1,
-          externo: 0,
-          userId,
-          driverId: driver,
-        });
+        // const result = await insertEnvios({
+        //   company: externalCompany,
+        //   clientId: externalClientId,
+        //   accountId: didcuenta_ext,
+        //   dataQr,
+        //   flex: 1,
+        //   externo: 0,
+        //   userId,
+        //   driverId: driver,
+        // });
 
-        const sqlEnvios2 = `
-          SELECT did, didCliente
-          FROM envios 
-          WHERE did = ? AND ml_vendedor_id = ? and elim = 0 and superado = 0
-          LIMIT 1
-        `;
-        rowsEnvios = await executeQuery({
-          dbConnection: externalDbConnection,
-          query: sqlEnvios2,
-          values: [result, senderid]
-        });
+        // const sqlEnvios2 = `
+        //   SELECT did, didCliente
+        //   FROM envios 
+        //   WHERE did = ? AND ml_vendedor_id = ? and elim = 0 and superado = 0
+        //   LIMIT 1
+        // `;
+        // rowsEnvios = await executeQuery({
+        //   dbConnection: externalDbConnection,
+        //   query: sqlEnvios2,
+        //   values: [result, senderid]
+        // });
 
         externalShipmentId = rowsEnvios[0].did;
       }
@@ -154,16 +151,16 @@ export async function handleExternalFlex({
       if (internalShipmentId.length > 0 && internalShipmentId[0]?.didLocal) {
         internalShipmentId = internalShipmentId[0].didLocal;
       } else {
-        internalShipmentId = await insertEnvios({
-          company,
-          accountId: externalLogisticId,
-          clientId: 0,
-          dataQr,
-          flex: 1,
-          externo: 1,
-          userId,
-          driverId: 0
-        });
+        // internalShipmentId = await insertEnvios({
+        //   company,
+        //   accountId: externalLogisticId,
+        //   clientId: 0,
+        //   dataQr,
+        //   flex: 1,
+        //   externo: 1,
+        //   userId,
+        //   driverId: 0
+        // });
 
         const check = "SELECT valor FROM envios_logisticainversa WHERE didEnvio = ?";
         const rows = await executeQuery({
@@ -172,22 +169,26 @@ export async function handleExternalFlex({
           values: [externalShipmentId]
         });
         if (rows.length > 0) {
-          await insertEnviosLogisticaInversa(
-            db,
-            internalShipmentId,
-            rows[0].valor,
-            userId
-          );
+          await LightdataORM.insert({
+            dbConnection: db,
+            table: 'envios_logisticainversa',
+            data: {
+              didEnvio: internalShipmentId,
+              didCampoLogistica: 1,
+              valor: rows[0].valor
+            },
+            quien: userId
+          });
         }
 
-        await insertEnviosExteriores(
-          db,
-          internalShipmentId,
-          externalShipmentId,
-          1,
-          nombreFantasia,
-          externalCompanyId
-        );
+        // await insertEnviosExteriores(
+        //   db,
+        //   internalShipmentId,
+        //   externalShipmentId,
+        //   1,
+        //   nombreFantasia,
+        //   externalCompanyId
+        // );
       }
 
       await sendShipmentStateToStateMicroserviceAPI(

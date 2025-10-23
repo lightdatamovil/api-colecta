@@ -1,4 +1,3 @@
-import { insertEnvios } from "../../functions/insertEnvios.js";
 import { informe } from "../../functions/informe.js";
 import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
 import { assign, checkIfFulfillment, LightdataORM, sendShipmentStateToStateMicroserviceAPI } from "lightdata-tools";
@@ -41,17 +40,17 @@ export async function handleInternalFlex({
   const mlQrSeguridad = rowEnvio.length > 0 ? rowEnvio.ml_qr_seguridad : null;
 
   if (rowEnvio) {
-    shipmentId = await insertEnvios({
-      company,
-      clientId: account.didCliente,
-      accountId: account.didCuenta,
-      dataQr,
-      flex: 1,
-      externo: 0,
-      userId,
-      cp: "",
-      driverId: userId,
-    });
+    // shipmentId = await insertEnvios({
+    //   company,
+    //   clientId: account.didCliente,
+    //   accountId: account.didCuenta,
+    //   dataQr,
+    //   flex: 1,
+    //   externo: 0,
+    //   userId,
+    //   cp: "",
+    //   driverId: userId,
+    // });
 
     [rowEnvio] = await LightdataORM.select({
       dbConnection: db,

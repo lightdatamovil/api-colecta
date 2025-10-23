@@ -1,6 +1,6 @@
 import redis from 'redis';
 import dotenv from 'dotenv';
-import { CompaniesService, logRed } from 'lightdata-tools';
+import { CompaniesService, logRed, RabbitService } from 'lightdata-tools';
 import mysql2 from 'mysql2/promise';
 import https from 'https';
 import axios from 'axios';
@@ -25,7 +25,7 @@ redisClient.on('error', (err) => {
 });
 
 // Servicio de empresas
-export const companiesService = new CompaniesService({ redisClient, redisKey: "empresasData" })
+export const companiesService = new CompaniesService({ redisClient, redisKey: "empresasData" });
 
 /// Base de datos de colecta
 const colectaDBHost = process.env.COLECTA_DB_HOST;
@@ -71,6 +71,9 @@ export const jwtExpiresIn = process.env.JWT_EXPIRES_IN || '1h';
 
 /// Microservicios y colas
 export const rabbitUrl = process.env.RABBITMQ_URL;
+
+export const rabbitService = new RabbitService(rabbitUrl);
+
 export const urlEstadosMicroservice = process.env.URL_ESTADOS_MICROSERVICE;
 export const queueEstados = process.env.QUEUE_ESTADOS;
 export const queueEstadosML = process.env.QUEUE_ESTADOS_ML;
