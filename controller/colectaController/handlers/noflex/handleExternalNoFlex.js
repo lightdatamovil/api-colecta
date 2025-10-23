@@ -51,7 +51,7 @@ export async function handleExternalNoFlex({
         const [rowDueñaClient] = await LightdataORM.select({
             dbConnection: dbDueña,
             table: 'clientes',
-            where: { codigoVinculacionLogE: company.codigo },
+            where: { codigoVinculacionLogE: companyDueña.codigo },
             select: ['did'],
             throwIfNotExists: true,
         });
