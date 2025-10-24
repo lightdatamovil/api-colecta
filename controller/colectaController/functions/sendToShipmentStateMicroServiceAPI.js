@@ -27,7 +27,7 @@ export async function sendToShipmentStateMicroServiceAPI(
         operacion: 'colecta',
         latitud,
         longitud,
-        desde: "APP NUEVA-MS estado 0 colecta",
+        desde: "APP NUEVA Colecta",
         tkn: generarTokenFechaHoy(),
     };
 
