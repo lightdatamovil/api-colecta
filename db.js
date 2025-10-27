@@ -75,12 +75,12 @@ export const rabbitUrl = process.env.RABBITMQ_URL;
 
 export const rabbitService = new RabbitService(rabbitUrl);
 
-export const urlEstadosMicroservice = local ? process.env.URL_ESTADOS_MICROSERVICE : process.env.URL_ESTADOS_MICROSERVICE_RED;
+export const urlEstadosMicroservice = local == 'true' ? process.env.URL_ESTADOS_MICROSERVICE : process.env.URL_ESTADOS_MICROSERVICE_RED;
 export const queueEstados = process.env.QUEUE_ESTADOS;
 export const queueEstadosML = process.env.QUEUE_ESTADOS_ML;
 
 /// Microservicio de asignacion
-export const urlAsignacionMicroservice = local ? process.env.URL_ASIGNACION_MICROSERVICE : process.env.URL_ASIGNACION_MICROSERVICE_RED;
+export const urlAsignacionMicroservice = local == 'true' ? process.env.URL_ASIGNACION_MICROSERVICE : process.env.URL_ASIGNACION_MICROSERVICE_RED;
 
 /// Microservicio de alta de envios
 export const urlAltaEnvioMicroservice = process.env.URL_ALTA_ENVIO_MICROSERVICE;

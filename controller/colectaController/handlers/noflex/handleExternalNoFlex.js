@@ -46,7 +46,7 @@ export async function handleExternalNoFlex({
         const t1 = performance.now();
         const companyDueña = await companiesService.getById(dataQr.empresa);
         const t2 = performance.now();
-        logGreen(`🏢 Empresa dueña obtenida (${companyDueña.nombre}) en ${(t2 - t1).toFixed(2)} ms`);
+        logGreen(`🏢 Empresa dueña obtenida (${companyDueña.empresa}) en ${(t2 - t1).toFixed(2)} ms`);
 
         /* 🧩 2. Conexión DB dueña */
         const dbConfigExt = getProductionDbConfig({
