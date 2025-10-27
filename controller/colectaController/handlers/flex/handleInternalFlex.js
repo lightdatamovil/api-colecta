@@ -1,18 +1,13 @@
 import { informe } from "../../functions/informe.js";
 import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
-import { assign, checkIfFulfillment, LightdataORM, sendShipmentStateToStateMicroserviceAPI } from "lightdata-tools";
-import { urlEstadosMicroservice, axiosInstance, urlAsignacionMicroservice } from "../../../../db.js";
+import { altaEnvioBasica, assign, checkIfFulfillment, EstadosEnvio, LightdataORM, sendShipmentStateToStateMicroserviceAPI } from "lightdata-tools";
+import { urlEstadosMicroservice, axiosInstance, urlAsignacionMicroservice, urlAltaEnvioMicroservice, urlAltaEnvioRedisMicroservice, rabbitService, queueEstadosML } from "../../../../db.js";
 
-/// Busco el envio
-/// Si no existe, lo inserto y tomo el did
-/// Checkeo si el envío ya fue colectado cancelado o entregado
-/// Actualizo el estado del envío y lo envío al microservicio de estados
-/// Asigno el envío al usuario si es necesario
 export async function handleInternalFlex({
   db,
+  headers,
   company,
   userId,
-  profile,
   dataQr,
   autoAssign,
   account,
@@ -24,7 +19,7 @@ export async function handleInternalFlex({
 
   let shipmentId;
 
-  await checkIfFulfillment(db, mlShipmentId);
+  await checkIfFulfillment({ db, mlShipmentId });
 
   let [rowEnvio] = LightdataORM.select({
     dbConnection: db,
@@ -36,21 +31,27 @@ export async function handleInternalFlex({
   });
 
   shipmentId = rowEnvio.length > 0 ? rowEnvio.did : null;
-  const didCliente = rowEnvio.length > 0 ? rowEnvio.didCliente : null;
-  const mlQrSeguridad = rowEnvio.length > 0 ? rowEnvio.ml_qr_seguridad : null;
+
+  let didCliente = rowEnvio.length > 0 ? rowEnvio.didCliente : null;
+  let mlQrSeguridad = rowEnvio.length > 0 ? rowEnvio.ml_qr_seguridad : null;
 
   if (rowEnvio) {
-    // shipmentId = await insertEnvios({
-    //   company,
-    //   clientId: account.didCliente,
-    //   accountId: account.didCuenta,
-    //   dataQr,
-    //   flex: 1,
-    //   externo: 0,
-    //   userId,
-    //   cp: "",
-    //   driverId: userId,
-    // });
+    shipmentId = await altaEnvioBasica({
+      urlAltaEnvioMicroservice,
+      urlAltaEnvioRedisMicroservice,
+      axiosInstance,
+      rabbitServiceInstance: rabbitService,
+      queueEstadosML,
+      company,
+      clientId: account.didCliente,
+      accountId: account.didCuenta,
+      dataQr,
+      flex: 1,
+      externo: 0,
+      userId,
+      driverId: userId,
+      lote: "colecta",
+    });
 
     [rowEnvio] = await LightdataORM.select({
       dbConnection: db,
@@ -61,11 +62,13 @@ export async function handleInternalFlex({
       },
     });
   } else {
-    const check = await checkearEstadoEnvio(db, shipmentId);
+    const check = await checkearEstadoEnvio({ db, shipmentId });
     if (check) return check;
   }
 
   shipmentId = rowEnvio.did;
+  didCliente = rowEnvio.didCliente;
+  mlQrSeguridad = rowEnvio.ml_qr_seguridad;
 
   if (!mlQrSeguridad) {
     await LightdataORM.update({
@@ -86,7 +89,7 @@ export async function handleInternalFlex({
     company,
     userId,
     shipmentId,
-    estado: 0,
+    estado: EstadosEnvio.value(EstadosEnvio.collected, company.did),
     latitude,
     longitude,
     desde: "Colecta App",
@@ -94,10 +97,8 @@ export async function handleInternalFlex({
 
   if (autoAssign) {
     await assign({
+      headers,
       url: urlAsignacionMicroservice,
-      companyId,
-      userId,
-      profile,
       dataQr,
       driverId: userId,
       desde: "Autoasignado de colecta"

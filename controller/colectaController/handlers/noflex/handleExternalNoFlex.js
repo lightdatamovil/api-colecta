@@ -26,10 +26,10 @@ import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
 
 export async function handleExternalNoFlex({
     db,
+    headers,
     dataQr,
     company,
     userId,
-    profile,
     autoAssign,
     latitude,
     longitude,
@@ -47,15 +47,13 @@ export async function handleExternalNoFlex({
             select: ["didLocal"],
         });
 
-        if (rowEncargadaShipmentId.didLocal) {
-            /// Chequeo si el envio ya fue colectado, entregado o cancelado
+        if (rowEncargadaShipmentId.length > 0) {
             const estado = await checkearEstadoEnvio({ db, shipmentId: rowEncargadaShipmentId.didLocal });
             if (estado) return estado;
         }
 
         const companyDueña = await companiesService.getById(dataQr.empresa);
 
-        /* 🧩 2. Conexión DB dueña */
         const dbConfigExt = getProductionDbConfig({
             host: hostProductionDb,
             port: portProductionDb,
@@ -114,13 +112,11 @@ export async function handleExternalNoFlex({
         }
 
         await assign({
+            headers,
             url: urlAsignacionMicroservice,
-            companyId: dataQr.empresa,
-            userId,
-            profile,
             dataQr,
             driverId: driver,
-            deviceFrom: "Autoasignado de colecta",
+            desde: "Autoasignado de colecta",
         });
 
         if (autoAssign) {
@@ -132,13 +128,11 @@ export async function handleExternalNoFlex({
             };
 
             await assign({
+                headers,
                 url: urlAsignacionMicroservice,
-                companyId: company.did,
-                userId,
-                profile,
-                dqr,
+                dataQr: dqr,
                 driverId: userId,
-                deviceFrom: "Autoasignado de colecta",
+                desde: "Autoasignado de colecta",
             });
         }
 

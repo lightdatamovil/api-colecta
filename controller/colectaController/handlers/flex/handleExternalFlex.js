@@ -1,23 +1,14 @@
-import mysql from "mysql";
 import { checkIfExistLogisticAsDriverInDueñaCompany } from "../../functions/checkIfExistLogisticAsDriverInDueñaCompany.js";
 import { informe } from "../../functions/informe.js";
 import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
-import { assign, executeQuery, getProductionDbConfig, LightdataORM, logRed, sendShipmentStateToStateMicroserviceAPI } from "lightdata-tools";
-import { companiesService, urlEstadosMicroservice } from "../../../../db.js";
+import { altaEnvioBasica, assign, connectMySQL, CustomException, EstadosEnvio, executeQuery, getProductionDbConfig, LightdataORM, sendShipmentStateToStateMicroserviceAPI } from "lightdata-tools";
+import { axiosInstance, companiesService, hostProductionDb, portProductionDb, queueEstadosML, rabbitService, urlAltaEnvioMicroservice, urlAltaEnvioRedisMicroservice, urlEstadosMicroservice, urlAsignacionMicroservice } from "../../../../db.js";
 
-/// Esta funcion busca las logisticas vinculadas
-/// Reviso si el envío ya fue colectado cancelado o entregado en la logística externa
-/// Si el envio existe, tomo el did
-/// Si no existe, lo inserto y tomo el did
-/// Tomo los datos de los clientes de la logística externa para luego insertar los envios
-/// Inserto el envio en la tabla envios y envios exteriores de la logística interna
-/// Actualizo el estado del envío y lo envío al microservicio de estados en la logística interna
-/// Actualizo el estado del envío y lo envío al microservicio de estados en la logística externa
 export async function handleExternalFlex({
   db,
+  headers,
   company,
   userId,
-  profile,
   dataQr,
   autoAssign,
   latitude,
@@ -38,178 +29,159 @@ export async function handleExternalFlex({
   });
 
   if (logisticasExternas.length === 0) {
-    throw new Error(`La cuenta de ML: ${dataQr.sender_id} no está vinculada`);
+    throw new CustomException({
+      title: `La cuenta de ML: ${dataQr.sender_id} no está vinculada`,
+      message: `No se encontró ninguna logística externa vinculada a la cuenta de ML: ${dataQr.sender_id}`,
+    });
   }
 
   for (const logistica of logisticasExternas) {
     if (logistica.did == undefined) {
-      throw new Error(`La logística está mal vinculada`);
+      throw new CustomException({
+        title: `La logística está mal vinculada`,
+        message: `La logística externa vinculada a la cuenta de ML: ${dataQr.sender_id} está mal vinculada`,
+      });
     }
 
     const externalLogisticId = logistica.did;
-    // const nombreFantasia = logistica.nombre_fantasia;
+    const nombreFantasia = logistica.nombre_fantasia;
     const syncCode = logistica.codigoVinculacionLogE;
 
     const externalCompany = await companiesService.getCompanyByCode(syncCode);
     const externalCompanyId = externalCompany.did;
 
-    const dbConfigExt = getProductionDbConfig(externalCompany);
-    const externalDbConnection = mysql.createConnection(dbConfigExt);
-    externalDbConnection.connect();
+    const dbConfigExt = getProductionDbConfig({
+      host: hostProductionDb,
+      port: portProductionDb,
+      company: externalCompany
+    });
+
+    const dbDueña = await connectMySQL(dbConfigExt);
 
     try {
-      const sqlEnvios = `
-        SELECT did, didCliente
-        FROM envios 
-        WHERE ml_shipment_id = ? AND ml_vendedor_id = ? and elim = 0 and superado = 0
-        LIMIT 1
-      `;
-      let rowsEnvios = await executeQuery({
-        dbConnection: externalDbConnection,
-        query: sqlEnvios,
-        values: [shipmentId, senderid]
+      const [rowsEnvios] = await LightdataORM.select({
+        dbConnection: dbDueña,
+        table: 'envios',
+        where: {
+          ml_shipment_id: shipmentId,
+          ml_vendedor_id: senderid
+        },
+        select: ['did', 'didCliente']
       });
 
       let externalShipmentId;
-      // let externalClientId;
+      let externalClientId;
 
       const driver = await checkIfExistLogisticAsDriverInDueñaCompany({
-        dbConnection: externalDbConnection,
+        db: dbDueña,
         syncCode: codLocal
       });
 
       if (!driver) {
-        return {
-          success: false,
-          message: "No se encontró chofer asignado",
-        };
+        throw new CustomException({
+          title: `Error en la vinculación`,
+          message: `No se encontró un conductor vinculado en la empresa dueña para la logística externa: ${nombreFantasia}`,
+        });
       }
 
       if (rowsEnvios.length > 0) {
         externalShipmentId = rowsEnvios[0].did;
-        // externalClientId = rowsEnvios[0].didCliente;
+        externalClientId = rowsEnvios[0].didCliente;
 
-        const check = await checkearEstadoEnvio(
-          externalDbConnection,
-          externalShipmentId
-        );
+        const check = await checkearEstadoEnvio({
+          db: dbDueña,
+          shipmentId: externalShipmentId
+        });
         if (check) return check;
 
       } else {
-        const sqlCuentas = `
-          SELECT did, didCliente 
-          FROM clientes_cuentas 
-          WHERE superado = 0 AND elim = 0 AND tipoCuenta = 1 AND ML_id_vendedor = ?
-        `;
-        const rowsCuentas = await executeQuery({
-          externalDbConnection,
-          query: sqlCuentas,
-          values: [senderid]
+        const rowsCuentas = await LightdataORM.select({
+          db: dbDueña,
+          table: 'clientes_cuentas',
+          where: { ML_id_vendedor: senderid, tipoCuenta: 1 },
+          select: ['did', 'didCliente']
         });
 
         if (rowsCuentas.length == 0) {
           continue;
         }
 
-        // externalClientId = rowsCuentas[0].didCliente;
-        // const didcuenta_ext = rowsCuentas[0].did;
+        externalClientId = rowsCuentas.didCliente;
+        const didcuenta_ext = rowsCuentas.did;
 
-        // const result = await insertEnvios({
-        //   company: externalCompany,
-        //   clientId: externalClientId,
-        //   accountId: didcuenta_ext,
-        //   dataQr,
-        //   flex: 1,
-        //   externo: 0,
-        //   userId,
-        //   driverId: driver,
-        // });
-
-        // const sqlEnvios2 = `
-        //   SELECT did, didCliente
-        //   FROM envios 
-        //   WHERE did = ? AND ml_vendedor_id = ? and elim = 0 and superado = 0
-        //   LIMIT 1
-        // `;
-        // rowsEnvios = await executeQuery({
-        //   dbConnection: externalDbConnection,
-        //   query: sqlEnvios2,
-        //   values: [result, senderid]
-        // });
-
-        externalShipmentId = rowsEnvios[0].did;
+        externalShipmentId = await altaEnvioBasica({
+          urlAltaEnvioMicroservice,
+          urlAltaEnvioRedisMicroservice,
+          axiosInstance,
+          rabbitServiceInstance: rabbitService,
+          queueEstadosML,
+          externalCompany,
+          clientId: externalClientId,
+          accountId: didcuenta_ext,
+          dataQr,
+          flex: 1,
+          externo: 0,
+          userId,
+          driverId: driver,
+          lote: "colecta",
+        });
       }
 
       let internalShipmentId;
-      const consulta = "SELECT didLocal FROM envios_exteriores WHERE didExterno = ? and superado = 0 and elim=0";
-      internalShipmentId = await executeQuery({
+      internalShipmentId = await LightdataORM.select({
         dbConnection: db,
-        query: consulta,
-        values: [externalShipmentId]
+        table: 'envios_exteriores',
+        where: { didExterno: externalShipmentId },
+        select: ['didLocal']
       });
 
       if (internalShipmentId.length > 0 && internalShipmentId[0]?.didLocal) {
         internalShipmentId = internalShipmentId[0].didLocal;
       } else {
-        // internalShipmentId = await insertEnvios({
-        //   company,
-        //   accountId: externalLogisticId,
-        //   clientId: 0,
-        //   dataQr,
-        //   flex: 1,
-        //   externo: 1,
-        //   userId,
-        //   driverId: 0
-        // });
-
-        const check = "SELECT valor FROM envios_logisticainversa WHERE didEnvio = ?";
-        const rows = await executeQuery({
-          dbConnection: externalDbConnection,
-          query: check,
-          values: [externalShipmentId]
+        internalShipmentId = await altaEnvioBasica({
+          urlAltaEnvioMicroservice,
+          urlAltaEnvioRedisMicroservice,
+          axiosInstance,
+          rabbitServiceInstance: rabbitService,
+          queueEstadosML,
+          company,
+          clientId: 0,
+          accountId: externalLogisticId,
+          dataQr,
+          flex: 1,
+          externo: 1,
+          userId,
+          driverId: driver,
+          lote: "colecta",
+          didExterno: externalShipmentId,
+          nombreClienteEnEmpresaDueña: nombreFantasia,
+          empresaDueña: externalCompanyId,
         });
-        if (rows.length > 0) {
-          await LightdataORM.insert({
-            dbConnection: db,
-            table: 'envios_logisticainversa',
-            data: {
-              didEnvio: internalShipmentId,
-              didCampoLogistica: 1,
-              valor: rows[0].valor
-            },
-            quien: userId
-          });
-        }
-
-        // await insertEnviosExteriores(
-        //   db,
-        //   internalShipmentId,
-        //   externalShipmentId,
-        //   1,
-        //   nombreFantasia,
-        //   externalCompanyId
-        // );
       }
 
-      await sendShipmentStateToStateMicroserviceAPI(
+      await sendShipmentStateToStateMicroserviceAPI({
         urlEstadosMicroservice,
+        axiosInstance,
         company,
         userId,
-        internalShipmentId,
-        0,
+        shipmentId: internalShipmentId,
+        estado: EstadosEnvio.value(EstadosEnvio.collected, company.did),
         latitude,
-        longitude
-      );
+        longitude,
+        desde: 'colecta'
+      });
 
-      await sendShipmentStateToStateMicroserviceAPI(
+      await sendShipmentStateToStateMicroserviceAPI({
         urlEstadosMicroservice,
-        externalCompanyId,
+        axiosInstance,
+        externalCompany,
         driver,
-        externalShipmentId,
-        0,
+        shipmentId: externalShipmentId,
+        estado: EstadosEnvio.value(EstadosEnvio.collected, externalCompany.did),
         latitude,
-        longitude
-      );
+        longitude,
+        desde: 'colecta'
+      });
 
       if (autoAssign) {
         const dqr = {
@@ -218,9 +190,14 @@ export async function handleExternalFlex({
           local: 1,
           cliente: externalLogisticId,
         };
-        await assign(company.did, userId, profile, dqr, userId, "Autoasignado de colecta");
 
-        await assign(externalCompany.did, userId, profile, dataQr, driver, "colecta");
+        await assign({
+          headers,
+          urlAsignacionMicroservice,
+          dataQr: dqr,
+          driverId: userId,
+          desde: 'Autoasignado de colecta'
+        });
       }
 
       const dqrext = {
@@ -229,18 +206,20 @@ export async function handleExternalFlex({
         local: 1,
         cliente: externalLogisticId,
       };
-      //tira error aca
-      await assign(externalCompanyId, userId, profile, dqrext, driver, 'colecta');
 
-      const queryInternalClient = `
-        SELECT didCliente 
-        FROM envios 
-        WHERE did = ? and elim = 0 and superado=0
-      `;
-      const internalClient = await executeQuery({
+      await assign({
+        headers,
+        urlAsignacionMicroservice,
+        dataQr: dqrext,
+        driverId: driver,
+        desde: 'colecta'
+      });
+
+      const [internalClient] = await LightdataORM.select({
         dbConnection: db,
-        query: queryInternalClient,
-        values: [internalShipmentId]
+        table: 'envios',
+        where: { did: internalShipmentId },
+        select: ['didCliente']
       });
       if (internalClient.length == 0) {
         return {
@@ -252,7 +231,7 @@ export async function handleExternalFlex({
       const body = await informe({
         db,
         company,
-        clientId: internalClient[0].didCliente,
+        clientId: internalClient.didCliente,
         userId
       });
 
@@ -262,16 +241,12 @@ export async function handleExternalFlex({
         body: body,
       };
     } catch (error) {
-      logRed(`Error procesando logística externa:  ${error.message}`);
-      return {
-        success: false,
-        message: "Error procesando logística externa",
-        error: error.message
-      };
-    } finally {
-      externalDbConnection.end((err) => {
-        if (err) logRed("Error al cerrar conexión externa: ", err.message);
+      throw new CustomException({
+        title: `Error al procesar la logística externa ${nombreFantasia}`,
+        message: error.message,
       });
+    } finally {
+      if (dbDueña) await dbDueña.end();
     }
   }
   return {

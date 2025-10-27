@@ -3,17 +3,12 @@ import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
 import { informe } from "../../functions/informe.js";
 import { urlAsignacionMicroservice, urlEstadosMicroservice, axiosInstance } from "../../../../db.js";
 
-/// Esta funcion checkea si el envio ya fue colectado, entregado o cancelado
-/// Busca el chofer asignado al envio
-/// Si el envio no esta asignado y se quiere autoasignar, lo asigna
-/// Actualiza el estado del envio en el micro servicio
-/// Actualiza el estado del envio en la base de datos
 export async function handleInternalNoFlex({
     db,
+    headers,
     dataQr,
     company,
     userId,
-    profile,
     autoAssign,
     latitude,
     longitude
@@ -21,11 +16,9 @@ export async function handleInternalNoFlex({
     const shipmentId = dataQr.did;
     const companyId = company.did;
 
-    /// Chequeo si el envio ya fue colectado, entregado o cancelado
     const estado = await checkearEstadoEnvio({ db, shipmentId });
     if (estado) return estado;
 
-    /// Busco el estado del envio y el chofer asignado
     const [row] = await LightdataORM.select({
         dbConnection: db,
         table: 'envios',
@@ -36,19 +29,16 @@ export async function handleInternalNoFlex({
 
     const isAlreadyAssigned = row.choferAsignado == userId;
 
-    /// Si el envio no esta asignado y se quiere autoasignar, lo asigno
     if (!isAlreadyAssigned && autoAssign) {
         await assign({
+            headers,
             url: urlAsignacionMicroservice,
-            companyId,
-            userId,
-            profile,
             dataQr,
-            deviceFrom: "Autoasignado de colecta",
+            driverId: userId,
+            desde: "Autoasignado de colecta",
         });
     }
 
-    /// Actualizamos el estado del envio en el micro servicio
     await sendShipmentStateToStateMicroserviceAPI({
         urlEstadosMicroservice,
         axiosInstance,

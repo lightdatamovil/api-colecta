@@ -10,6 +10,7 @@ export async function colectar({ db, req, company }) {
     const { userId, profile } = req.user;
 
     let response;
+    const headers = req.headers;
     dataQr = parseIfJson(dataQr);
     //es barcode
     if (
@@ -91,19 +92,19 @@ export async function colectar({ db, req, company }) {
 
             if (resultCheck.length > 0) {
                 senderId = dataQr.sender_id;
-                response = await handleInternalFlex({ db, company, userId, profile, dataQr, autoAssign, account, latitude, longitude, senderId });
+                response = await handleInternalFlex({ headers, db, company, userId, profile, dataQr, autoAssign, account, latitude, longitude, senderId });
             } else {
-                response = await handleExternalFlex({ db, company, userId, profile, dataQr, autoAssign, latitude, longitude });
+                response = await handleExternalFlex({ headers, db, company, userId, profile, dataQr, autoAssign, latitude, longitude });
             }
         } else {
-            response = await handleExternalFlex({ db, company, userId, profile, dataQr, autoAssign, latitude, longitude });
+            response = await handleExternalFlex({ headers, db, company, userId, profile, dataQr, autoAssign, latitude, longitude });
         }
 
     } else {
         if (company.did == dataQr.empresa) {
-            response = await handleInternalNoFlex({ db, dataQr, company, userId, profile, autoAssign, latitude, longitude });
+            response = await handleInternalNoFlex({ headers, db, dataQr, company, userId, profile, autoAssign, latitude, longitude });
         } else {
-            response = await handleExternalNoFlex({ db, dataQr, company, userId, profile, autoAssign, latitude, longitude });
+            response = await handleExternalNoFlex({ headers, db, dataQr, company, userId, profile, autoAssign, latitude, longitude });
         }
     }
 
