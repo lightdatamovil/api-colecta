@@ -5,7 +5,7 @@ import { urlEstadosMicroservice, axiosInstance, urlAsignacionMicroservice, urlAl
 
 export async function handleInternalFlex({
   db,
-  headers,
+  req,
   company,
   userId,
   dataQr,
@@ -97,7 +97,7 @@ export async function handleInternalFlex({
 
   if (autoAssign) {
     await assign({
-      headers,
+      req,
       url: urlAsignacionMicroservice,
       dataQr,
       driverId: userId,

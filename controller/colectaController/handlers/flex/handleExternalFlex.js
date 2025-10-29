@@ -6,7 +6,7 @@ import { axiosInstance, companiesService, hostProductionDb, portProductionDb, qu
 
 export async function handleExternalFlex({
   db,
-  headers,
+  req,
   company,
   userId,
   dataQr,
@@ -192,7 +192,7 @@ export async function handleExternalFlex({
         };
 
         await assign({
-          headers,
+          req,
           urlAsignacionMicroservice,
           dataQr: dqr,
           driverId: userId,
@@ -208,7 +208,7 @@ export async function handleExternalFlex({
       };
 
       await assign({
-        headers,
+        req,
         urlAsignacionMicroservice,
         dataQr: dqrext,
         driverId: driver,

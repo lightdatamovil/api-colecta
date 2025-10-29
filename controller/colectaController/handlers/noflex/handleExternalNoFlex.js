@@ -26,7 +26,7 @@ import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
 
 export async function handleExternalNoFlex({
     db,
-    headers,
+    req,
     dataQr,
     company,
     userId,
@@ -47,7 +47,7 @@ export async function handleExternalNoFlex({
             select: ["didLocal"],
         });
 
-        if (rowEncargadaShipmentId.length > 0) {
+        if (rowEncargadaShipmentId) {
             const estado = await checkearEstadoEnvio({ db, shipmentId: rowEncargadaShipmentId.didLocal });
             if (estado) return estado;
         }
@@ -112,11 +112,13 @@ export async function handleExternalNoFlex({
         }
 
         await assign({
-            headers,
+            req,
+            axiosInstance,
             url: urlAsignacionMicroservice,
             dataQr,
             driverId: driver,
             desde: "Autoasignado de colecta",
+            companyId: companyDueña.did,
         });
 
         if (autoAssign) {
@@ -128,7 +130,8 @@ export async function handleExternalNoFlex({
             };
 
             await assign({
-                headers,
+                req,
+                axiosInstance,
                 url: urlAsignacionMicroservice,
                 dataQr: dqr,
                 driverId: userId,

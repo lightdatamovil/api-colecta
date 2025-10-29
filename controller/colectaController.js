@@ -2,15 +2,14 @@ import { handleInternalFlex } from "./colectaController/handlers/flex/handleInte
 import { handleExternalFlex } from "./colectaController/handlers/flex/handleExternalFlex.js";
 import { handleExternalNoFlex } from "./colectaController/handlers/noflex/handleExternalNoFlex.js";
 import { handleInternalNoFlex } from "./colectaController/handlers/noflex/handleInternalNoFlex.js";
-import { executeQuery, getShipmentIdFromQr, LogisticaConfig, parseIfJson } from "lightdata-tools";
-import { companiesService } from "../db.js";
+import { CustomException, executeQuery, getShipmentIdFromQr, LogisticaConfig, parseIfJson } from "lightdata-tools";
+import { companiesService, urlApimovilGetShipmentId } from "../db.js";
 
 export async function colectar({ db, req, company }) {
     let { dataQr, autoAssign, latitude, longitude } = req.body;
     const { userId, profile } = req.user;
 
     let response;
-    const headers = req.headers;
     dataQr = parseIfJson(dataQr);
     //es barcode
     if (
@@ -21,7 +20,13 @@ export async function colectar({ db, req, company }) {
     ) {
         try {
             // obtenemos el envío
-            const shipmentId = await getShipmentIdFromQr({ companyId: company.did, dataQr });
+            const shipmentId = await getShipmentIdFromQr({
+                url: urlApimovilGetShipmentId,
+                headers: req.headers,
+                dataQr,
+                desde: 'colecta'
+            });
+
             const cliente = LogisticaConfig.getSenderId(company.did);
 
             dataQr = {
@@ -38,10 +43,19 @@ export async function colectar({ db, req, company }) {
             // que pasa si es 211 o  55 que no tienen empresa vinculada
             if (empresaVinculada === null) {
                 // preguntar a cris 
-                throw new Error("El envio no esta igresado en su sistema");
+                throw new CustomException({
+                    title: "El envio no esta ingresado en su sistema",
+                    message: "Por favor verifique el codigo de barras"
+                });
             };
 
-            const shipmentIdExterno = await getShipmentIdFromQr({ companyId: empresaVinculada, dataQr });
+            const shipmentIdExterno = await getShipmentIdFromQr({
+                url: urlApimovilGetShipmentId,
+                headers: req.headers,
+                dataQr,
+                desde: 'colecta',
+                companyId: empresaVinculada
+            });
 
             //no encontre shipmentiD : cambiar en el qr la empresa x la externa --- si no esta lo inserta 
             dataQr = {
@@ -92,19 +106,19 @@ export async function colectar({ db, req, company }) {
 
             if (resultCheck.length > 0) {
                 senderId = dataQr.sender_id;
-                response = await handleInternalFlex({ headers, db, company, userId, profile, dataQr, autoAssign, account, latitude, longitude, senderId });
+                response = await handleInternalFlex({ req, db, company, userId, profile, dataQr, autoAssign, account, latitude, longitude, senderId });
             } else {
-                response = await handleExternalFlex({ headers, db, company, userId, profile, dataQr, autoAssign, latitude, longitude });
+                response = await handleExternalFlex({ req, db, company, userId, profile, dataQr, autoAssign, latitude, longitude });
             }
         } else {
-            response = await handleExternalFlex({ headers, db, company, userId, profile, dataQr, autoAssign, latitude, longitude });
+            response = await handleExternalFlex({ req, db, company, userId, profile, dataQr, autoAssign, latitude, longitude });
         }
 
     } else {
         if (company.did == dataQr.empresa) {
-            response = await handleInternalNoFlex({ headers, db, dataQr, company, userId, profile, autoAssign, latitude, longitude });
+            response = await handleInternalNoFlex({ req, db, dataQr, company, userId, profile, autoAssign, latitude, longitude });
         } else {
-            response = await handleExternalNoFlex({ headers, db, dataQr, company, userId, profile, autoAssign, latitude, longitude });
+            response = await handleExternalNoFlex({ req, db, dataQr, company, userId, profile, autoAssign, latitude, longitude });
         }
     }
 

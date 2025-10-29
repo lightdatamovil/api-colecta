@@ -57,7 +57,7 @@ export const httpsAgent = new https.Agent({
 
 export const axiosInstance = axios.create({
     httpsAgent,
-    timeout: 5000,
+    timeout: 335000,
 });
 
 // Produccion
@@ -85,3 +85,4 @@ export const urlAsignacionMicroservice = local == 'true' ? process.env.URL_ASIGN
 /// Microservicio de alta de envios
 export const urlAltaEnvioMicroservice = process.env.URL_ALTA_ENVIO_MICROSERVICE;
 export const urlAltaEnvioRedisMicroservice = process.env.URL_ALTA_ENVIO_REDIS_MICROSERVICE;
+export const urlApimovilGetShipmentId = process.env.URL_APIMOVIL_GET_SHIPMENT_ID;

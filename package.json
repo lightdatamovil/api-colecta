@@ -6,7 +6,7 @@
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "https": "^1.0.0",
-    "lightdata-tools": "^1.4.76",
+    "lightdata-tools": "C:\\Users\\Lightdata\\Desktop\\gon\\proyectos\\lightdata-tools\\src",
     "mysql2": "^3.15.2",
     "redis": "^4.7.0"
   },
