@@ -4,16 +4,10 @@ import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
 import { altaEnvioBasica, assign, connectMySQL, CustomException, EstadosEnvio, executeQuery, getProductionDbConfig, LightdataORM, sendShipmentStateToStateMicroserviceAPI } from "lightdata-tools";
 import { axiosInstance, companiesService, hostProductionDb, portProductionDb, queueEstadosML, rabbitService, urlAltaEnvioMicroservice, urlAltaEnvioRedisMicroservice, urlEstadosMicroservice, urlAsignacionMicroservice } from "../../../../db.js";
 
-export async function handleExternalFlex({
-  db,
-  req,
-  company,
-  userId,
-  dataQr,
-  autoAssign,
-  latitude,
-  longitude
-}) {
+export async function handleExternalFlex({ db, req, company }) {
+  const { dataQr, latitude, longitude, autoAssign } = req.body;
+  const { userId } = req.user;
+
   const senderid = dataQr.sender_id;
   const shipmentId = dataQr.id;
   const codLocal = company.codigo;

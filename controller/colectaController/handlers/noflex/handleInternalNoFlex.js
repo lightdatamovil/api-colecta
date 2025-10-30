@@ -3,16 +3,10 @@ import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
 import { informe } from "../../functions/informe.js";
 import { urlAsignacionMicroservice, urlEstadosMicroservice, axiosInstance } from "../../../../db.js";
 
-export async function handleInternalNoFlex({
-    db,
-    req,
-    dataQr,
-    company,
-    userId,
-    autoAssign,
-    latitude,
-    longitude
-}) {
+export async function handleInternalNoFlex({ db, req, company }) {
+    const { dataQr, latitude, longitude, autoAssign } = req.body;
+    const { userId } = req.user;
+
     const shipmentId = dataQr.did;
     const companyId = company.did;
 

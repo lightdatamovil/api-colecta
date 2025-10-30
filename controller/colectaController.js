@@ -2,14 +2,14 @@ import { handleInternalFlex } from "./colectaController/handlers/flex/handleInte
 import { handleExternalFlex } from "./colectaController/handlers/flex/handleExternalFlex.js";
 import { handleExternalNoFlex } from "./colectaController/handlers/noflex/handleExternalNoFlex.js";
 import { handleInternalNoFlex } from "./colectaController/handlers/noflex/handleInternalNoFlex.js";
-import { CustomException, executeQuery, getShipmentIdFromQr, LightdataORM, LogisticaConfig, parseIfJson } from "lightdata-tools";
+import { CustomException, getShipmentIdFromQr, LightdataORM, LogisticaConfig, parseIfJson } from "lightdata-tools";
 import { companiesService, urlApimovilGetShipmentId, axiosInstance } from "../db.js";
 
 export async function colectar({ db, req, company }) {
-    let { dataQr, autoAssign, latitude, longitude } = req.body;
-    const { userId, profile } = req.user;
+    let { dataQr } = req.body;
 
     let response;
+
     dataQr = parseIfJson(dataQr);
     //es barcode
     if (
@@ -42,7 +42,6 @@ export async function colectar({ db, req, company }) {
             const empresaVinculada = LogisticaConfig.getEmpresaVinculada(company.did);
             // que pasa si es 211 o  55 que no tienen empresa vinculada
             if (empresaVinculada === null) {
-                // preguntar a cris 
                 throw new CustomException({
                     title: "El envio no esta ingresado en su sistema",
                     message: "Por favor verifique el codigo de barras"
@@ -79,9 +78,15 @@ export async function colectar({ db, req, company }) {
 
         if (isCollectShipmentML) {
             //! Esto quiere decir que es un envio de colecta de ML
-            const querySeller = `SELECT ml_vendedor_id FROM envios WHERE ml_shipment_id = ? AND flex = 1 AND superado=0 AND elim=0`;
-            const result = await executeQuery({ dbConnection: db, query: querySeller, values: [dataQr.id] });
-            senderId = result[0].ml_vendedor_id;
+            const [result] = await LightdataORM.select({
+                dbConnection: db,
+                where: {
+                    ml_shipment_id: dataQr.id,
+                    flex: 1,
+                },
+                table: 'envios',
+            });
+            senderId = result.ml_vendedor_id;
             account = await companiesService.getAccountBySenderId(db, company.did, senderId);
         } else {
             account = await companiesService.getAccountBySenderId(db, company.did, dataQr.sender_id);
@@ -89,7 +94,7 @@ export async function colectar({ db, req, company }) {
         }
 
         if (account) {
-            response = await handleInternalFlex({ db, company, userId, profile, dataQr, autoAssign, account, latitude, longitude, senderId });
+            response = await handleInternalFlex({ db, company, account, senderId });
 
             /// Si la cuenta no existe, es externo
         } else if (company.did == 144 || company.did == 167) {
@@ -105,19 +110,19 @@ export async function colectar({ db, req, company }) {
 
             if (row.length > 0) {
                 senderId = dataQr.sender_id;
-                response = await handleInternalFlex({ req, db, company, userId, profile, dataQr, autoAssign, account, latitude, longitude, senderId });
+                response = await handleInternalFlex({ req, db, company, account, senderId });
             } else {
-                response = await handleExternalFlex({ req, db, company, userId, profile, dataQr, autoAssign, latitude, longitude });
+                response = await handleExternalFlex({ req, db, company });
             }
         } else {
-            response = await handleExternalFlex({ req, db, company, userId, profile, dataQr, autoAssign, latitude, longitude });
+            response = await handleExternalFlex({ req, db, company });
         }
 
     } else {
         if (company.did == dataQr.empresa) {
-            response = await handleInternalNoFlex({ req, db, dataQr, company, userId, profile, autoAssign, latitude, longitude });
+            response = await handleInternalNoFlex({ req, db, company });
         } else {
-            response = await handleExternalNoFlex({ req, db, dataQr, company, userId, profile, autoAssign, latitude, longitude });
+            response = await handleExternalNoFlex({ req, db, company });
         }
     }
 

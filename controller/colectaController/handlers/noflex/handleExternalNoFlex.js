@@ -24,16 +24,10 @@ import {
 } from "lightdata-tools";
 import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
 
-export async function handleExternalNoFlex({
-    db,
-    req,
-    dataQr,
-    company,
-    userId,
-    autoAssign,
-    latitude,
-    longitude,
-}) {
+export async function handleExternalNoFlex({ db, req, company }) {
+    const { dataQr, latitude, longitude, autoAssign } = req.body;
+    const { userId } = req.user;
+
     const shipmentIdFromDataQr = dataQr.did;
     const clientIdFromDataQr = dataQr.cliente;
 

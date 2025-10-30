@@ -3,21 +3,12 @@ import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
 import { altaEnvioBasica, assign, checkIfFulfillment, EstadosEnvio, LightdataORM, sendShipmentStateToStateMicroserviceAPI } from "lightdata-tools";
 import { urlEstadosMicroservice, axiosInstance, urlAsignacionMicroservice, urlAltaEnvioMicroservice, urlAltaEnvioRedisMicroservice, rabbitService, queueEstadosML } from "../../../../db.js";
 
-export async function handleInternalFlex({
-  db,
-  req,
-  company,
-  userId,
-  dataQr,
-  autoAssign,
-  account,
-  latitude,
-  longitude, senderId,
-}) {
-  const companyId = company.did;
-  const mlShipmentId = dataQr.id;
 
-  let shipmentId;
+export async function handleInternalFlex({ db, req, company, senderId, account }) {
+  const { dataQr, latitude, longitude, autoAssign } = req.body;
+  const { userId } = req.user;
+
+  const mlShipmentId = dataQr.id;
 
   await checkIfFulfillment({ db, mlShipmentId });
 
@@ -30,12 +21,14 @@ export async function handleInternalFlex({
     },
   });
 
-  shipmentId = rowEnvio.length > 0 ? rowEnvio.did : null;
-
+  let shipmentId = rowEnvio.length > 0 ? rowEnvio.did : null;
   let didCliente = rowEnvio.length > 0 ? rowEnvio.didCliente : null;
   let mlQrSeguridad = rowEnvio.length > 0 ? rowEnvio.ml_qr_seguridad : null;
 
   if (rowEnvio) {
+    const check = await checkearEstadoEnvio({ db, shipmentId });
+    if (check) return check;
+  } else {
     shipmentId = await altaEnvioBasica({
       urlAltaEnvioMicroservice,
       urlAltaEnvioRedisMicroservice,
@@ -61,9 +54,6 @@ export async function handleInternalFlex({
         ml_vendedor_id: senderId,
       },
     });
-  } else {
-    const check = await checkearEstadoEnvio({ db, shipmentId });
-    if (check) return check;
   }
 
   shipmentId = rowEnvio.did;
@@ -108,7 +98,7 @@ export async function handleInternalFlex({
   const body = await informe({
     db,
     company,
-    clientId: companyId == 144 ? didCliente : account.didCliente || 0,
+    clientId: company.did == 144 ? didCliente : account.didCliente || 0,
     userId
   });
 
