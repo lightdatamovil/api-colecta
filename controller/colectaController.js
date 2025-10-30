@@ -162,8 +162,10 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
         return response;
 
     } catch (error) {
+        console.log(dbConfig);
         logRed(`Error en colectar: ${error.message}`);
         throw error;
+
 
     } finally {
         decrActiveLocal(company.did);
