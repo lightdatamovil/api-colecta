@@ -2,8 +2,8 @@ import { handleInternalFlex } from "./colectaController/handlers/flex/handleInte
 import { handleExternalFlex } from "./colectaController/handlers/flex/handleExternalFlex.js";
 import { handleExternalNoFlex } from "./colectaController/handlers/noflex/handleExternalNoFlex.js";
 import { handleInternalNoFlex } from "./colectaController/handlers/noflex/handleInternalNoFlex.js";
-import { CustomException, executeQuery, getShipmentIdFromQr, LogisticaConfig, parseIfJson } from "lightdata-tools";
-import { companiesService, urlApimovilGetShipmentId } from "../db.js";
+import { CustomException, executeQuery, getShipmentIdFromQr, LightdataORM, LogisticaConfig, parseIfJson } from "lightdata-tools";
+import { companiesService, urlApimovilGetShipmentId, axiosInstance } from "../db.js";
 
 export async function colectar({ db, req, company }) {
     let { dataQr, autoAssign, latitude, longitude } = req.body;
@@ -19,10 +19,10 @@ export async function colectar({ db, req, company }) {
         !Object.hasOwn(dataQr, 'sender_id')
     ) {
         try {
-            // obtenemos el envío
             const shipmentId = await getShipmentIdFromQr({
                 url: urlApimovilGetShipmentId,
-                headers: req.headers,
+                axiosInstance,
+                req,
                 dataQr,
                 desde: 'colecta'
             });
@@ -36,7 +36,7 @@ export async function colectar({ db, req, company }) {
                 empresa: company.did
             };
 
-        } catch (error) {
+        } catch {
 
             const cliente = LogisticaConfig.getSenderId(company.did);
             const empresaVinculada = LogisticaConfig.getEmpresaVinculada(company.did);
@@ -51,7 +51,8 @@ export async function colectar({ db, req, company }) {
 
             const shipmentIdExterno = await getShipmentIdFromQr({
                 url: urlApimovilGetShipmentId,
-                headers: req.headers,
+                axiosInstance,
+                req,
                 dataQr,
                 desde: 'colecta',
                 companyId: empresaVinculada
@@ -93,18 +94,16 @@ export async function colectar({ db, req, company }) {
             /// Si la cuenta no existe, es externo
         } else if (company.did == 144 || company.did == 167) {
 
-            const queryCheck = `
-                  SELECT did
-                  FROM envios
-                  WHERE ml_vendedor_id = ?
-                  AND ml_shipment_id = ?
-                  AND superado = 0
-                  AND elim = 0
-                  LIMIT 1
-                `;
-            const resultCheck = await executeQuery({ dbConnection: db, query: queryCheck, values: [dataQr.sender_id, dataQr.id] });
+            const row = await LightdataORM.select({
+                dbConnection: db,
+                table: 'envios',
+                where: {
+                    ml_vendedor_id: dataQr.sender_id,
+                    ml_shipment_id: dataQr.id
+                },
+            });
 
-            if (resultCheck.length > 0) {
+            if (row.length > 0) {
                 senderId = dataQr.sender_id;
                 response = await handleInternalFlex({ req, db, company, userId, profile, dataQr, autoAssign, account, latitude, longitude, senderId });
             } else {
