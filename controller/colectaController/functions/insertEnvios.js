@@ -57,15 +57,14 @@ export async function insertEnvios(
     ]);
 
     // mensaje por rabbitMQ
-    if (companyId == 12 || companyId == 79 || companyId == 167) {
+    // Array de companyIds que deben enviar el mensaje
+    const companiesToSend = [12, 79, 167, 365, 364, 363, 362, 361, 360, 359, 358, 357, 356, 355, 354, 353, 352, 351, 350];
 
-      await senToDataML(
-        companyId,
-        result.insertId,
-        senderid,
-        idshipment
-      );
+    // Verificamos si el companyId actual está en la lista
+    if (companiesToSend.includes(companyId)) {
+      await senToDataML(companyId, result.insertId, senderid, idshipment);
     }
+
 
 
     await axiosInstance.post(
