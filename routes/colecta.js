@@ -29,9 +29,8 @@ colecta.post("/colecta", async (req, res) => {
   const { companyId, userId, profile, dataQr, autoAssign, ilat, ilong } = req.body;
 
   try {
-    console.log("Company ID:", companyId);
     const company = await getCompanyById(companyId);
-    console.log("Company Data:", company);
+
     const result = await colectar(
       company,
       dataQr,

@@ -41,7 +41,6 @@ async function getShipmentIdFromQr(companyId, dataQr) {
 
 export async function colectar(company, dataQr, userId, profile, autoAssign, latitude, longitude) {
     const dbConfig = getProdDbConfig(company);
-    console.log(dbConfig);
     const dbConnection = mysql.createConnection(dbConfig);
     dbConnection.connect();
     incrActiveLocal(company.did);
