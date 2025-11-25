@@ -20,7 +20,8 @@ export async function insertEnvios(
     .slice(0, 19)
     .replace("T", " ");
   const idshipment = dataQr.id;
-  const senderid = dataQr.sender_id;
+  console.log('id en insert', idshipment);
+  const senderid = dataQr.sender_id ?? dataQr.id_seller;
   const fechaunix = Math.floor(Date.now() / 1000);
 
   const queryInsertEnvios = `
@@ -41,7 +42,7 @@ export async function insertEnvios(
     flex,
     externo,
     fechaunix,
-  ]);
+  ], true);
 
   if (result.insertId) {
     const updateSql = `
@@ -54,7 +55,7 @@ export async function insertEnvios(
     await executeQuery(dbConnection, updateSql, [
       result.insertId,
       result.insertId,
-    ]);
+    ], true);
 
     // mensaje por rabbitMQ
     if (companyId == 12 || companyId == 79 || companyId == 167) {

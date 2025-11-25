@@ -30,7 +30,7 @@ colecta.post("/colecta", async (req, res) => {
 
   try {
     const company = await getCompanyById(companyId);
-
+    
     const result = await colectar(
       company,
       dataQr,
@@ -65,6 +65,8 @@ colecta.post("/colecta", async (req, res) => {
       false
     );
     res.status(500).json({ message: error.message });
+
+    //todo implemnentar log de errores bd
   } finally {
     const endTime = performance.now();
 

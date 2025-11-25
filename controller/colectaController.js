@@ -8,6 +8,9 @@ import { logCyan, logRed } from "../src/funciones/logsCustom.js";
 import { parseIfJson } from "../src/funciones/isValidJson.js";
 import LogisticaConf from "../classes/logisticas_conf.js";
 import { decrActiveLocal, incrActiveLocal } from "../src/funciones/dbList.js";
+import { is } from "zod/locales";
+import { log } from "console";
+import { handleInternalFlexMP } from "./colectaController/handlers/flex/handleInternalFlexMP.js";
 
 async function getShipmentIdFromQr(companyId, dataQr) {
     const payload = {
@@ -88,6 +91,36 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
                 };
             }
         }
+        console.log(1);
+        const isMisPichos = Object.prototype.hasOwnProperty.call(dataQr, "flex");
+        console.log(isMisPichos);
+
+        //verificacion mis pichos para el wr nuevo -- isnerto en envios y despues en envios_hisotrial con estado colectado // cliente 66
+        if (isMisPichos == true) {
+            console.log("Es un envío de Mis Pichos");
+
+            //agarra flujo flex
+            //account y senderId es lo mismo?
+            const senderId = 66;
+            const account = await getAccountBySenderId(dbConnection, company.did, senderId);
+            console.log(account)
+
+            dataQr = {
+                id: dataQr.id_orden,
+                sender_id: dataQr.id_seller,
+                hash_code: "1111111111",
+                "security_digit": "0"
+            };
+
+
+            //agarrar demo
+            return await handleInternalFlexMP(dbConnection, company, userId, profile, dataQr, autoAssign, account, latitude, longitude, senderId);
+
+        }
+
+
+
+
         logCyan(`Datos del QR: ${JSON.stringify(dataQr)}`);
         const isCollectShipmentML = Object.prototype.hasOwnProperty.call(dataQr, "t");
         /// Me fijo si es flex o no
