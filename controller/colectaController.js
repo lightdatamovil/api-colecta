@@ -55,10 +55,26 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
             !Object.hasOwn(dataQr, 'local') &&
             !Object.hasOwn(dataQr, 'sender_id')
         ) {
+            let cliente, shipmentId;
             try {
-                // obtenemos el envío
-                const shipmentId = await getShipmentIdFromQr(company.did, dataQr);
-                const cliente = LogisticaConf.getSenderId(company.did);
+                if (LogisticaConf.getExisteSioSi(company.did)) {
+                    const q = `
+                    SELECT didCliente,did
+                    FROM envios
+                    WHERE ml_shipment_id = ? AND superado = 0 AND elim = 0
+                    LIMIT 1
+                  `;
+                    const result = await executeQuery(dbConnection, q, [dataQr], true);
+                    if (result.length > 0) {
+                        cliente = result[0]?.didCliente ?? null;
+                        shipmentId = result[0]?.did ?? null;
+                    } else {
+                        throw new Error("No se encontró el envío en la base de datos.");
+                    }
+                } else {
+                    cliente = LogisticaConf.getSenderId(company.did, dataQr);
+                    shipmentId = await getShipmentIdFromQr(company.did, dataQr);
+                }
 
                 dataQr = {
                     local: '1',
@@ -68,7 +84,7 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
                 };
 
             } catch (error) {
-
+                logRed(`Error al procesar código de barras: ${error.message}`);
                 const cliente = LogisticaConf.getSenderId(company.did);
                 const empresaVinculada = LogisticaConf.getEmpresaVinculada(company.did);
                 // que pasa si es 211 o  55 que no tienen empresa vinculada
@@ -76,8 +92,13 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
                     // preguntar a cris 
                     throw new Error("El envio no esta igresado en su sistema");
                 };
+                let shipmentIdExterno;
+                try {
 
-                const shipmentIdExterno = await getShipmentIdFromQr(empresaVinculada, dataQr);
+                    shipmentIdExterno = await getShipmentIdFromQr(empresaVinculada, dataQr);
+                } catch (error) {
+                    throw new Error("Error envio no insertado ");
+                }
 
                 //no encontre shipmentiD : cambiar en el qr la empresa x la externa --- si no esta lo inserta 
                 dataQr = {
@@ -110,10 +131,6 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
             } else {
                 account = await getAccountBySenderId(dbConnection, company.did, dataQr.sender_id);
                 senderId = dataQr.sender_id;
-                /** if (company.did == 167 && account == undefined) {
-                     logCyan("Es JSL");
-                     return await handleInternalFlex(dbConnection, company, userId, profile, dataQr, autoAssign, 0, latitude, longitude, senderId);
-                 } */
             }
 
             if (account) {
@@ -121,8 +138,9 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
                 response = await handleInternalFlex(dbConnection, company, userId, profile, dataQr, autoAssign, account, latitude, longitude, senderId);
 
                 /// Si la cuenta no existe, es externo
-            } else if (company.did == 144 || company.did == 167) {
-                logCyan("⚠️ Cuenta nula, verificando envío interno por empresa 144");
+            } else if (company.did == 144 || company.did == 167 || company.did == 114) {
+                //est verificacion admite solo envios ingresados en el sistema, de lo contrario es externo. No se ingresa
+                logCyan("⚠️ Cuenta nula, verificando envío interno por empresa 144 , 167 o 114");
 
                 const queryCheck = `
                   SELECT did
