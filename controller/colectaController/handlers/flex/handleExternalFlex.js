@@ -41,7 +41,6 @@ export async function handleExternalFlex(
     dbConnection,
     queryLogisticasExternas,
     [],
-    true
   );
   logCyan("Me traigo las logisticas externas");
 
@@ -68,6 +67,19 @@ export async function handleExternalFlex(
     externalDbConnection.connect();
 
     try {
+      const driver = await checkIfExistLogisticAsDriverInExternalCompany(
+        externalDbConnection,
+        codLocal
+      );
+
+      if (!driver) {
+        return {
+          success: false,
+          message: "No se encontró chofer asignado",
+        };
+      }
+      logCyan("Encontré la logística como chofer en la logística externa");
+
       const sqlEnvios = `
         SELECT did, didCliente
         FROM envios 
@@ -83,19 +95,6 @@ export async function handleExternalFlex(
       let externalShipmentId;
       let externalClientId;
 
-      const driver = await checkIfExistLogisticAsDriverInExternalCompany(
-        externalDbConnection,
-        codLocal
-      );
-
-      if (!driver) {
-        return {
-          success: false,
-          message: "No se encontró chofer asignado",
-        };
-      }
-
-      logCyan("Encontré la logística como chofer en la logística externa");
 
       if (rowsEnvios.length > 0) {
         externalShipmentId = rowsEnvios[0].did;
@@ -164,7 +163,6 @@ export async function handleExternalFlex(
         dbConnection,
         consulta,
         [externalShipmentId],
-        true
       );
 
       if (internalShipmentId.length > 0 && internalShipmentId[0]?.didLocal) {
@@ -183,32 +181,31 @@ export async function handleExternalFlex(
         );
         logCyan("Inserté el envío en envíos");
 
-        const check = "SELECT valor FROM envios_logisticainversa WHERE didEnvio = ?";
-        const rows = await executeQuery(
-          externalDbConnection,
-          check,
-          [externalShipmentId],
-          true
+        await insertEnviosExteriores(
+          dbConnection,
+          internalShipmentId,
+          externalShipmentId,
+          1,
+          nombreFantasia,
+          externalCompanyId
         );
-        if (rows.length > 0) {
-          await insertEnviosLogisticaInversa(
-            dbConnection,
-            internalShipmentId,
-            rows[0].valor,
-            userId
-          );
-        }
+        logCyan("Inserté el envío en envíos exteriores");
+      }
+      const check = "SELECT valor FROM envios_logisticainversa WHERE didEnvio = ?";
+      const rows = await executeQuery(
+        externalDbConnection,
+        check,
+        [externalShipmentId],
+      );
+      if (rows.length > 0) {
+        await insertEnviosLogisticaInversa(
+          dbConnection,
+          internalShipmentId,
+          rows[0].valor,
+          userId
+        );
       }
 
-      await insertEnviosExteriores(
-        dbConnection,
-        internalShipmentId,
-        externalShipmentId,
-        1,
-        nombreFantasia,
-        externalCompanyId
-      );
-      logCyan("Inserté el envío en envíos exteriores");
 
       await sendToShipmentStateMicroServiceAPI(
         company.did,
@@ -261,7 +258,6 @@ export async function handleExternalFlex(
         dbConnection,
         queryInternalClient,
         [internalShipmentId],
-        true
       );
       if (internalClient.length == 0) {
         return {
