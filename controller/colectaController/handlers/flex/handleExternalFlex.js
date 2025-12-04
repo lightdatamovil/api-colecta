@@ -158,7 +158,7 @@ export async function handleExternalFlex(
       logCyan("El envío no fue colectado, cancelado ni entregado");
 
       let internalShipmentId;
-      const consulta = "SELECT didLocal FROM envios_exteriores WHERE didExterno = ? and superado = 0 and elim=0";
+      const consulta = "SELECT didLocal FROM envios_exteriores WHERE didExterno = ? and didEmpresa = ? and superado = 0 and elim = 0";
       internalShipmentId = await executeQuery(
         dbConnection,
         consulta,
