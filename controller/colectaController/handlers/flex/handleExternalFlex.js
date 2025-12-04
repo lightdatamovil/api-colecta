@@ -147,7 +147,7 @@ export async function handleExternalFlex(
       internalShipmentId = await executeQuery(
         dbConnection,
         consulta,
-        [externalShipmentId],
+        [externalShipmentId, externalCompanyId],
       );
 
       if (internalShipmentId.length > 0 && internalShipmentId[0]?.didLocal) {
