@@ -17,7 +17,6 @@ export async function assign(companyId, userId, profile, dataQr, driverId, devic
         deviceFrom: deviceFrom
     };
 
-    // console.log("[assign] payload:", JSON.stringify(payload));
     try {
         const result = await axiosInstance.post('http://10.70.0.71:13000/api/asignaciones/asignar', payload);
         if (result.status == 200) {
