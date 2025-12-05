@@ -14,7 +14,7 @@ export async function connectWithFallback(company, retries = 3) {
         if (retries > 0) {
             console.log(`🔁 Reintentando conexión MySQL... (${retries} left)`);
             await new Promise(r => setTimeout(r, 300)); // pequeño delay
-            return connectWithFallback(dbConfig, retries - 1);
+            return connectWithFallback(company, retries - 1);
         }
         logRed("❌ Error al conectar a MySQL:", err.message);
         throw new Error("No se pudo conectar a MySQL después de varios intentos.");
