@@ -175,7 +175,7 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
         const dbConfig = getProdDbConfig(company);
         await crearLogRaro({
             company,
-            mensaje: `Error al conectar a MySQL: ${error.message} ${dbConfig}`,
+            mensaje: `Error al conectar a MySQL: ${error.message} ${JSON.stringify(dbConfig)}`,
             detalle: JSON.stringify(company),
             nivel: "ERROR",
         });
