@@ -28,8 +28,8 @@ colecta.post("/colecta", async (req, res) => {
   const body = req.body;
   const { companyId, userId, profile, dataQr, autoAssign, ilat, ilong } = req.body;
 
+  const company = await getCompanyById(companyId);
   try {
-    const company = await getCompanyById(companyId);
 
     const result = await colectar(
       company,
@@ -42,7 +42,7 @@ colecta.post("/colecta", async (req, res) => {
     );
     const endTime = performance.now();
     crearLog(
-      companyId,
+      company,
       userId,
       profile || 0,
       body,
@@ -55,7 +55,7 @@ colecta.post("/colecta", async (req, res) => {
   } catch (error) {
     const endTime = performance.now();
     crearLog(
-      companyId,
+      company,
       userId,
       profile || 0,
       body,
