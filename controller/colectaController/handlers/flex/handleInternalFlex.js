@@ -3,15 +3,9 @@ import { assign } from "../../functions/assign.js";
 import { insertEnvios } from "../../functions/insertEnvios.js";
 import { informe } from "../../functions/informe.js";
 import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
-import { logBlue, logCyan } from "../../../../src/funciones/logsCustom.js";
 import { sendToShipmentStateMicroServiceAPI } from "../../functions/sendToShipmentStateMicroServiceAPI.js";
 import { checkIfFulfillment } from "../../../../src/funciones/checkIfFulfillment.js";
 
-/// Busco el envio
-/// Si no existe, lo inserto y tomo el did
-/// Checkeo si el envío ya fue colectado cancelado o entregado
-/// Actualizo el estado del envío y lo envío al microservicio de estados
-/// Asigno el envío al usuario si es necesario
 export async function handleInternalFlex(
   dbConnection,
   company,
@@ -25,9 +19,9 @@ export async function handleInternalFlex(
 ) {
   const companyId = company.did;
   const mlShipmentId = dataQr.id;
-  let shipmentId;
+
   await checkIfFulfillment(dbConnection, mlShipmentId);
-  /// Busco el envio
+
   const sql = `
             SELECT did , didCliente, ml_qr_seguridad 
             FROM envios 
@@ -38,12 +32,11 @@ export async function handleInternalFlex(
     mlShipmentId,
     senderId,
   ]);
-  shipmentId = resultBuscarEnvio.length > 0 ? resultBuscarEnvio[0].did : null;
-  let didCLiente = resultBuscarEnvio.length > 0 ? resultBuscarEnvio[0].didCliente : null;
-  let mlQrSeguridad = resultBuscarEnvio.length > 0 ? resultBuscarEnvio[0].ml_qr_seguridad : null;
-  /// Si no existe, lo inserto y tomo el did
+
+  let did = resultBuscarEnvio.length > 0 ? resultBuscarEnvio[0].did : null;
+
   if (resultBuscarEnvio.length === 0) {
-    shipmentId = await insertEnvios(
+    did = await insertEnvios(
       dbConnection,
       companyId,
       account.didCliente,
@@ -57,21 +50,14 @@ export async function handleInternalFlex(
       mlShipmentId,
       senderId,
     ]);
-    logCyan("Inserte el envio");
+    did = resultBuscarEnvio[0].did;
   } else {
-
-
-    /// Checkeo si el envío ya fue colectado cancelado o entregado
-    const check = await checkearEstadoEnvio(dbConnection, shipmentId);
+    const check = await checkearEstadoEnvio(dbConnection, did);
     if (check) return check;
-    logCyan("Encontre el envio");
   }
 
-  const row = resultBuscarEnvio[0];
-
-  shipmentId = row.did;
-  logCyan("El envio no fue colectado cancelado o entregado");
-
+  const didCliente = resultBuscarEnvio.length > 0 ? resultBuscarEnvio[0].didCliente : null;
+  const mlQrSeguridad = resultBuscarEnvio.length > 0 ? resultBuscarEnvio[0].ml_qr_seguridad : null;
 
   if (!mlQrSeguridad) {
     const queryUpdateEnvios = `
@@ -82,52 +68,27 @@ export async function handleInternalFlex(
 
     await executeQuery(dbConnection, queryUpdateEnvios, [
       JSON.stringify(dataQr),
-      shipmentId,
+      did,
     ]);
-    logCyan("Actualice el ml_qr_seguridad del envio");
   }
 
-  /// Actualizo el estado del envío y lo envío al microservicio de estados
+  await sendToShipmentStateMicroServiceAPI(companyId, userId, did, latitude, longitude);
 
-  const startTime = performance.now();
-  await sendToShipmentStateMicroServiceAPI(companyId, userId, shipmentId, latitude, longitude);
-  logBlue(`Tiempo de espera en sendToShipmentStateMicroServiceAPI: ${performance.now() - startTime} ms`);
-  logCyan(
-    "Actualice el estado del envio y lo envie al microservicio de estados"
-  );
-
-  /// Asigno el envío al usuario si es necesario
   if (autoAssign) {
     await assign(companyId, userId, profile, dataQr, userId, "Autoasignado de colecta");
-    logCyan("Asigne el envio");
-  }
-
-  if (companyId == 144) {
-    const body = await informe(
-      dbConnection,
-      company,
-      didCLiente,
-      userId,
-      shipmentId
-    );
-    return {
-      success: true,
-      message: "Paquete puesto a planta  - FLEX",
-      body: body,
-    };
   }
 
   const body = await informe(
     dbConnection,
     company,
-    account.didCliente || 0,
+    companyId == 144 ? account.didCliente : didCliente,
     userId,
-    shipmentId
+    did
   );
 
   return {
     success: true,
     message: "Paquete insertado y colectado - FLEX",
-    body: body,
+    body,
   };
 }
