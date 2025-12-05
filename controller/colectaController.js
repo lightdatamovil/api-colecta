@@ -41,10 +41,10 @@ async function getShipmentIdFromQr(companyId, dataQr) {
 
 
 export async function colectar(company, dataQr, userId, profile, autoAssign, latitude, longitude) {
-    const dbConnection = await connectWithFallback(company);
     incrActiveLocal(company.did);
-
+    let dbConnection;
     try {
+        dbConnection = await connectWithFallback(company);
         let response;
         dataQr = parseIfJson(dataQr);
         //es barcode
