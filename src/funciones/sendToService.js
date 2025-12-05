@@ -1,4 +1,4 @@
-import { axiosInstance } from "../../db";
+import { axiosInstance } from "../../db.js";
 
 export async function sendToService(endpoint, message, retries = 3) {
     try {
