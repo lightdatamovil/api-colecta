@@ -52,6 +52,14 @@ export async function handleExternalFlex(
   }
 
   for (const logistica of logisticasExternas) {
+    if (logistica == undefined) {
+      await crearLogRaro({
+        company,
+        mensaje: `Logistica undefined para la cuenta de ML: ${dataQr.sender_id}`,
+        detalle: JSON.stringify(logisticasExternas),
+        nivel: "WARN",
+      });
+    }
     if (!logistica?.did) {
       continue;
     }
