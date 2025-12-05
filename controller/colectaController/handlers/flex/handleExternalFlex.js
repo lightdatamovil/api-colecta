@@ -62,12 +62,12 @@ export async function handleExternalFlex(
 
     const externalCompany = await getCompanyByCode(syncCode);
     if (!externalCompany) {
-
       await crearLogRaro({
         company,
         mensaje: `No se encontró la empresa externa con código ${syncCode} para la cuenta de ML: ${dataQr.sender_id}`,
         nivel: "WARN",
       });
+      continue;
     }
     const externalCompanyId = externalCompany.did;
 
