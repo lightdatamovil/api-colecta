@@ -1,4 +1,4 @@
-import { executeQuery, getAccountBySenderId } from "../db.js";
+import { executeQuery, getAccountBySenderId, getProdDbConfig } from "../db.js";
 import { handleInternalFlex } from "./colectaController/handlers/flex/handleInternalFlex.js";
 import { handleExternalFlex } from "./colectaController/handlers/flex/handleExternalFlex.js";
 import { handleExternalNoFlex } from "./colectaController/handlers/noflex/handleExternalNoFlex.js";
@@ -9,6 +9,7 @@ import LogisticaConf from "../classes/logisticas_conf.js";
 import { decrActiveLocal, incrActiveLocal } from "../src/funciones/dbList.js";
 import { sendToService } from "../src/funciones/sendToService.js";
 import { connectWithFallback } from "../src/funciones/connectWithFallback.js";
+import { crearLogRaro } from "../src/funciones/crear_log_raro.js";
 
 async function getShipmentIdFromQr(companyId, dataQr) {
     const payload = {
@@ -171,6 +172,13 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
 
     } catch (error) {
         console.log(error);
+        const dbConfig = getProdDbConfig(company);
+        await crearLogRaro({
+            company,
+            mensaje: `Error al conectar a MySQL: ${error.message} ${dbConfig}`,
+            detalle: JSON.stringify(company),
+            nivel: "ERROR",
+        });
         throw error;
     } finally {
         decrActiveLocal(company.did);
