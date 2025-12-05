@@ -1,4 +1,5 @@
-import { axiosInstance, executeQuery } from "../../../db.js";
+import { executeQuery } from "../../../db.js";
+import { sendToService } from "../../../src/funciones/sendToService.js";
 import { senToDataML } from "./sendToDataML.js";
 
 export async function insertEnvios(
@@ -67,7 +68,7 @@ export async function insertEnvios(
 
 
 
-    await axiosInstance.post(
+    await sendToService(
       "https://altaenvios.lightdata.com.ar/api/enviosMLredis",
       {
         idEmpresa: companyId,

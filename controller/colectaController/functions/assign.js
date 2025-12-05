@@ -1,5 +1,5 @@
-import { axiosInstance } from '../../../db.js';
 import CustomException from '../../../classes/custom_exception.js';
+import { sendToService } from '../../../src/funciones/sendToService.js';
 
 export async function assign(companyId, userId, profile, dataQr, driverId, deviceFrom) {
 
@@ -18,7 +18,7 @@ export async function assign(companyId, userId, profile, dataQr, driverId, devic
     };
 
     try {
-        await axiosInstance.post('http://10.70.0.71:13000/api/asignaciones/asignar', payload);
+        await sendToService('http://10.70.0.71:13000/api/asignaciones/asignar', payload);
     } catch (err) {
         throw new CustomException({
             title: "Error al asignar conductor",

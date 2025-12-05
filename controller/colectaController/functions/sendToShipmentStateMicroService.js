@@ -3,13 +3,12 @@ import dotenv from 'dotenv';
 import { logGreen, logRed, logYellow } from '../../../src/funciones/logsCustom.js';
 import { formatFechaUTC3 } from '../../../src/funciones/formatFechaUTC3.js';
 import { generarTokenFechaHoy } from '../../../src/funciones/generarTokenFechaHoy.js';
-import { axiosInstance } from '../../../db.js';
+import { sendToService } from '../../../src/funciones/sendToService.js';
 dotenv.config({ path: process.env.ENV_FILE || '.env' });
 
 const RABBITMQ_URL = process.env.RABBITMQ_URL;
 const QUEUE_ESTADOS = process.env.QUEUE_ESTADOS;
 const BACKUP_ENDPOINT = "http://10.70.0.69:13000/estados"
-
 
 let connection = null;
 let channel = null;
@@ -76,7 +75,7 @@ export async function sendToShipmentStateMicroService(
         logRed(`❌ Falló RabbitMQ, intentando enviar por HTTP: ${error.message}`);
 
         try {
-            const response = await axiosInstance.post(BACKUP_ENDPOINT, message);
+            const response = await sendToService(BACKUP_ENDPOINT, message);
             logGreen(`✅ Enviado por HTTP con status ${response.status}`);
         } catch (httpError) {
             logRed(`❌ Falló el envío por HTTP también: ${httpError.message}`);

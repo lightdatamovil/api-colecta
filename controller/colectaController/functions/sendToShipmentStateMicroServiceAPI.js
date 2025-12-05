@@ -1,8 +1,8 @@
 import dotenv from 'dotenv';
 import { formatFechaUTC3 } from '../../../src/funciones/formatFechaUTC3.js';
 import { generarTokenFechaHoy } from '../../../src/funciones/generarTokenFechaHoy.js';
-import { axiosInstance } from '../../../db.js';
 import CustomException from '../../../classes/custom_exception.js';
+import { sendToService } from '../../../src/funciones/sendToService.js';
 
 dotenv.config({ path: process.env.ENV_FILE || '.env' });
 
@@ -31,7 +31,7 @@ export async function sendToShipmentStateMicroServiceAPI(
     };
 
     try {
-        await axiosInstance.post(BACKUP_ENDPOINT, message);
+        await sendToService(BACKUP_ENDPOINT, message);
     } catch (error) {
         throw new CustomException({
             title: "Error enviando al microservicio de estados",
