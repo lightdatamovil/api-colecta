@@ -171,7 +171,6 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
         return response;
 
     } catch (error) {
-        console.log(dbConfig);
         console.log(error);
         throw error;
     } finally {
