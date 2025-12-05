@@ -4,7 +4,7 @@ import { handleExternalFlex } from "./colectaController/handlers/flex/handleExte
 import { handleExternalNoFlex } from "./colectaController/handlers/noflex/handleExternalNoFlex.js";
 import { handleInternalNoFlex } from "./colectaController/handlers/noflex/handleInternalNoFlex.js";
 import mysql from "mysql";
-import { logCyan, logRed } from "../src/funciones/logsCustom.js";
+import { logRed } from "../src/funciones/logsCustom.js";
 import { parseIfJson } from "../src/funciones/isValidJson.js";
 import LogisticaConf from "../classes/logisticas_conf.js";
 import { decrActiveLocal, incrActiveLocal } from "../src/funciones/dbList.js";
@@ -110,13 +110,12 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
                 };
             }
         }
-        logCyan(`Datos del QR: ${JSON.stringify(dataQr)}`);
+
         const isCollectShipmentML = Object.prototype.hasOwnProperty.call(dataQr, "t");
         /// Me fijo si es flex o no
         const isFlex = Object.prototype.hasOwnProperty.call(dataQr, "sender_id") || isCollectShipmentML;
 
         if (isFlex) {
-            logCyan("Es flex");
             /// Busco la cuenta del cliente
             let account = null;
             let senderId = null;
@@ -128,20 +127,17 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
 
                 senderId = result[0].ml_vendedor_id;
                 account = await getAccountBySenderId(dbConnection, company.did, senderId);
-                logCyan(JSON.stringify(account));
             } else {
                 account = await getAccountBySenderId(dbConnection, company.did, dataQr.sender_id);
                 senderId = dataQr.sender_id;
             }
 
             if (account) {
-                logCyan("Es interno");
                 response = await handleInternalFlex(dbConnection, company, userId, profile, dataQr, autoAssign, account, latitude, longitude, senderId);
 
                 /// Si la cuenta no existe, es externo
             } else if (company.did == 144 || company.did == 167 || company.did == 114) {
                 //est verificacion admite solo envios ingresados en el sistema, de lo contrario es externo. No se ingresa
-                logCyan("⚠️ Cuenta nula, verificando envío interno por empresa 144 , 167 o 114");
 
                 const queryCheck = `
                   SELECT did
@@ -158,22 +154,16 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
                     senderId = dataQr.sender_id;
                     response = await handleInternalFlex(dbConnection, company, userId, profile, dataQr, autoAssign, account, latitude, longitude, senderId);
                 } else {
-                    logCyan("🌐 Es externo (empresa 144 sin coincidencia)");
                     response = await handleExternalFlex(dbConnection, company, userId, profile, dataQr, autoAssign, latitude, longitude);
                 }
             } else {
-                logCyan("Es externo");
                 response = await handleExternalFlex(dbConnection, company, userId, profile, dataQr, autoAssign, latitude, longitude);
             }
 
         } else {
-            logCyan("No es flex");
-            logCyan(`Empresa: ${company.did}, Data QR: ${JSON.stringify(dataQr)}`);
             if (company.did == dataQr.empresa) {
-                logCyan("Es interno");
                 response = await handleInternalNoFlex(dbConnection, dataQr, company, userId, profile, autoAssign, latitude, longitude);
             } else {
-                logCyan("Es externo");
                 response = await handleExternalNoFlex(dbConnection, dataQr, company, userId, profile, autoAssign, latitude, longitude);
             }
         }
