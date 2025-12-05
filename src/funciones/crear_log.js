@@ -29,7 +29,7 @@ export async function crearLog(
 
   try {
     await poolColecta.execute(sql, values);
-    logGreen('Log creado');
+    logGreen(`Log creado ${new Date().toISOString()}: ${REDACT(formatted)}`);
   } catch (e) {
     // logueá TODO, no solo e.message
     console.error('crearLog: fallo insert logs_v2', {
