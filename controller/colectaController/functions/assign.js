@@ -1,5 +1,5 @@
-import { logGreen, logRed } from '../../../src/funciones/logsCustom.js';
 import { axiosInstance } from '../../../db.js';
+import CustomException from '../../../classes/custom_exception.js';
 
 export async function assign(companyId, userId, profile, dataQr, driverId, deviceFrom) {
 
@@ -18,15 +18,12 @@ export async function assign(companyId, userId, profile, dataQr, driverId, devic
     };
 
     try {
-        const result = await axiosInstance.post('http://10.70.0.71:13000/api/asignaciones/asignar', payload);
-        if (result.status == 200) {
-            logGreen("Asignado correctamente");
-        }
+        await axiosInstance.post('http://10.70.0.71:13000/api/asignaciones/asignar', payload);
     } catch (err) {
-        logRed("Error al asignar");
-        debugHttpError(err, "assign");
-        throw new Error("Error al asignar");
-
+        throw new CustomException({
+            title: "Error al asignar conductor",
+            message: `Error al asignar conductor ${err.message}`,
+        });
     }
 }
 
