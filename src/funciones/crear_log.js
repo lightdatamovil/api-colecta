@@ -1,6 +1,7 @@
 import mysql2 from 'mysql2/promise';
 import { logGreen } from './logsCustom.js';
 import { poolColecta } from '../../db.js';
+import { getFechaConHoraLocalDePais } from 'lightdata-tools';
 
 const REDACT = (s) => (typeof s === 'string' && s.length > 500 ? s.slice(0, 500) + ' …[truncado]' : s);
 
@@ -29,7 +30,7 @@ export async function crearLog(
 
   try {
     await poolColecta.execute(sql, values);
-    logGreen(`Log creado ${new Date().toISOString()}`);
+    logGreen(`Log creado ${getFechaConHoraLocalDePais(empresa.pais)}`);
   } catch (e) {
     // logueá TODO, no solo e.message
     console.error('crearLog: fallo insert logs_v2', {
