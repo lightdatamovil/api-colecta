@@ -9,7 +9,7 @@ import { logRed } from "../../../../src/funciones/logsCustom.js";
 import { insertEnviosLogisticaInversa } from "../../functions/insertLogisticaInversa.js";
 import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
 import { sendToShipmentStateMicroServiceAPI } from "../../functions/sendToShipmentStateMicroServiceAPI.js";
-import { checkIfFulfillment } from "lightdata-tools";
+import { checkIfFulfillment, CustomException } from "lightdata-tools";
 
 /// Esta funcion busca las logisticas vinculadas
 /// Reviso si el envío ya fue colectado cancelado o entregado en la logística externa
@@ -51,8 +51,12 @@ export async function handleExternalFlex(
   }
 
   for (const logistica of logisticasExternas) {
-    if (logistica.did == undefined) {
-      throw new Error(`La logística está mal vinculada`);
+    if (!logistica?.did) {
+      throw new CustomException({
+        title: "Logística externa sin ID",
+        message: `La logística externa ${logistica.nombre_fantasia} no tiene un ID válido.`,
+        statusCode: 500,
+      });
     }
 
     const externalLogisticId = logistica.did;
