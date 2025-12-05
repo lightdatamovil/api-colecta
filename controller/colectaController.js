@@ -97,6 +97,7 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
 
                     shipmentIdExterno = await getShipmentIdFromQr(empresaVinculada, dataQr);
                 } catch (error) {
+                    console.log(error);
                     throw new Error("Error envio no insertado ");
                 }
 
@@ -181,10 +182,8 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
 
     } catch (error) {
         console.log(dbConfig);
-        logRed(`Error en colectar: ${error.message}`);
+        console.log(error);
         throw error;
-
-
     } finally {
         decrActiveLocal(company.did);
         dbConnection.end();
