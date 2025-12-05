@@ -1,6 +1,5 @@
-import { executeQuery, getClientsByCompany, getCompanyById, getProdDbConfig } from "../../../../db.js";
+import { executeQuery, getClientsByCompany, getCompanyById } from "../../../../db.js";
 import { assign } from "../../functions/assign.js";
-import mysql from "mysql";
 import { insertEnvios } from "../../functions/insertEnvios.js";
 import { insertEnviosExteriores } from "../../functions/insertEnviosExteriores.js";
 import { checkIfExistLogisticAsDriverInExternalCompany } from "../../functions/checkIfExistLogisticAsDriverInExternalCompany.js";
@@ -8,6 +7,7 @@ import { informe } from "../../functions/informe.js";
 import { insertEnviosLogisticaInversa } from "../../functions/insertLogisticaInversa.js";
 import { sendToShipmentStateMicroServiceAPI } from "../../functions/sendToShipmentStateMicroServiceAPI.js";
 import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
+import { connectWithFallback } from "../../../../src/funciones/connectWithFallback.js";
 
 /// Esta funcion se conecta a la base de datos de la empresa externa
 /// Checkea si el envio ya fue colectado, entregado o cancelado
@@ -25,9 +25,7 @@ export async function handleExternalNoFlex(dbConnection, dataQr, company, userId
     const externalCompany = await getCompanyById(dataQr.empresa);
 
     /// Conecto a la base de datos de la empresa externa
-    const dbConfigExt = getProdDbConfig(externalCompany);
-    const externalDbConnection = mysql.createConnection(dbConfigExt);
-    externalDbConnection.connect();
+    const externalDbConnection = await connectWithFallback(externalCompany);
 
     const companyClientList = await getClientsByCompany(externalDbConnection, externalCompany.did);
 

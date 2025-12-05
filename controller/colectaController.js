@@ -1,14 +1,14 @@
-import { executeQuery, getAccountBySenderId, getProdDbConfig } from "../db.js";
+import { executeQuery, getAccountBySenderId } from "../db.js";
 import { handleInternalFlex } from "./colectaController/handlers/flex/handleInternalFlex.js";
 import { handleExternalFlex } from "./colectaController/handlers/flex/handleExternalFlex.js";
 import { handleExternalNoFlex } from "./colectaController/handlers/noflex/handleExternalNoFlex.js";
 import { handleInternalNoFlex } from "./colectaController/handlers/noflex/handleInternalNoFlex.js";
-import mysql from "mysql";
 import { logRed } from "../src/funciones/logsCustom.js";
 import { parseIfJson } from "../src/funciones/isValidJson.js";
 import LogisticaConf from "../classes/logisticas_conf.js";
 import { decrActiveLocal, incrActiveLocal } from "../src/funciones/dbList.js";
 import { sendToService } from "../src/funciones/sendToService.js";
+import { connectWithFallback } from "../src/funciones/connectWithFallback.js";
 
 async function getShipmentIdFromQr(companyId, dataQr) {
     const payload = {
@@ -41,9 +41,7 @@ async function getShipmentIdFromQr(companyId, dataQr) {
 
 
 export async function colectar(company, dataQr, userId, profile, autoAssign, latitude, longitude) {
-    const dbConfig = getProdDbConfig(company);
-    const dbConnection = mysql.createConnection(dbConfig);
-    dbConnection.connect();
+    const dbConnection = await connectWithFallback(company);
     incrActiveLocal(company.did);
 
     try {

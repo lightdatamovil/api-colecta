@@ -1,6 +1,5 @@
-import { executeQuery, getProdDbConfig, getCompanyByCode } from "../../../../db.js";
+import { executeQuery, getCompanyByCode } from "../../../../db.js";
 import { assign } from "../../functions/assign.js";
-import mysql from "mysql";
 import { insertEnvios } from "../../functions/insertEnvios.js";
 import { insertEnviosExteriores } from "../../functions/insertEnviosExteriores.js";
 import { checkIfExistLogisticAsDriverInExternalCompany } from "../../functions/checkIfExistLogisticAsDriverInExternalCompany.js";
@@ -10,6 +9,7 @@ import { insertEnviosLogisticaInversa } from "../../functions/insertLogisticaInv
 import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
 import { sendToShipmentStateMicroServiceAPI } from "../../functions/sendToShipmentStateMicroServiceAPI.js";
 import { checkIfFulfillment } from "lightdata-tools";
+import { connectWithFallback } from "../../../../src/funciones/connectWithFallback.js";
 
 /// Esta funcion busca las logisticas vinculadas
 /// Reviso si el envío ya fue colectado cancelado o entregado en la logística externa
@@ -62,9 +62,7 @@ export async function handleExternalFlex(
     const externalCompany = await getCompanyByCode(syncCode);
     const externalCompanyId = externalCompany.did;
 
-    const dbConfigExt = getProdDbConfig(externalCompany);
-    const externalDbConnection = mysql.createConnection(dbConfigExt);
-    externalDbConnection.connect();
+    const externalDbConnection = await connectWithFallback(externalCompany);
 
     try {
       const driver = await checkIfExistLogisticAsDriverInExternalCompany(
