@@ -53,6 +53,7 @@ colecta.post("/colecta", async (req, res) => {
     );
     res.status(200).json(result);
   } catch (error) {
+    console.log(error);
     const endTime = performance.now();
     crearLog(
       company,
