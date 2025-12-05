@@ -81,7 +81,7 @@ export async function handleInternalFlex(
   const body = await informe(
     dbConnection,
     company,
-    companyId == 144 ? account.didCliente : didCliente,
+    companyId == 144 ? account?.didCliente ?? didCliente : didCliente,
     userId,
     did
   );
