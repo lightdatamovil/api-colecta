@@ -10,6 +10,7 @@ import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
 import { sendToShipmentStateMicroServiceAPI } from "../../functions/sendToShipmentStateMicroServiceAPI.js";
 import { checkIfFulfillment } from "lightdata-tools";
 import { connectWithFallback } from "../../../../src/funciones/connectWithFallback.js";
+import { crearLogRaro } from "../../../../src/funciones/crear_log_raro.js";
 
 /// Esta funcion busca las logisticas vinculadas
 /// Reviso si el envío ya fue colectado cancelado o entregado en la logística externa
@@ -60,6 +61,14 @@ export async function handleExternalFlex(
     const syncCode = logistica.codigoVinculacionLogE;
 
     const externalCompany = await getCompanyByCode(syncCode);
+    if (!externalCompany) {
+
+      await crearLogRaro({
+        company,
+        mensaje: `No se encontró la empresa externa con código ${syncCode} para la cuenta de ML: ${dataQr.sender_id}`,
+        nivel: "WARN",
+      });
+    }
     const externalCompanyId = externalCompany.did;
 
     const externalDbConnection = await connectWithFallback(externalCompany);

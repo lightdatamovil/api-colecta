@@ -48,6 +48,7 @@ export const poolColecta = mysql2.createPool({
     port: process.env.COLECTA_DB_PORT || 3306,
     waitForConnections: true,
     connectionLimit: 10,
+    multipleStatements: true,
     queueLimit: 0
 });
 

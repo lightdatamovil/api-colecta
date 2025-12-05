@@ -30,7 +30,6 @@ colecta.post("/colecta", async (req, res) => {
 
   const company = await getCompanyById(companyId);
   try {
-
     const result = await colectar(
       company,
       dataQr,
