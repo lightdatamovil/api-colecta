@@ -173,7 +173,7 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
                 response = await handleInternalMisPichos(dbConnection, dataQr, company, userId, profile, autoAssign, account, latitude, longitude);
             } else {
                 console.log("Entro a externo no flex");
-                response = await handleExternalNoFlex(dbConnection, dataQr, company, userId, profile, autoAssign, account, latitude, longitude);
+                response = await handleExternalNoFlex(dbConnection, dataQr, company, userId, profile, autoAssign, latitude, longitude);
             }
         }
 
