@@ -10,6 +10,7 @@ import { decrActiveLocal, incrActiveLocal } from "../src/funciones/dbList.js";
 import { sendToService } from "../src/funciones/sendToService.js";
 import { connectWithFallback } from "../src/funciones/connectWithFallback.js";
 import { crearLogRaro } from "../src/funciones/crear_log_raro.js";
+import { handleInternalMisPichos } from "./colectaController/handlers/flex/handleInternalMisPichos.js";
 
 async function getShipmentIdFromQr(companyId, dataQr) {
     const payload = {
@@ -115,6 +116,7 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
         /// Me fijo si es flex o no
         const isFlex = Object.prototype.hasOwnProperty.call(dataQr, "sender_id") || isCollectShipmentML;
 
+
         if (isFlex) {
             /// Busco la cuenta del cliente
             let account = null;
@@ -161,12 +163,20 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
             }
 
         } else {
+            const isMisPichos = Object.prototype.hasOwnProperty.call(dataQr, "id_orden") || isCollectShipmentML;
+            console.log("isMisPichos:", isMisPichos);
+
             if (company.did == dataQr.empresa) {
-                response = await handleInternalNoFlex(dbConnection, dataQr, company, userId, profile, autoAssign, latitude, longitude);
+                response = await handleInternalFlex(dbConnection, dataQr, company, userId, profile, autoAssign, account, latitude, longitude);
+            } else if (isMisPichos) {
+                console.log("Entro a mis pichos");
+                response = await handleInternalMisPichos(dbConnection, dataQr, company, userId, profile, autoAssign, account, latitude, longitude);
             } else {
-                response = await handleExternalNoFlex(dbConnection, dataQr, company, userId, profile, autoAssign, latitude, longitude);
+                console.log("Entro a externo no flex");
+                response = await handleExternalNoFlex(dbConnection, dataQr, company, userId, profile, autoAssign, account, latitude, longitude);
             }
         }
+
 
         return response;
 

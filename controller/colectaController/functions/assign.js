@@ -18,8 +18,10 @@ export async function assign(companyId, userId, profile, dataQr, driverId, devic
     };
 
     try {
-        await sendToService('http://10.70.0.71:13000/api/asignaciones/asignar', payload);
+        //   await sendToService('http://10.70.0.71:13000/api/asignaciones/asignar', payload);
+        await sendToService('https://asignaciones.lightdata.app/api/asignaciones/asignar', payload);
     } catch (err) {
+        debugHttpError(err, "assign");
         throw new CustomException({
             title: "Error al asignar conductor",
             message: `Error al asignar conductor ${err.message}`,

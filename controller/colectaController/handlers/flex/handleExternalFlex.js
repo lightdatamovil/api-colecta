@@ -90,6 +90,7 @@ export async function handleExternalFlex(
         continue;
       }
 
+      // busco envio en compañia externa
       const sqlEnvios = `
         SELECT did
         FROM envios 
@@ -103,7 +104,7 @@ export async function handleExternalFlex(
       if (rowsEnvios.length > 0) {
         externalShipmentId = rowsEnvios[0].did;
         logCyan("Encontré el envío en la logística externa");
-        //! se reporta como error que el paquete haya sifodo colecta si apenas ingreso al sistema en la logística externa - no descomentar
+        //! se reporta como error que el paquete haya sido colectado si apenas ingreso al sistema en la logística externa - no descomentar
         // const check = await checkearEstadoEnvio(
         //   externalDbConnection,
         //   externalShipmentId
@@ -112,6 +113,7 @@ export async function handleExternalFlex(
 
       } else {
 
+        // inserto-- primero busco el cliente en la logística externa
         const sqlCuentas = `
           SELECT did, didCliente 
           FROM clientes_cuentas 
@@ -130,6 +132,7 @@ export async function handleExternalFlex(
         const externalClientId = rowsCuentas[0].didCliente;
         const didcuenta_ext = rowsCuentas[0].did;
 
+        // inserto en logistica externa
         const result = await insertEnvios(
           externalDbConnection,
           externalCompanyId,
@@ -141,6 +144,7 @@ export async function handleExternalFlex(
           userId
         );
 
+        //  busco ese envio insertado
         rowsEnvios = await executeQuery(
           externalDbConnection,
           sqlEnvios,
@@ -150,12 +154,14 @@ export async function handleExternalFlex(
         externalShipmentId = rowsEnvios[0].did;
       }
 
+      // busc el shipment interno
       let internalShipmentId;
+      // busco ese envio en envios exteriores aca tengo un letargo  (primera iteracion pareciera no encontrarlo y despues si lo hace))
       const consulta = "SELECT didLocal FROM envios_exteriores WHERE didExterno = ? and didEmpresa = ? and superado = 0 and elim = 0";
       internalShipmentId = await executeQuery(
         dbConnection,
         consulta,
-        [externalShipmentId, externalCompanyId],
+        [externalShipmentId, externalCompanyId], true
       );
 
       if (internalShipmentId.length > 0 && internalShipmentId[0]?.didLocal) {
@@ -239,7 +245,7 @@ export async function handleExternalFlex(
       const internalClient = await executeQuery(
         dbConnection,
         queryInternalClient,
-        [internalShipmentId],
+        [internalShipmentId], true
       );
       if (internalClient.length == 0) {
         return {

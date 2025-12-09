@@ -6,7 +6,9 @@ import { sendToService } from '../../../src/funciones/sendToService.js';
 
 dotenv.config({ path: process.env.ENV_FILE || '.env' });
 
-const BACKUP_ENDPOINT = "http://10.70.0.69:13000/estados"
+// const BACKUP_ENDPOINT = "http://10.70.0.69:13000/estados"
+
+const BACKUP_ENDPOINT = "http://serverestado.lightdata.app/estados"
 
 export async function sendToShipmentStateMicroServiceAPI(
     companyId,

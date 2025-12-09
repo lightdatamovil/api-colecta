@@ -42,7 +42,7 @@ export async function insertEnvios(
     flex,
     externo,
     fechaunix,
-  ]);
+  ], true);
 
   if (result.insertId) {
     const updateSql = `
