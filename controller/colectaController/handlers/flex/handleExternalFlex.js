@@ -92,11 +92,12 @@ export async function handleExternalFlex(
       if (rowsEnvios.length > 0) {
         externalShipmentId = rowsEnvios[0].did;
         logCyan("Encontré el envío en la logística externa");
-        const check = await checkearEstadoEnvio(
-          externalDbConnection,
-          externalShipmentId
-        );
-        if (check) return check;
+        //! se reporta como error que el paquete haya sifodo colecta si apenas ingreso al sistema en la logística externa - no descomentar
+        // const check = await checkearEstadoEnvio(
+        //   externalDbConnection,
+        //   externalShipmentId
+        // );
+        //  if (check) return check;
 
       } else {
         logCyan("No encontré el envío en la logística externa");
