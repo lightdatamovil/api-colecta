@@ -1,4 +1,5 @@
-import { axiosInstance, executeQuery } from "../../../db.js";
+import { executeQuery } from "../../../db.js";
+import { sendToService } from "../../../src/funciones/sendToService.js";
 import { senToDataML } from "./sendToDataML.js";
 
 export async function insertEnvios(
@@ -58,7 +59,7 @@ export async function insertEnvios(
 
     // mensaje por rabbitMQ
     // Array de companyIds que deben enviar el mensaje
-    const companiesToSend = [12, 79, 167, 365, 364, 363, 362, 361, 360, 359, 358, 357, 356, 355, 354, 353, 352, 351, 350, 204, 334, 211];
+    const companiesToSend = [12, 79, 167, 365, 364, 363, 362, 361, 360, 359, 358, 357, 356, 355, 354, 353, 352, 351, 350, 204, 334, 211, 227];
 
     // Verificamos si el companyId actual está en la lista
     if (companiesToSend.includes(companyId)) {
@@ -67,7 +68,7 @@ export async function insertEnvios(
 
 
 
-    await axiosInstance.post(
+    await sendToService(
       "https://altaenvios.lightdata.com.ar/api/enviosMLredis",
       {
         idEmpresa: companyId,

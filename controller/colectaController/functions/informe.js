@@ -1,6 +1,6 @@
 import { executeQuery, getClientsByCompany } from "../../../db.js";
 import { getFechaLocalDePais } from "../../../src/funciones/getFechaLocalByPais.js";
-import { logCyan, logRed } from "../../../src/funciones/logsCustom.js";
+import { logRed } from "../../../src/funciones/logsCustom.js";
 
 // Cache en memoria con TTL simple
 const cache = {};
@@ -89,10 +89,7 @@ export async function informe(dbConnection, company, clientId = 0, userId) {
   const cliente = companyClients?.[clientId]?.nombre ?? "Sin información";
 
   if (!companyClients[clientId]) {
-    logCyan(`[informe] Cliente no encontrado (ID: ${clientId})`);
   }
-
-  logCyan(`[informe] Informe generado para empresa ${company.did}`);
 
   // ---------- Resultado ----------
   return {

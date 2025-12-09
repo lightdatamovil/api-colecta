@@ -38,16 +38,16 @@ export const axiosInstance = axios.create({
     timeout: 5000, // 5 segundos máximo por request
 });
 
-
 // pool
 export const poolColecta = mysql2.createPool({
-    host: process.env.COLECTA_DB_HOST,
-    user: process.env.COLECTA_DB_USER_FOR_LOGS,
-    password: process.env.COLECTA_DB_PASSWORD_FOR_LOGS,
-    database: process.env.COLECTA_DB_NAME_FOR_LOGS,
-    port: process.env.COLECTA_DB_PORT || 3306,
+    host: colectaDBHost,
+    user: colectaDbUserForLogs,
+    password: colectaDbPasswordForLogs,
+    database: colectaDbNameForLogs,
+    port: colectaDBPort,
     waitForConnections: true,
     connectionLimit: 10,
+    multipleStatements: true,
     queueLimit: 0
 });
 
@@ -75,15 +75,6 @@ export function getProdDbConfig(company) {
         password: company.dbpass,
         database: company.dbname,
         port: portProductionDb,
-    };
-}
-export function getLocalDbConfig() {
-    return {
-        host: colectaDBHost,
-        user: colectaDbUserForLogs,
-        password: colectaDbPasswordForLogs,
-        database: colectaDbNameForLogs,
-        port: colectaDBPort
     };
 }
 

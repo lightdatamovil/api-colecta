@@ -1,15 +1,15 @@
-import { executeQuery, getProdDbConfig, getCompanyByCode } from "../../../../db.js";
+import { executeQuery, getCompanyByCode } from "../../../../db.js";
 import { assign } from "../../functions/assign.js";
-import mysql from "mysql";
 import { insertEnvios } from "../../functions/insertEnvios.js";
 import { insertEnviosExteriores } from "../../functions/insertEnviosExteriores.js";
 import { checkIfExistLogisticAsDriverInExternalCompany } from "../../functions/checkIfExistLogisticAsDriverInExternalCompany.js";
 import { informe } from "../../functions/informe.js";
 import { logCyan, logRed } from "../../../../src/funciones/logsCustom.js";
 import { insertEnviosLogisticaInversa } from "../../functions/insertLogisticaInversa.js";
-import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
 import { sendToShipmentStateMicroServiceAPI } from "../../functions/sendToShipmentStateMicroServiceAPI.js";
 import { checkIfFulfillment } from "lightdata-tools";
+import { connectWithFallback } from "../../../../src/funciones/connectWithFallback.js";
+import { crearLogRaro } from "../../../../src/funciones/crear_log_raro.js";
 
 /// Esta funcion busca las logisticas vinculadas
 /// Reviso si el envío ya fue colectado cancelado o entregado en la logística externa
@@ -44,7 +44,6 @@ export async function handleExternalFlex(
     queryLogisticasExternas,
     [],
   );
-  logCyan("Me traigo las logisticas externas");
 
   if (logisticasExternas.length === 0) {
     logRed("No hay logisticas externas");
@@ -52,9 +51,16 @@ export async function handleExternalFlex(
   }
 
   for (const logistica of logisticasExternas) {
-    logCyan(`Logística externa actual: ${logistica.nombre_fantasia}`);
-    if (logistica.did == undefined) {
-      throw new Error(`La logística está mal vinculada`);
+    if (logistica == undefined) {
+      await crearLogRaro({
+        company,
+        mensaje: `Logistica undefined para la cuenta de ML: ${dataQr.sender_id}`,
+        detalle: JSON.stringify(logisticasExternas),
+        nivel: "WARN",
+      });
+    }
+    if (!logistica?.did) {
+      continue;
     }
 
     const externalLogisticId = logistica.did;
@@ -62,11 +68,17 @@ export async function handleExternalFlex(
     const syncCode = logistica.codigoVinculacionLogE;
 
     const externalCompany = await getCompanyByCode(syncCode);
+    if (!externalCompany) {
+      await crearLogRaro({
+        company,
+        mensaje: `No se encontró la empresa externa con código ${syncCode} para la cuenta de ML: ${dataQr.sender_id}`,
+        nivel: "WARN",
+      });
+      continue;
+    }
     const externalCompanyId = externalCompany.did;
 
-    const dbConfigExt = getProdDbConfig(externalCompany);
-    const externalDbConnection = mysql.createConnection(dbConfigExt);
-    externalDbConnection.connect();
+    const externalDbConnection = await connectWithFallback(externalCompany);
 
     try {
       const driver = await checkIfExistLogisticAsDriverInExternalCompany(
@@ -77,7 +89,6 @@ export async function handleExternalFlex(
       if (!driver) {
         continue;
       }
-      logCyan("Encontré la logística como chofer en la logística externa");
 
       const sqlEnvios = `
         SELECT did
@@ -100,7 +111,6 @@ export async function handleExternalFlex(
         //  if (check) return check;
 
       } else {
-        logCyan("No encontré el envío en la logística externa");
 
         const sqlCuentas = `
           SELECT did, didCliente 
@@ -137,11 +147,8 @@ export async function handleExternalFlex(
           [result, senderid]
         );
 
-        logCyan("Inserté el envío en la logística externa");
         externalShipmentId = rowsEnvios[0].did;
       }
-
-      logCyan("El envío no fue colectado, cancelado ni entregado");
 
       let internalShipmentId;
       const consulta = "SELECT didLocal FROM envios_exteriores WHERE didExterno = ? and didEmpresa = ? and superado = 0 and elim = 0";
@@ -153,7 +160,6 @@ export async function handleExternalFlex(
 
       if (internalShipmentId.length > 0 && internalShipmentId[0]?.didLocal) {
         internalShipmentId = internalShipmentId[0].didLocal;
-        logCyan("Encontré el envío en envíos exteriores");
       } else {
         internalShipmentId = await insertEnvios(
           dbConnection,
@@ -165,7 +171,6 @@ export async function handleExternalFlex(
           1,
           userId
         );
-        logCyan("Inserté el envío en envíos");
 
         await insertEnviosExteriores(
           dbConnection,
@@ -175,7 +180,6 @@ export async function handleExternalFlex(
           nombreFantasia,
           externalCompanyId
         );
-        logCyan("Inserté el envío en envíos exteriores");
       }
       const check = "SELECT valor FROM envios_logisticainversa WHERE didEnvio = ?";
       const rows = await executeQuery(
@@ -199,7 +203,6 @@ export async function handleExternalFlex(
         latitude,
         longitude
       );
-      logCyan("Actualicé el estado del envío interno");
 
       await sendToShipmentStateMicroServiceAPI(
         externalCompanyId,
@@ -208,7 +211,6 @@ export async function handleExternalFlex(
         latitude,
         longitude
       );
-      logCyan("Actualicé el estado del envío externo");
 
       if (autoAssign) {
         const dqr = {
@@ -218,10 +220,6 @@ export async function handleExternalFlex(
           cliente: externalLogisticId,
         };
         await assign(company.did, userId, profile, dqr, userId, "Autoasignado de colecta");
-        logCyan("Asigné el envío en la logística interna");
-
-        await assign(externalCompany.did, userId, profile, dataQr, driver, "colecta");
-        logCyan("Asigné el envío en la logística externa");
       }
 
       const dqrext = {
@@ -230,8 +228,7 @@ export async function handleExternalFlex(
         local: 1,
         cliente: externalLogisticId,
       };
-      logCyan("Voy a asignar el envío en la logística externa");
-      //tira error aca
+
       await assign(externalCompanyId, userId, profile, dqrext, driver, 'colecta');
 
       const queryInternalClient = `
@@ -251,7 +248,6 @@ export async function handleExternalFlex(
         };
       }
 
-      logCyan("Encontré el cliente interno");
       const body = await informe(
         dbConnection,
         company,
