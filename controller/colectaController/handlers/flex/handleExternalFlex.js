@@ -140,14 +140,7 @@ export async function handleExternalFlex(
           0,
           userId
         );
-
-        rowsEnvios = await executeQuery(
-          externalDbConnection,
-          sqlEnvios,
-          [result, senderid]
-        );
-
-        externalShipmentId = rowsEnvios[0].did;
+        externalShipmentId = result;
       }
 
       let internalShipmentId;
