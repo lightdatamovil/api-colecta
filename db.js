@@ -24,6 +24,10 @@ const colectaDbNameForLogs = process.env.COLECTA_DB_NAME_FOR_LOGS;
 const hostProductionDb = process.env.PRODUCTION_DB_HOST;
 const portProductionDb = process.env.PRODUCTION_DB_PORT;
 
+export const urlMicroserviciosEstado = process.env.LOCAL == "true" ? process.env.URL_MICROSERVICIOS_ESTADO : process.env.URL_MICROSERVICIOS_ESTADO_NODO;
+export const urlMicroserviciosAsignaciones = process.env.LOCAL == "true" ? process.env.URL_MICROSERVICIOS_ASIGNACIONES : process.env.URL_MICROSERVICIOS_ASIGNACIONES_NODO;
+
+
 // 🔹 Agente HTTPS con keep-alive y hasta 100 conexiones simultáneas
 export const httpsAgent = new https.Agent({
     keepAlive: true,

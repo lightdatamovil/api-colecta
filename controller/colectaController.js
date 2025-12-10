@@ -128,7 +128,9 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
                 senderId = result[0].ml_vendedor_id;
                 account = await getAccountBySenderId(dbConnection, company.did, senderId);
             } else {
+                console.log("Buscando cuenta por sender_id:", dataQr.sender_id);
                 account = await getAccountBySenderId(dbConnection, company.did, dataQr.sender_id);
+                console.log("Cuenta encontrada:", account);
                 senderId = dataQr.sender_id;
             }
 

@@ -4,11 +4,11 @@ import { logGreen, logRed, logYellow } from '../../../src/funciones/logsCustom.j
 import { formatFechaUTC3 } from '../../../src/funciones/formatFechaUTC3.js';
 import { generarTokenFechaHoy } from '../../../src/funciones/generarTokenFechaHoy.js';
 import { sendToService } from '../../../src/funciones/sendToService.js';
+import { urlMicroserviciosEstado } from '../../../db.js';
 dotenv.config({ path: process.env.ENV_FILE || '.env' });
 
 const RABBITMQ_URL = process.env.RABBITMQ_URL;
 const QUEUE_ESTADOS = process.env.QUEUE_ESTADOS;
-const BACKUP_ENDPOINT = "http://10.70.0.69:13000/estados"
 
 let connection = null;
 let channel = null;
@@ -75,7 +75,7 @@ export async function sendToShipmentStateMicroService(
         logRed(`❌ Falló RabbitMQ, intentando enviar por HTTP: ${error.message}`);
 
         try {
-            const response = await sendToService(BACKUP_ENDPOINT, message);
+            const response = await sendToService(urlMicroserviciosEstado, message);
             logGreen(`✅ Enviado por HTTP con status ${response.status}`);
         } catch (httpError) {
             logRed(`❌ Falló el envío por HTTP también: ${httpError.message}`);
