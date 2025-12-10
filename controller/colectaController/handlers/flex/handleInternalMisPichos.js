@@ -6,7 +6,7 @@ import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
 import { logBlue, logCyan } from "../../../../src/funciones/logsCustom.js";
 import { sendToShipmentStateMicroServiceAPI } from "../../functions/sendToShipmentStateMicroServiceAPI.js";
 import { checkIfFulfillment } from "../../../../src/funciones/checkIfFulfillment.js";
-import { da } from "zod/locales";
+
 
 /// Busco el envio
 /// Si no existe, lo inserto y tomo el did
@@ -61,7 +61,7 @@ export async function handleInternalMisPichos(
       account.didCliente,
       account.didCuenta,
       dataQr,
-      1,
+      21, //mis pichos flex = 21
       0,
       userId
     );

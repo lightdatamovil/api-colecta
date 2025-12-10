@@ -167,9 +167,11 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
             console.log("isMisPichos:", isMisPichos);
 
             if (company.did == dataQr.empresa) {
-                response = await handleInternalFlex(dbConnection, dataQr, company, userId, profile, autoAssign, account, latitude, longitude);
+                response = await handleInternalNoFlex(dbConnection, dataQr, company, userId, profile, autoAssign, latitude, longitude);
             } else if (isMisPichos) {
                 console.log("Entro a mis pichos");
+
+                const account = await getAccountBySenderId(dbConnection, company.did, dataQr.id_seller);
                 response = await handleInternalMisPichos(dbConnection, dataQr, company, userId, profile, autoAssign, account, latitude, longitude);
             } else {
                 console.log("Entro a externo no flex");
