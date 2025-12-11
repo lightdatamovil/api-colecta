@@ -20,8 +20,8 @@ export async function insertEnvios(
     .toISOString()
     .slice(0, 19)
     .replace("T", " ");
-  const idshipment = dataQr.id;
-  const senderid = dataQr.sender_id;
+  const idshipment = dataQr.id || dataQr.id_seller;
+  const senderid = dataQr.sender_id || dataQr.id_orden;
   const fechaunix = Math.floor(Date.now() / 1000);
 
   const queryInsertEnvios = `
@@ -42,7 +42,7 @@ export async function insertEnvios(
     flex,
     externo,
     fechaunix,
-  ]);
+  ], true);
 
   if (result.insertId) {
     const updateSql = `

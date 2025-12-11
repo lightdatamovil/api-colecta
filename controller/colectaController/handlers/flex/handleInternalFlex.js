@@ -20,8 +20,9 @@ export async function handleInternalFlex(
   mlShipmentId,
   flex
 ) {
+  console.log("entre a internal flex");
   const companyId = company.did;
-
+  console.log("1");
   await checkIfFulfillment(dbConnection, mlShipmentId);
 
   const sql = `
@@ -36,7 +37,7 @@ export async function handleInternalFlex(
   ]);
 
   let did = resultBuscarEnvio.length > 0 ? resultBuscarEnvio[0].did : null;
-
+  console.log("2");
   if (resultBuscarEnvio.length === 0) {
     did = await insertEnvios(
       dbConnection,
@@ -48,19 +49,16 @@ export async function handleInternalFlex(
       0,
       userId
     );
-    resultBuscarEnvio = await executeQuery(dbConnection, sql, [
-      mlShipmentId,
-      senderId,
-    ]);
-    did = resultBuscarEnvio[0].did;
+
   } else {
     const check = await checkearEstadoEnvio(dbConnection, did);
     if (check) return check;
   }
+  console.log("3");
 
   const didCliente = resultBuscarEnvio.length > 0 ? resultBuscarEnvio[0].didCliente : null;
   const mlQrSeguridad = resultBuscarEnvio.length > 0 ? resultBuscarEnvio[0].ml_qr_seguridad : null;
-
+  console.log("3");
   if (!mlQrSeguridad) {
     const queryUpdateEnvios = `
                     UPDATE envios 
@@ -71,15 +69,17 @@ export async function handleInternalFlex(
     await executeQuery(dbConnection, queryUpdateEnvios, [
       JSON.stringify(dataQr),
       did,
-    ]);
+    ], true);
   }
-
+  console.log("4");
   await sendToShipmentStateMicroServiceAPI(companyId, userId, did, latitude, longitude);
 
   if (autoAssign) {
+    console.log("5");
     await assign(companyId, userId, profile, dataQr, userId, "Autoasignado de colecta");
   }
 
+  console.log("Preparando informe...");
   const body = await informe(
     dbConnection,
     company,
