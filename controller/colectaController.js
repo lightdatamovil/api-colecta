@@ -113,12 +113,13 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
 
         const isCollectShipmentML = Object.prototype.hasOwnProperty.call(dataQr, "t");
         /// Me fijo si es flex o no
-        const isFlex = Object.prototype.hasOwnProperty.call(dataQr, "sender_id") || isCollectShipmentML;
+        const isFlex = Object.prototype.hasOwnProperty.call(dataQr, "sender_id") || isCollectShipmentML || Object.prototype.hasOwnProperty.call(dataQr, "id_orden");
 
         if (isFlex) {
             /// Busco la cuenta del cliente
             let account = null;
             let senderId = null;
+            let flex = null;
 
             if (isCollectShipmentML) {
                 //! Esto quiere decir que es un envio de colecta de ML
@@ -128,12 +129,15 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
                 senderId = result[0].ml_vendedor_id;
                 account = await getAccountBySenderId(dbConnection, company.did, senderId);
             } else {
-                account = await getAccountBySenderId(dbConnection, company.did, dataQr.sender_id);
-                senderId = dataQr.sender_id;
+                senderId = Object.prototype.hasOwnProperty.call(dataQr, "id_orden") ? dataQr.id_seller : dataQr.sender_id;
+                flex = Object.prototype.hasOwnProperty.call(dataQr, "id_orden") ? 21 : 1;
+                account = await getAccountBySenderId(dbConnection, company.did, senderId);
+
             }
 
             if (account) {
-                response = await handleInternalFlex(dbConnection, company, userId, profile, dataQr, autoAssign, account, latitude, longitude, senderId);
+
+                response = await handleInternalFlex(dbConnection, company, userId, profile, dataQr, autoAssign, account, latitude, longitude, senderId, flex);
 
                 /// Si la cuenta no existe, es externo
             } else if (company.did == 144 || company.did == 167 || company.did == 114) {

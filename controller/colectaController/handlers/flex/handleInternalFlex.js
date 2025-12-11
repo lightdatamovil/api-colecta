@@ -15,10 +15,12 @@ export async function handleInternalFlex(
   autoAssign,
   account,
   latitude,
-  longitude, senderId,
+  longitude,
+  senderId,
+  mlShipmentId,
+  flex
 ) {
   const companyId = company.did;
-  const mlShipmentId = dataQr.id;
 
   await checkIfFulfillment(dbConnection, mlShipmentId);
 
@@ -42,7 +44,7 @@ export async function handleInternalFlex(
       account.didCliente,
       account.didCuenta,
       dataQr,
-      1,
+      flex,
       0,
       userId
     );
