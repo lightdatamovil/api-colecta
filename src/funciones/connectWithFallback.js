@@ -17,10 +17,10 @@ export async function connectWithFallback(company, retries = 3) {
             await new Promise(r => setTimeout(r, 300)); // pequeño delay
             return connectWithFallback(company, retries - 1);
         }
-        logRed("❌ Error al conectar a MySQL:", err.message);
+        logRed(`❌ Error al conectar a MySQL empresa ${company}: ${err.message}`);
         await crearLogRaro({
             company,
-            mensaje: `Error al conectar a MySQL: ${err.message}`,
+            mensaje: `Error al conectar a MySQL empresa ${company}: ${err.message}`,
             detalle: JSON.stringify(dbConfig),
             nivel: "ERROR",
         });
