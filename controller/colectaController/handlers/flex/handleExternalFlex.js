@@ -4,9 +4,8 @@ import { insertEnvios } from "../../functions/insertEnvios.js";
 import { insertEnviosExteriores } from "../../functions/insertEnviosExteriores.js";
 import { checkIfExistLogisticAsDriverInExternalCompany } from "../../functions/checkIfExistLogisticAsDriverInExternalCompany.js";
 import { informe } from "../../functions/informe.js";
-import { logCyan, logRed } from "../../../../src/funciones/logsCustom.js";
+import { logRed } from "../../../../src/funciones/logsCustom.js";
 import { insertEnviosLogisticaInversa } from "../../functions/insertLogisticaInversa.js";
-import { sendToShipmentStateMicroServiceAPI } from "../../functions/sendToShipmentStateMicroServiceAPI.js";
 import { checkIfFulfillment } from "lightdata-tools";
 import { connectWithFallback } from "../../../../src/funciones/connectWithFallback.js";
 import { crearLogRaro } from "../../../../src/funciones/crear_log_raro.js";
@@ -103,7 +102,6 @@ export async function handleExternalFlex(
 
       if (rowsEnvios.length > 0) {
         externalShipmentId = rowsEnvios[0].did;
-        logCyan("Encontré el envío en la logística externa");
         //! se reporta como error que el paquete haya sifodo colecta si apenas ingreso al sistema en la logística externa - no descomentar
         // const check = await checkearEstadoEnvio(
         //   externalDbConnection,
