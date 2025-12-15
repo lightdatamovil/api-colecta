@@ -2,7 +2,6 @@ import { executeQuery } from "../../../../db.js";
 import { assign } from "../../functions/assign.js";
 import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
 import { informe } from "../../functions/informe.js";
-import { logCyan } from "../../../../src/funciones/logsCustom.js";
 import { sendToShipmentStateMicroServiceAPI } from "../../functions/sendToShipmentStateMicroServiceAPI.js";
 
 
@@ -21,8 +20,6 @@ export async function handleInternalNoFlex(dbConnection, dataQr, company, userId
         return check;
     }
 
-    logCyan("El envio no fue colectado, entregado o cancelado");
-
     /// Busco el estado del envio y el chofer asignado
     const querySelectEnvios = `SELECT choferAsignado FROM envios WHERE superado = 0 AND elim = 0 AND did = ? LIMIT 1`;
     const resultChoferAsignado = await executeQuery(dbConnection, querySelectEnvios, [shipmentId]);
@@ -32,19 +29,15 @@ export async function handleInternalNoFlex(dbConnection, dataQr, company, userId
         return { success: false, message: "Paquete no encontrado" };
     }
 
-    logCyan("Se encontro el chofer asignado");
-
     const isAlreadyAssigned = resultChoferAsignado[0].choferAsignado == userId;
 
     /// Si el envio no esta asignado y se quiere autoasignar, lo asigno
     if (!isAlreadyAssigned && autoAssign) {
         await assign(companyId, userId, profile, dataQr, userId, "Autoasignado de colecta");
-        logCyan("Se asigno el envio");
     }
 
     /// Actualizamos el estado del envio en el micro servicio
     await sendToShipmentStateMicroServiceAPI(companyId, userId, shipmentId, latitude, longitude);
-    logCyan("Se actualizo el estado del envio en el micro servicio");
 
     const body = await informe(dbConnection, company, dataQr.cliente, userId, shipmentId);
 

@@ -24,6 +24,10 @@ const colectaDbNameForLogs = process.env.COLECTA_DB_NAME_FOR_LOGS;
 const hostProductionDb = process.env.PRODUCTION_DB_HOST;
 const portProductionDb = process.env.PRODUCTION_DB_PORT;
 
+export const urlMicroserviciosEstado = process.env.LOCAL == "true" ? process.env.URL_MICROSERVICIOS_ESTADO : process.env.URL_MICROSERVICIOS_ESTADO_NODO;
+export const urlMicroserviciosAsignaciones = process.env.LOCAL == "true" ? process.env.URL_MICROSERVICIOS_ASIGNACIONES : process.env.URL_MICROSERVICIOS_ASIGNACIONES_NODO;
+
+
 // 🔹 Agente HTTPS con keep-alive y hasta 100 conexiones simultáneas
 export const httpsAgent = new https.Agent({
     keepAlive: true,
@@ -38,16 +42,16 @@ export const axiosInstance = axios.create({
     timeout: 5000, // 5 segundos máximo por request
 });
 
-
 // pool
 export const poolColecta = mysql2.createPool({
-    host: process.env.COLECTA_DB_HOST,
-    user: process.env.COLECTA_DB_USER_FOR_LOGS,
-    password: process.env.COLECTA_DB_PASSWORD_FOR_LOGS,
-    database: process.env.COLECTA_DB_NAME_FOR_LOGS,
-    port: process.env.COLECTA_DB_PORT || 3306,
+    host: colectaDBHost,
+    user: colectaDbUserForLogs,
+    password: colectaDbPasswordForLogs,
+    database: colectaDbNameForLogs,
+    port: colectaDBPort,
     waitForConnections: true,
     connectionLimit: 10,
+    multipleStatements: true,
     queueLimit: 0
 });
 
@@ -75,15 +79,6 @@ export function getProdDbConfig(company) {
         password: company.dbpass,
         database: company.dbname,
         port: portProductionDb,
-    };
-}
-export function getLocalDbConfig() {
-    return {
-        host: colectaDBHost,
-        user: colectaDbUserForLogs,
-        password: colectaDbPasswordForLogs,
-        database: colectaDbNameForLogs,
-        port: colectaDBPort
     };
 }
 
