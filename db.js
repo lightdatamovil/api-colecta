@@ -74,7 +74,7 @@ let driverList = {};
 
 export function getProdDbConfig(company) {
     return {
-        host: hostProductionDb,
+        host: "10.60.0.125",
         user: company.dbuser,
         password: company.dbpass,
         database: company.dbname,
