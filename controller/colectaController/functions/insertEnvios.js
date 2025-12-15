@@ -70,22 +70,23 @@ export async function insertEnvios(
     }
 
 
-
-    await sendToService(
-      "https://altaenvios.lightdata.com.ar/api/enviosMLredis",
-      {
-        idEmpresa: companyId,
-        estado: 0,
-        did: result.insertId,
-        ml_shipment_id: idshipment,
-        ml_vendedor_id: senderid,
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    /*
+        await sendToService(
+          "https://altaenvios.lightdata.com.ar/api/enviosMLredis",
+          {
+            idEmpresa: companyId,
+            estado: 0,
+            did: result.insertId,
+            ml_shipment_id: idshipment,
+            ml_vendedor_id: senderid,
+          },
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        */
 
   }
 
