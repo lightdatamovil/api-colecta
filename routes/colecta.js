@@ -1,11 +1,12 @@
 import { Router } from "express";
 import { colectar } from "../controller/colectaController.js";
-import { getCompanyById } from "../db.js";
+import { getCompanyById, portProductionDb } from "../db.js";
 import { verifyParameters } from "../src/funciones/verifyParameters.js";
 import { logPurple } from "../src/funciones/logsCustom.js";
 import { crearLog } from "../src/funciones/crear_log.js";
 import { obtenerEstadoComparado } from "../controller/test.js";
 import { probarConexionesPlanet } from "../db_test.js";
+import { connectWithFallback } from "../src/funciones/connectWithFallback.js";
 
 
 const colecta = Router();
@@ -86,6 +87,27 @@ colecta.get("/test", async (_req, res) => {
   }
 });
 
+colecta.get("/test2", async (_req, res) => {
+  let dbConnection;
+  try {
+
+    const company = await getCompanyById(12);
+
+    dbConnection = await connectWithFallback(company);
+    res.status(200).json({ "ok": true });
+  } catch (e) {
+    res.status(e.status || 502).json({
+      ok: false,
+      error: "No se pudo obtener el estado",
+      detalle: e.message,
+    });
+  } finally {
+    if (dbConnection) {
+      dbConnection.end();
+    }
+  }
+});
+
 
 colecta.get("/dbconection", async (_req, res) => {
   try {
@@ -101,3 +123,14 @@ colecta.get("/dbconection", async (_req, res) => {
 });
 
 export default colecta;
+
+
+export function getProdDbConfig2(company) {
+  return {
+    host: "10.60.0.125",
+    user: company.dbuser,
+    password: company.dbpass,
+    database: company.dbname,
+    port: portProductionDb,
+  };
+}

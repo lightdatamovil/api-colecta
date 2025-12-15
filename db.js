@@ -22,7 +22,7 @@ const colectaDbNameForLogs = process.env.COLECTA_DB_NAME_FOR_LOGS;
 
 // Produccion
 const hostProductionDb = process.env.PRODUCTION_DB_HOST;
-const portProductionDb = process.env.PRODUCTION_DB_PORT;
+export const portProductionDb = process.env.PRODUCTION_DB_PORT;
 
 export const urlMicroserviciosEstado = process.env.LOCAL == "true" ? process.env.URL_MICROSERVICIOS_ESTADO : process.env.URL_MICROSERVICIOS_ESTADO_NODO;
 export const urlMicroserviciosAsignaciones = process.env.LOCAL == "true" ? process.env.URL_MICROSERVICIOS_ASIGNACIONES : process.env.URL_MICROSERVICIOS_ASIGNACIONES_NODO;
@@ -74,7 +74,7 @@ let driverList = {};
 
 export function getProdDbConfig(company) {
     return {
-        host: "10.60.0.125",
+        host: hostProductionDb,
         user: company.dbuser,
         password: company.dbpass,
         database: company.dbname,
