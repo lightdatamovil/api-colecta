@@ -3,10 +3,9 @@ import { formatFechaUTC3 } from '../../../src/funciones/formatFechaUTC3.js';
 import { generarTokenFechaHoy } from '../../../src/funciones/generarTokenFechaHoy.js';
 import CustomException from '../../../classes/custom_exception.js';
 import { sendToService } from '../../../src/funciones/sendToService.js';
+import { urlMicroserviciosEstado } from '../../../db.js';
 
 dotenv.config({ path: process.env.ENV_FILE || '.env' });
-
-const BACKUP_ENDPOINT = "http://10.70.0.69:13000/estados"
 
 export async function sendToShipmentStateMicroServiceAPI(
     companyId,
@@ -31,7 +30,7 @@ export async function sendToShipmentStateMicroServiceAPI(
     };
 
     try {
-        await sendToService(BACKUP_ENDPOINT, message);
+        await sendToService(urlMicroserviciosEstado, message);
     } catch (error) {
         throw new CustomException({
             title: "Error enviando al microservicio de estados",

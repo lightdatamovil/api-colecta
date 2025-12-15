@@ -63,6 +63,9 @@ export async function insertEnvios(
 
     // Verificamos si el companyId actual está en la lista
     if (companiesToSend.includes(companyId)) {
+
+      console.log("entramossssssssssssssssss a datamlllllllllllllll");
+
       await senToDataML(companyId, result.insertId, senderid, idshipment);
     }
 

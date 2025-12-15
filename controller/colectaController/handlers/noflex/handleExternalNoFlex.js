@@ -8,6 +8,7 @@ import { insertEnviosLogisticaInversa } from "../../functions/insertLogisticaInv
 import { sendToShipmentStateMicroServiceAPI } from "../../functions/sendToShipmentStateMicroServiceAPI.js";
 import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
 import { connectWithFallback } from "../../../../src/funciones/connectWithFallback.js";
+import { fsetestadoMasivoDesde } from "../../../../src/funciones/setEstado.js";
 
 /// Esta funcion se conecta a la base de datos de la empresa externa
 /// Checkea si el envio ya fue colectado, entregado o cancelado
@@ -114,9 +115,27 @@ export async function handleExternalNoFlex(dbConnection, dataQr, company, userId
         await assign(companyId, userId, profile, dqr, userId, "Autoasignado de colecta");
     }
 
-    await sendToShipmentStateMicroServiceAPI(companyId, userId, internalShipmentId, latitude, longitude);
+    //    await sendToShipmentStateMicroServiceAPI(companyId, userId, internalShipmentId, latitude, longitude);
 
-    await sendToShipmentStateMicroServiceAPI(dataQr.empresa, driver, shipmentIdFromDataQr, latitude, longitude);
+    await fsetestadoMasivoDesde({
+        dbConnection,
+        shipmentIds: [internalShipmentId],
+        deviceFrom: "colectaAPP",
+        dateConHora: new Date(),
+        userId,
+        onTheWayState: 0,
+    });
+
+    //    await sendToShipmentStateMicroServiceAPI(dataQr.empresa, driver, shipmentIdFromDataQr, latitude, longitude);
+
+    await fsetestadoMasivoDesde({
+        dbConnection: externalDbConnection,
+        shipmentIds: [shipmentIdFromDataQr],
+        deviceFrom: "colectaAPP",
+        dateConHora: new Date(),
+        userId: driver,
+        onTheWayState: 0,
+    });
 
     const body = await informe(dbConnection, company, externalClient[0].did, userId, internalShipmentId);
 
