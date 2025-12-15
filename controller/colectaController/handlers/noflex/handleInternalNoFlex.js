@@ -1,4 +1,5 @@
 import { executeQuery } from "../../../../db.js";
+import { fsetestadoMasivoDesde } from "../../../../src/funciones/setEstado.js";
 import { assign } from "../../functions/assign.js";
 import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
 import { informe } from "../../functions/informe.js";
@@ -37,7 +38,17 @@ export async function handleInternalNoFlex(dbConnection, dataQr, company, userId
     }
 
     /// Actualizamos el estado del envio en el micro servicio
-    await sendToShipmentStateMicroServiceAPI(companyId, userId, shipmentId, latitude, longitude);
+    //  await sendToShipmentStateMicroServiceAPI(companyId, userId, shipmentId, latitude, longitude);
+
+
+    await fsetestadoMasivoDesde({
+        dbConnection,
+        shipmentIds: [shipmentId],
+        deviceFrom: "colectaAPP",
+        dateConHora: new Date(),
+        userId,
+        onTheWayState: 0,
+    });
 
     const body = await informe(dbConnection, company, dataQr.cliente, userId, shipmentId);
 

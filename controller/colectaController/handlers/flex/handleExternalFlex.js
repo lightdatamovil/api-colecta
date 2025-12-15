@@ -10,6 +10,7 @@ import { sendToShipmentStateMicroServiceAPI } from "../../functions/sendToShipme
 import { checkIfFulfillment } from "lightdata-tools";
 import { connectWithFallback } from "../../../../src/funciones/connectWithFallback.js";
 import { crearLogRaro } from "../../../../src/funciones/crear_log_raro.js";
+import { fsetestadoMasivoDesde } from "../../../../src/funciones/setEstado.js";
 
 /// Esta funcion busca las logisticas vinculadas
 /// Reviso si el envío ya fue colectado cancelado o entregado en la logística externa
@@ -188,22 +189,43 @@ export async function handleExternalFlex(
           userId
         );
       }
-
-      await sendToShipmentStateMicroServiceAPI(
-        company.did,
+      /*
+            await sendToShipmentStateMicroServiceAPI(
+              company.did,
+              userId,
+              internalShipmentId,
+              latitude,
+              longitude
+            );
+      */
+      await fsetestadoMasivoDesde({
+        dbConnection,
+        shipmentIds: [internalShipmentId],
+        deviceFrom: "colectaAPP",
+        dateConHora: new Date(),
         userId,
-        internalShipmentId,
-        latitude,
-        longitude
-      );
+        onTheWayState: 0,
+      });
 
-      await sendToShipmentStateMicroServiceAPI(
+
+      /*
+     await sendToShipmentStateMicroServiceAPI(
         externalCompanyId,
         driver,
         externalShipmentId,
         latitude,
         longitude
       );
+
+*/
+      await fsetestadoMasivoDesde({
+        dbConnection: externalDbConnection,
+        shipmentIds: [externalShipmentId],
+        deviceFrom: "colectaAPP",
+        dateConHora: new Date(),
+        userId: driver,
+        onTheWayState: 0,
+      });
 
       if (autoAssign) {
         const dqr = {

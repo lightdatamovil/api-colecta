@@ -5,6 +5,7 @@ import { informe } from "../../functions/informe.js";
 import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
 import { sendToShipmentStateMicroServiceAPI } from "../../functions/sendToShipmentStateMicroServiceAPI.js";
 import { checkIfFulfillment } from "../../../../src/funciones/checkIfFulfillment.js";
+import { fsetestadoMasivoDesde } from "../../../../src/funciones/setEstado.js";
 
 export async function handleInternalFlex(
   dbConnection,
@@ -72,7 +73,16 @@ export async function handleInternalFlex(
     ]);
   }
 
-  await sendToShipmentStateMicroServiceAPI(companyId, userId, did, latitude, longitude);
+  //  await sendToShipmentStateMicroServiceAPI(companyId, userId, did, latitude, longitude);
+
+  await fsetestadoMasivoDesde({
+    dbConnection,
+    shipmentIds: [did],
+    deviceFrom: "colectaAPP",
+    dateConHora: new Date(),
+    userId,
+    onTheWayState: 0,
+  });
 
   if (autoAssign) {
     await assign(companyId, userId, profile, dataQr, userId, "Autoasignado de colecta");
