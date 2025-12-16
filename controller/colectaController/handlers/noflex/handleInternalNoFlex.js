@@ -37,21 +37,21 @@ export async function handleInternalNoFlex(dbConnection, dataQr, company, userId
         await assign(companyId, userId, profile, dataQr, userId, "Autoasignado de colecta");
     }
 
-    const companiesToSend = [211, 54, 164, 55, 12];
+    // const companiesToSend = [211, 54, 164, 55, 12];
 
-    if (!companiesToSend.includes(companyId)) {
-        /// Actualizamos el estado del envio en el micro servicio
-        await sendToShipmentStateMicroServiceAPI(companyId, userId, shipmentId, latitude, longitude);
-    } else {
-        await fsetestadoMasivoDesde({
-            dbConnection,
-            shipmentIds: [shipmentId],
-            deviceFrom: "colectaAPP",
-            dateConHora: new Date(),
-            userId,
-            onTheWayState: 0,
-        });
-    }
+    // if (!companiesToSend.includes(companyId)) {
+    /// Actualizamos el estado del envio en el micro servicio
+    // await sendToShipmentStateMicroServiceAPI(companyId, userId, shipmentId, latitude, longitude);
+    // } else {
+    await fsetestadoMasivoDesde({
+        dbConnection,
+        shipmentIds: [shipmentId],
+        deviceFrom: "colectaAPP",
+        dateConHora: new Date(),
+        userId,
+        onTheWayState: 0,
+    });
+    // }
 
     const body = await informe(dbConnection, company, dataQr.cliente, userId, shipmentId);
 

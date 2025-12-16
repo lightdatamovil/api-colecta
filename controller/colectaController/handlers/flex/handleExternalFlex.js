@@ -188,45 +188,45 @@ export async function handleExternalFlex(
           userId
         );
       }
-      const companiesToSend = [211, 54, 164, 55, 12];
+      // const companiesToSend = [211, 54, 164, 55, 12];
 
-      if (!companiesToSend.includes(company.did)) {
+      // if (!companiesToSend.includes(company.did)) {
 
-        await sendToShipmentStateMicroServiceAPI(
-          company.did,
-          userId,
-          internalShipmentId,
-          latitude,
-          longitude
-        );
+      //   await sendToShipmentStateMicroServiceAPI(
+      //     company.did,
+      //     userId,
+      //     internalShipmentId,
+      //     latitude,
+      //     longitude
+      //   );
 
-        await sendToShipmentStateMicroServiceAPI(
-          externalCompanyId,
-          driver,
-          externalShipmentId,
-          latitude,
-          longitude
-        );
+      //   await sendToShipmentStateMicroServiceAPI(
+      //     externalCompanyId,
+      //     driver,
+      //     externalShipmentId,
+      //     latitude,
+      //     longitude
+      //   );
 
-      } else {
-        await fsetestadoMasivoDesde({
-          dbConnection,
-          shipmentIds: [internalShipmentId],
-          deviceFrom: "colectaAPP",
-          dateConHora: new Date(),
-          userId,
-          onTheWayState: 0,
-        });
+      // } else {
+      await fsetestadoMasivoDesde({
+        dbConnection,
+        shipmentIds: [internalShipmentId],
+        deviceFrom: "colectaAPP",
+        dateConHora: new Date(),
+        userId,
+        onTheWayState: 0,
+      });
 
-        await fsetestadoMasivoDesde({
-          dbConnection: externalDbConnection,
-          shipmentIds: [externalShipmentId],
-          deviceFrom: "colectaAPP",
-          dateConHora: new Date(),
-          userId: driver,
-          onTheWayState: 0,
-        });
-      }
+      await fsetestadoMasivoDesde({
+        dbConnection: externalDbConnection,
+        shipmentIds: [externalShipmentId],
+        deviceFrom: "colectaAPP",
+        dateConHora: new Date(),
+        userId: driver,
+        onTheWayState: 0,
+      });
+      // }
 
 
 
