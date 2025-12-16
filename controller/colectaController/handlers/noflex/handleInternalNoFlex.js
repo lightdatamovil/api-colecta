@@ -1,9 +1,9 @@
 import { executeQuery } from "../../../../db.js";
-import { fsetestadoMasivoDesde } from "../../../../src/funciones/setEstado.js";
 import { assign } from "../../functions/assign.js";
+import { changeState } from "../../functions/changeState.js";
 import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
 import { informe } from "../../functions/informe.js";
-import { sendToShipmentStateMicroServiceAPI } from "../../functions/sendToShipmentStateMicroServiceAPI.js";
+
 
 
 /// Esta funcion checkea si el envio ya fue colectado, entregado o cancelado
@@ -37,21 +37,7 @@ export async function handleInternalNoFlex(dbConnection, dataQr, company, userId
         await assign(companyId, userId, profile, dataQr, userId, "Autoasignado de colecta");
     }
 
-    // const companiesToSend = [211, 54, 164, 55, 12];
-
-    // if (!companiesToSend.includes(companyId)) {
-    /// Actualizamos el estado del envio en el micro servicio
-    // await sendToShipmentStateMicroServiceAPI(companyId, userId, shipmentId, latitude, longitude);
-    // } else {
-    await fsetestadoMasivoDesde({
-        dbConnection,
-        shipmentIds: [shipmentId],
-        deviceFrom: "colectaAPP",
-        dateConHora: new Date(),
-        userId,
-        onTheWayState: 0,
-    });
-    // }
+    await changeState(companyId, userId, shipmentId, latitude, longitude, dbConnection);
 
     const body = await informe(dbConnection, company, dataQr.cliente, userId, shipmentId);
 

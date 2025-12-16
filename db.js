@@ -4,6 +4,9 @@ import { logRed, logYellow } from './src/funciones/logsCustom.js';
 import mysql2 from 'mysql2/promise';
 import https from 'https';
 import axios from 'axios';
+import { RabbitService } from "./classes/rabbit_service.js";
+import { MicroservicioEstadosService } from "./classes/microservicio_estados.js";
+
 dotenv.config({ path: process.env.ENV_FILE || ".env" });
 
 /// Redis para obtener las empresas
@@ -20,13 +23,17 @@ const colectaDbUserForLogs = process.env.COLECTA_DB_USER_FOR_LOGS;
 const colectaDbPasswordForLogs = process.env.COLECTA_DB_PASSWORD_FOR_LOGS;
 const colectaDbNameForLogs = process.env.COLECTA_DB_NAME_FOR_LOGS;
 
+const local = process.env.LOCAL == "true";
 // Produccion
-const hostProductionDb = process.env.PRODUCTION_DB_HOST;
+const hostProductionDb = local ? process.env.PRODUCTION_DB_HOST : process.env.PRODUCTION_DB_HOST_NODO;
 export const portProductionDb = process.env.PRODUCTION_DB_PORT;
 
-export const urlMicroserviciosEstado = process.env.LOCAL == "true" ? process.env.URL_MICROSERVICIOS_ESTADO : process.env.URL_MICROSERVICIOS_ESTADO_NODO;
-export const urlMicroserviciosAsignaciones = process.env.LOCAL == "true" ? process.env.URL_MICROSERVICIOS_ASIGNACIONES : process.env.URL_MICROSERVICIOS_ASIGNACIONES_NODO;
+export const urlMicroserviciosEstado = local ? process.env.URL_MICROSERVICIOS_ESTADO : process.env.URL_MICROSERVICIOS_ESTADO_NODO;
+export const urlMicroserviciosAsignaciones = local ? process.env.URL_MICROSERVICIOS_ASIGNACIONES : process.env.URL_MICROSERVICIOS_ASIGNACIONES_NODO;
 
+export const urlRabbitMQ = process.env.RABBITMQ_URL;
+export const queueEstados = process.env.QUEUE_ESTADOS;
+export const rabbitService = new RabbitService(urlRabbitMQ);
 
 // 🔹 Agente HTTPS con keep-alive y hasta 100 conexiones simultáneas
 export const httpsAgent = new https.Agent({
@@ -41,6 +48,8 @@ export const axiosInstance = axios.create({
     httpsAgent,
     timeout: 20000, // 5 segundos máximo por request
 });
+
+export const microservicioEstadosService = new MicroservicioEstadosService(60000, axiosInstance, urlMicroserviciosEstado);
 
 // pool
 export const poolColecta = mysql2.createPool({
