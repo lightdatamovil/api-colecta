@@ -5,10 +5,9 @@ import { insertEnviosExteriores } from "../../functions/insertEnviosExteriores.j
 import { checkIfExistLogisticAsDriverInExternalCompany } from "../../functions/checkIfExistLogisticAsDriverInExternalCompany.js";
 import { informe } from "../../functions/informe.js";
 import { insertEnviosLogisticaInversa } from "../../functions/insertLogisticaInversa.js";
-import { sendToShipmentStateMicroServiceAPI } from "../../functions/sendToShipmentStateMicroServiceAPI.js";
 import { checkearEstadoEnvio } from "../../functions/checkarEstadoEnvio.js";
 import { connectWithFallback } from "../../../../src/funciones/connectWithFallback.js";
-import { fsetestadoMasivoDesde } from "../../../../src/funciones/setEstado.js";
+import { changeState } from "../../functions/changeState.js";
 
 /// Esta funcion se conecta a la base de datos de la empresa externa
 /// Checkea si el envio ya fue colectado, entregado o cancelado
@@ -115,27 +114,11 @@ export async function handleExternalNoFlex(dbConnection, dataQr, company, userId
         await assign(companyId, userId, profile, dqr, userId, "Autoasignado de colecta");
     }
 
-    //    await sendToShipmentStateMicroServiceAPI(companyId, userId, internalShipmentId, latitude, longitude);
 
-    await fsetestadoMasivoDesde({
-        dbConnection,
-        shipmentIds: [internalShipmentId],
-        deviceFrom: "colectaAPP",
-        dateConHora: new Date(),
-        userId,
-        onTheWayState: 0,
-    });
+    await changeState(companyId, userId, internalShipmentId, latitude, longitude, dbConnection);
 
-    //    await sendToShipmentStateMicroServiceAPI(dataQr.empresa, driver, shipmentIdFromDataQr, latitude, longitude);
+    await changeState(dataQr.empresa, driver, shipmentIdFromDataQr, latitude, longitude, externalDbConnection);
 
-    await fsetestadoMasivoDesde({
-        dbConnection: externalDbConnection,
-        shipmentIds: [shipmentIdFromDataQr],
-        deviceFrom: "colectaAPP",
-        dateConHora: new Date(),
-        userId: driver,
-        onTheWayState: 0,
-    });
 
     const body = await informe(dbConnection, company, externalClient[0].did, userId, internalShipmentId);
 
