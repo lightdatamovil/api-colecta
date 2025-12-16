@@ -115,27 +115,28 @@ export async function handleExternalNoFlex(dbConnection, dataQr, company, userId
         await assign(companyId, userId, profile, dqr, userId, "Autoasignado de colecta");
     }
 
-    //    await sendToShipmentStateMicroServiceAPI(companyId, userId, internalShipmentId, latitude, longitude);
+    const companiesToSend = [211, 54, 164, 55, 12];
 
-    await fsetestadoMasivoDesde({
-        dbConnection,
-        shipmentIds: [internalShipmentId],
-        deviceFrom: "colectaAPP",
-        dateConHora: new Date(),
-        userId,
-        onTheWayState: 0,
-    });
-
-    //    await sendToShipmentStateMicroServiceAPI(dataQr.empresa, driver, shipmentIdFromDataQr, latitude, longitude);
-
-    await fsetestadoMasivoDesde({
-        dbConnection: externalDbConnection,
-        shipmentIds: [shipmentIdFromDataQr],
-        deviceFrom: "colectaAPP",
-        dateConHora: new Date(),
-        userId: driver,
-        onTheWayState: 0,
-    });
+    if (!companiesToSend.includes(company.did)) {
+        await sendToShipmentStateMicroServiceAPI(companyId, userId, internalShipmentId, latitude, longitude);
+        await sendToShipmentStateMicroServiceAPI(dataQr.empresa, driver, shipmentIdFromDataQr, latitude, longitude);
+    } else {
+        await fsetestadoMasivoDesde({
+            dbConnection,
+            shipmentIds: [internalShipmentId],
+            deviceFrom: "colectaAPP",
+            dateConHora: new Date(),
+            userId,
+            onTheWayState: 0,
+        }); await fsetestadoMasivoDesde({
+            dbConnection: externalDbConnection,
+            shipmentIds: [shipmentIdFromDataQr],
+            deviceFrom: "colectaAPP",
+            dateConHora: new Date(),
+            userId: driver,
+            onTheWayState: 0,
+        });
+    }
 
     const body = await informe(dbConnection, company, externalClient[0].did, userId, internalShipmentId);
 

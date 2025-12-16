@@ -10,6 +10,7 @@ import { checkIfFulfillment } from "lightdata-tools";
 import { connectWithFallback } from "../../../../src/funciones/connectWithFallback.js";
 import { crearLogRaro } from "../../../../src/funciones/crear_log_raro.js";
 import { fsetestadoMasivoDesde } from "../../../../src/funciones/setEstado.js";
+import { sendToShipmentStateMicroServiceAPI } from "../../functions/sendToShipmentStateMicroServiceAPI.js";
 
 /// Esta funcion busca las logisticas vinculadas
 /// Reviso si el envío ya fue colectado cancelado o entregado en la logística externa
@@ -187,43 +188,47 @@ export async function handleExternalFlex(
           userId
         );
       }
-      /*
-            await sendToShipmentStateMicroServiceAPI(
-              company.did,
-              userId,
-              internalShipmentId,
-              latitude,
-              longitude
-            );
-      */
-      await fsetestadoMasivoDesde({
-        dbConnection,
-        shipmentIds: [internalShipmentId],
-        deviceFrom: "colectaAPP",
-        dateConHora: new Date(),
-        userId,
-        onTheWayState: 0,
-      });
+      const companiesToSend = [211, 54, 164, 55, 12];
+
+      if (!companiesToSend.includes(company.did)) {
+
+        await sendToShipmentStateMicroServiceAPI(
+          company.did,
+          userId,
+          internalShipmentId,
+          latitude,
+          longitude
+        );
+
+        await sendToShipmentStateMicroServiceAPI(
+          externalCompanyId,
+          driver,
+          externalShipmentId,
+          latitude,
+          longitude
+        );
+
+      } else {
+        await fsetestadoMasivoDesde({
+          dbConnection,
+          shipmentIds: [internalShipmentId],
+          deviceFrom: "colectaAPP",
+          dateConHora: new Date(),
+          userId,
+          onTheWayState: 0,
+        });
+
+        await fsetestadoMasivoDesde({
+          dbConnection: externalDbConnection,
+          shipmentIds: [externalShipmentId],
+          deviceFrom: "colectaAPP",
+          dateConHora: new Date(),
+          userId: driver,
+          onTheWayState: 0,
+        });
+      }
 
 
-      /*
-     await sendToShipmentStateMicroServiceAPI(
-        externalCompanyId,
-        driver,
-        externalShipmentId,
-        latitude,
-        longitude
-      );
-
-*/
-      await fsetestadoMasivoDesde({
-        dbConnection: externalDbConnection,
-        shipmentIds: [externalShipmentId],
-        deviceFrom: "colectaAPP",
-        dateConHora: new Date(),
-        userId: driver,
-        onTheWayState: 0,
-      });
 
       if (autoAssign) {
         const dqr = {

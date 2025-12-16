@@ -73,16 +73,20 @@ export async function handleInternalFlex(
     ]);
   }
 
-  //  await sendToShipmentStateMicroServiceAPI(companyId, userId, did, latitude, longitude);
+  const companiesToSend = [211, 54, 164, 55, 12];
 
-  await fsetestadoMasivoDesde({
-    dbConnection,
-    shipmentIds: [did],
-    deviceFrom: "colectaAPP",
-    dateConHora: new Date(),
-    userId,
-    onTheWayState: 0,
-  });
+  if (!companiesToSend.includes(company.did)) {
+    await sendToShipmentStateMicroServiceAPI(companyId, userId, did, latitude, longitude);
+  } else {
+    await fsetestadoMasivoDesde({
+      dbConnection,
+      shipmentIds: [did],
+      deviceFrom: "colectaAPP",
+      dateConHora: new Date(),
+      userId,
+      onTheWayState: 0,
+    });
+  }
 
   if (autoAssign) {
     await assign(companyId, userId, profile, dataQr, userId, "Autoasignado de colecta");
