@@ -25,8 +25,8 @@ export async function insertEnvios(
   const fechaunix = Math.floor(Date.now() / 1000);
 
   const queryInsertEnvios = `
-            INSERT INTO envios (did, ml_shipment_id, ml_vendedor_id, didCliente, quien, lote, didCuenta, ml_qr_seguridad, fecha_inicio, flex, exterior, fechaunix)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO envios (did, ml_shipment_id, ml_vendedor_id, didCliente, quien, lote, didCuenta, ml_qr_seguridad, fecha_inicio, flex, exterior, fechaunix, ml_venta_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
   const result = await executeQuery(dbConnection, queryInsertEnvios, [
@@ -42,6 +42,7 @@ export async function insertEnvios(
     flex,
     externo,
     fechaunix,
+    flex == 21 ? idshipment : null,
   ]);
 
   if (result.insertId) {
