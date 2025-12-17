@@ -14,19 +14,19 @@ export async function changeState(
     const message = {
         didempresa: companyId,
         didenvio: shipmentId,
-        estado: 1,
+        estado: 0,
         subestado: null,
         estadoML: null,
         fecha: formatFechaUTC3(),
         quien: userId,
-        operacion: 'aplanta',
+        operacion: 'colecta',
         latitud,
         longitud,
-        desde: "aplanta",
+        desde: "colecta",
         tkn: generarTokenFechaHoy(),
     };
     if (microservicioEstadosService.estaCaido()) {
-        await actualizarEstadoLocal(db, [shipmentId], "aplanta", formatFechaUTC3(), userId, 0);
+        await actualizarEstadoLocal(db, [shipmentId], "colecta", formatFechaUTC3(), userId, 0);
         await rabbitService.send(queueEstados, message);
     } else {
         try {
@@ -34,7 +34,7 @@ export async function changeState(
         } catch (error) {
             logRed(`Error enviando a Shipment State MicroService API: ${error.message}`);
             microservicioEstadosService.setEstadoCaido();
-            await actualizarEstadoLocal(db, [shipmentId], "aplanta", formatFechaUTC3(), userId, 0);
+            await actualizarEstadoLocal(db, [shipmentId], "colecta", formatFechaUTC3(), userId, 0);
             await rabbitService.send(queueEstados, message);
         }
     }
