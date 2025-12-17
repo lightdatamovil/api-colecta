@@ -129,6 +129,8 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
 
                 senderId = result[0].ml_vendedor_id;
                 account = await getAccountBySenderId(dbConnection, company.did, senderId);
+                flex = 1;
+                mlShipmentId = dataQr.id;
             } else {
                 senderId = Object.prototype.hasOwnProperty.call(dataQr, "id_orden") ? dataQr.id_seller : dataQr.sender_id;
                 mlShipmentId = Object.prototype.hasOwnProperty.call(dataQr, "id_orden") ? dataQr.id_orden : dataQr.id;
