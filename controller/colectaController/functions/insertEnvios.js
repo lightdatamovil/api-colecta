@@ -42,7 +42,7 @@ export async function insertEnvios(
     flex,
     externo,
     fechaunix,
-    flex == 21 ? idshipment : null,
+    flex == 21 ? idshipment : "",
   ]);
 
   if (result.insertId) {
