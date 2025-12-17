@@ -156,7 +156,7 @@ export async function colectar(company, dataQr, userId, profile, autoAssign, lat
 
                 if (resultCheck.length > 0) {
                     senderId = dataQr.sender_id;
-                    response = await handleInternalFlex(dbConnection, company, userId, profile, dataQr, autoAssign, account, latitude, longitude, senderId);
+                    response = await handleInternalFlex(dbConnection, company, userId, profile, dataQr, autoAssign, account, latitude, longitude, senderId, dataQr.id, 1);
                 } else {
                     response = await handleExternalFlex(dbConnection, company, userId, profile, dataQr, autoAssign, latitude, longitude);
                 }
