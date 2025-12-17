@@ -23,7 +23,7 @@ const colectaDbUserForLogs = process.env.COLECTA_DB_USER_FOR_LOGS;
 const colectaDbPasswordForLogs = process.env.COLECTA_DB_PASSWORD_FOR_LOGS;
 const colectaDbNameForLogs = process.env.COLECTA_DB_NAME_FOR_LOGS;
 
-const local = process.env.LOCAL == "true";
+export const local = process.env.LOCAL == "true";
 // Produccion
 const hostProductionDb = local ? process.env.PRODUCTION_DB_HOST : process.env.PRODUCTION_DB_HOST_NODO;
 export const portProductionDb = process.env.PRODUCTION_DB_PORT;
@@ -133,7 +133,7 @@ async function loadAccountList(dbConnection, companyId, senderId) {
     const querySelectClientesCuentas = `
             SELECT did, didCliente, ML_id_vendedor 
             FROM clientes_cuentas 
-            WHERE superado = 0 AND elim = 0 AND tipoCuenta = 1 AND ML_id_vendedor != ''
+            WHERE superado = 0 AND elim = 0 AND tipoCuenta IN (1,21) AND ML_id_vendedor != ''
         `;
 
     const result = await executeQuery(dbConnection, querySelectClientesCuentas);

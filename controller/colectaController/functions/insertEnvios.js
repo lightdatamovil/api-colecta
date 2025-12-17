@@ -20,8 +20,8 @@ export async function insertEnvios(
     .toISOString()
     .slice(0, 19)
     .replace("T", " ");
-  const idshipment = dataQr.id;
-  const senderid = dataQr.sender_id;
+  const idshipment = dataQr.id || dataQr.id_seller;
+  const senderid = dataQr.sender_id || dataQr.id_orden;
   const fechaunix = Math.floor(Date.now() / 1000);
 
   const queryInsertEnvios = `
@@ -59,7 +59,7 @@ export async function insertEnvios(
 
     // mensaje por rabbitMQ
     // Array de companyIds que deben enviar el mensaje
-    const companiesToSend = [12, 79, 167, 365, 364, 363, 362, 361, 360, 359, 358, 357, 356, 355, 354, 353, 352, 351, 350, 204, 334, 211, 227];
+    const companiesToSend = [12, 79, 167, 365, 364, 363, 362, 361, 360, 359, 358, 357, 356, 355, 354, 353, 352, 351, 350, 204, 334, 211, 227, 388];
 
     // Verificamos si el companyId actual está en la lista
     if (companiesToSend.includes(companyId)) {
@@ -70,23 +70,23 @@ export async function insertEnvios(
     }
 
 
-    /*
-        await sendToService(
-          "https://altaenvios.lightdata.com.ar/api/enviosMLredis",
-          {
-            idEmpresa: companyId,
-            estado: 0,
-            did: result.insertId,
-            ml_shipment_id: idshipment,
-            ml_vendedor_id: senderid,
-          },
-          {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        */
+
+    await sendToService(
+      "https://altaenvios.lightdata.com.ar/api/enviosMLredis",
+      {
+        idEmpresa: companyId,
+        estado: 0,
+        did: result.insertId,
+        ml_shipment_id: idshipment,
+        ml_vendedor_id: senderid,
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
 
   }
 

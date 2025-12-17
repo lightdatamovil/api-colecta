@@ -16,9 +16,11 @@ export async function handleInternalFlex(
   account,
   latitude,
   longitude, senderId,
+  mlShipmentId,
+  flex
 ) {
   const companyId = company.did;
-  const mlShipmentId = dataQr.id;
+
 
   await checkIfFulfillment(dbConnection, mlShipmentId);
 
@@ -42,15 +44,11 @@ export async function handleInternalFlex(
       account.didCliente,
       account.didCuenta,
       dataQr,
-      1,
+      flex,
       0,
       userId
     );
-    resultBuscarEnvio = await executeQuery(dbConnection, sql, [
-      mlShipmentId,
-      senderId,
-    ]);
-    did = resultBuscarEnvio[0].did;
+
   } else {
     const check = await checkearEstadoEnvio(dbConnection, did);
     if (check) return check;

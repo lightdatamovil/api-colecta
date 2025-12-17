@@ -1,7 +1,7 @@
 import { logRed } from '../../../src/funciones/logsCustom.js';
 import { formatFechaUTC3 } from '../../../src/funciones/formatFechaUTC3.js';
 import { generarTokenFechaHoy } from '../../../src/funciones/generarTokenFechaHoy.js';
-import { executeQuery, microservicioEstadosService, queueEstados, rabbitService } from '../../../db.js';
+import { executeQuery, local, microservicioEstadosService, queueEstados, rabbitService } from '../../../db.js';
 
 export async function changeState(
     companyId,
@@ -27,7 +27,7 @@ export async function changeState(
     };
     if (microservicioEstadosService.estaCaido()) {
         await actualizarEstadoLocal(db, [shipmentId], "colecta", formatFechaUTC3(), userId, 0);
-        await rabbitService.send(queueEstados, message);
+        if (!local) await rabbitService.send(queueEstados, message);
     } else {
         try {
             await microservicioEstadosService.sendEstadoAPI(message);
@@ -35,7 +35,7 @@ export async function changeState(
             logRed(`Error enviando a Shipment State MicroService API: ${error.message}`);
             microservicioEstadosService.setEstadoCaido();
             await actualizarEstadoLocal(db, [shipmentId], "colecta", formatFechaUTC3(), userId, 0);
-            await rabbitService.send(queueEstados, message);
+            if (!local) await rabbitService.send(queueEstados, message);
         }
     }
 }
