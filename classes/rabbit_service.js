@@ -69,13 +69,14 @@ export class RabbitService {
         const sent = ch.sendToQueue(queueName, Buffer.from(JSON.stringify(message)), {
             persistent: true,
         });
-
-        if (!sent) {
-            throw new CustomException({
-                title: "Error al enviar a RabbitMQ",
-                message: "El buffer de envío está lleno.",
-            });
-        }
+        /*
+                if (!sent) {
+                    throw new CustomException({
+                        title: "Error al enviar a RabbitMQ",
+                        message: "El buffer de envío está lleno.",
+                    });
+                }
+                    */
     }
 
     /**
