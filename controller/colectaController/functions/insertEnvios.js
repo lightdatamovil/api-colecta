@@ -59,12 +59,10 @@ export async function insertEnvios(
 
     // mensaje por rabbitMQ
     // Array de companyIds que deben enviar el mensaje
-    const companiesToSend = [12, 79, 117, 167, 365, 364, 363, 362, 361, 360, 359, 358, 357, 356, 355, 354, 353, 352, 351, 350, 204, 334, 211, 227, 388];
+    const companiesToSend = [12, 79, 167, 365, 364, 363, 362, 361, 360, 359, 358, 357, 356, 355, 354, 353, 352, 351, 350, 204, 334, 211, 227, 388];
 
     // Verificamos si el companyId actual está en la lista
     if (companiesToSend.includes(Number(companyId))) {
-
-      console.log("entramossssssssssssssssss a datamlllllllllllllll");
       await rabbitService.send("dataML", {
         idEmpresa: companyId,
         did: result.insertId,
