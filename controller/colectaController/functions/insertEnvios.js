@@ -63,6 +63,7 @@ export async function insertEnvios(
 
     // Verificamos si el companyId actual está en la lista
     console.log("companyId actual:", companyId);
+    console.log("companyId type:", typeof companyId);
     console.log("entramos a comparar con la lista:", companiesToSend.includes(companyId));
     if (companiesToSend.includes(companyId)) {
 
