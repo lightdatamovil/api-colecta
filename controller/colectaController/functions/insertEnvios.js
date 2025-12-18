@@ -62,10 +62,7 @@ export async function insertEnvios(
     const companiesToSend = [12, 79, 117, 167, 365, 364, 363, 362, 361, 360, 359, 358, 357, 356, 355, 354, 353, 352, 351, 350, 204, 334, 211, 227, 388];
 
     // Verificamos si el companyId actual está en la lista
-    console.log("companyId actual:", companyId);
-    console.log("companyId type:", typeof companyId);
-    console.log("entramos a comparar con la lista:", companiesToSend.includes(companyId));
-    if (companiesToSend.includes(companyId)) {
+    if (companiesToSend.includes(Number(companyId))) {
 
       console.log("entramossssssssssssssssss a datamlllllllllllllll");
       await rabbitService.send("dataML", {
