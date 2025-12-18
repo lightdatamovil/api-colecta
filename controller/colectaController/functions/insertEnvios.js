@@ -1,6 +1,5 @@
-import { executeQuery } from "../../../db.js";
+import { executeQuery, rabbitService } from "../../../db.js";
 import { sendToService } from "../../../src/funciones/sendToService.js";
-import { senToDataML } from "./sendToDataML.js";
 
 export async function insertEnvios(
   dbConnection,
@@ -66,11 +65,13 @@ export async function insertEnvios(
     if (companiesToSend.includes(companyId)) {
 
       console.log("entramossssssssssssssssss a datamlllllllllllllll");
-
-      await senToDataML(companyId, result.insertId, senderid, idshipment);
+      await rabbitService.send("dataML", {
+        idEmpresa: companyId,
+        did: result.insertId,
+        sellerId: senderid,
+        shipmentId: idshipment
+      });
     }
-
-
 
     await sendToService(
       "https://altaenvios.lightdata.com.ar/api/enviosMLredis",
