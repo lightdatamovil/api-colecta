@@ -17,6 +17,7 @@ import { changeState } from "../../functions/changeState.js";
 /// Si es autoasignacion, asigno a la empresa interna
 /// Actualizo el estado del envio a colectado y envio el estado del envio en los microservicios
 export async function handleExternalNoFlex(dbConnection, dataQr, company, userId, profile, autoAssign, latitude, longitude) {
+    let ingresado
     const companyId = company.did;
     const shipmentIdFromDataQr = dataQr.did;
     const clientIdFromDataQr = dataQr.cliente;
@@ -42,7 +43,6 @@ export async function handleExternalNoFlex(dbConnection, dataQr, company, userId
         return { success: false, message: "No se encontró chofer asignado" };
     }
 
-
     const queryClient = `SELECT did  FROM clientes WHERE codigoVinculacionLogE = ?`;
     const externalClient = await executeQuery(dbConnection, queryClient, [externalCompany.codigo]);
 
@@ -62,7 +62,6 @@ export async function handleExternalNoFlex(dbConnection, dataQr, company, userId
         }
 
     } else {
-
         internalShipmentId = await insertEnvios(
             dbConnection,
             companyId,
@@ -83,6 +82,7 @@ export async function handleExternalNoFlex(dbConnection, dataQr, company, userId
             client.nombre || "",
             externalCompany.did,
         );
+        ingresado = true;
     }
     const check2 = "SELECT valor FROM envios_logisticainversa WHERE didEnvio = ?";
 
@@ -122,5 +122,5 @@ export async function handleExternalNoFlex(dbConnection, dataQr, company, userId
 
     externalDbConnection.end();
 
-    return { success: true, message: "Paquete colectado con exito", body: body };
+    return { success: true, message: `Paquete ${ingresado ? "ingresado y" : ""} colectado con éxito`, body: body };
 }

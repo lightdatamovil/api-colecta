@@ -29,6 +29,7 @@ export async function handleExternalFlex(
   latitude,
   longitude
 ) {
+  let ingresado;
   const senderid = dataQr.sender_id;
   const shipmentId = dataQr.id;
   await checkIfFulfillment(dbConnection, shipmentId);
@@ -251,7 +252,7 @@ export async function handleExternalFlex(
 
       return {
         success: true,
-        message: "Paquete colectado correctamente - FLEX",
+        message: `Paquete ${ingresado ? "ingresado y" : ""} colectado con éxito`,
         body: body,
       };
     } catch (error) {
