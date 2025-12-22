@@ -2,6 +2,7 @@ import { connect } from "amqplib";
 import CustomException from "./custom_exception.js";
 import { logRed } from "../src/funciones/logsCustom.js";
 
+
 /* ============================================================
    🐇 RabbitMQ Service (instanciable, con conexión propia)
    ============================================================ */
@@ -69,14 +70,11 @@ export class RabbitService {
         const sent = ch.sendToQueue(queueName, Buffer.from(JSON.stringify(message)), {
             persistent: true,
         });
-        /*
-                if (!sent) {
-                    throw new CustomException({
-                        title: "Error al enviar a RabbitMQ",
-                        message: "El buffer de envío está lleno.",
-                    });
-                }
-                    */
+
+        if (!sent) {
+            logRed(`⚠️ No se pudo enviar el mensaje a la cola ${queueName}`);
+        }
+
     }
 
     /**
