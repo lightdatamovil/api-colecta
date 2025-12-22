@@ -19,9 +19,9 @@ export async function insertEnvios(
     .toISOString()
     .slice(0, 19)
     .replace("T", " ");
-  console.log("Insertando envio con los siguientes datos:", dataQr);
+
   const idshipment = dataQr.id ?? dataQr.id_orden;
-  console.log("ID Shipment:", idshipment);
+
   const senderid = dataQr.sender_id ?? dataQr.id_seller;
   const fechaunix = Math.floor(Date.now() / 1000);
 
