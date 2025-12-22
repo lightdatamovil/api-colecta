@@ -19,8 +19,8 @@ export async function handleInternalFlex(
   mlShipmentId,
   flex
 ) {
+  let insertado;
   const companyId = company.did;
-
 
   await checkIfFulfillment(dbConnection, mlShipmentId);
 
@@ -48,7 +48,7 @@ export async function handleInternalFlex(
       0,
       userId
     );
-
+    insertado = true;
   } else {
     const check = await checkearEstadoEnvio(dbConnection, did);
     if (check) return check;
@@ -86,7 +86,7 @@ export async function handleInternalFlex(
 
   return {
     success: true,
-    message: "Paquete insertado y colectado - FLEX",
+    message: `Paquete ${insertado ? "ingresado y" : ""} colectado con éxito`,
     body,
   };
 }
