@@ -44,7 +44,7 @@ export async function insertEnvios(
     externo,
     fechaunix,
     flex == 21 ? idshipment : "",
-  ], true);
+  ]);
 
   if (result.insertId) {
     const updateSql = `
