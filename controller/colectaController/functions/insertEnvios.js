@@ -19,8 +19,10 @@ export async function insertEnvios(
     .toISOString()
     .slice(0, 19)
     .replace("T", " ");
-  const idshipment = dataQr.did || dataQr.id || dataQr.id_orden;
-  const senderid = dataQr.sender_id || dataQr.id_seller;
+  console.log("Insertando envio con los siguientes datos:", dataQr);
+  const idshipment = dataQr.id ?? dataQr.id_orden;
+  console.log("ID Shipment:", idshipment);
+  const senderid = dataQr.sender_id ?? dataQr.id_seller;
   const fechaunix = Math.floor(Date.now() / 1000);
 
   const queryInsertEnvios = `
@@ -42,7 +44,7 @@ export async function insertEnvios(
     externo,
     fechaunix,
     flex == 21 ? idshipment : "",
-  ]);
+  ], true);
 
   if (result.insertId) {
     const updateSql = `
