@@ -1,4 +1,4 @@
-import { executeQuery, getCompanyByCode } from "../../../../db.js";
+import { executeQuery, getClientsByCompany, getCompanyByCode } from "../../../../db.js";
 import { assign } from "../../functions/assign.js";
 import { insertEnvios } from "../../functions/insertEnvios.js";
 import { insertEnviosExteriores } from "../../functions/insertEnviosExteriores.js";
@@ -65,7 +65,7 @@ export async function handleExternalFlex(
     }
 
     const externalLogisticId = logistica.did;
-    const nombreFantasia = logistica.nombre_fantasia;
+
     const syncCode = logistica.codigoVinculacionLogE;
 
     const externalCompany = await getCompanyByCode(syncCode);
@@ -100,6 +100,7 @@ export async function handleExternalFlex(
       let rowsEnvios = await executeQuery(externalDbConnection, sqlEnvios, [shipmentId, senderid]);
 
       let externalShipmentId;
+      let cliente;
 
       if (rowsEnvios.length > 0) {
         externalShipmentId = rowsEnvios[0].did;
@@ -113,7 +114,7 @@ export async function handleExternalFlex(
       } else {
 
         const sqlCuentas = `
-          SELECT did, didCliente 
+          SELECT did, didCliente,
           FROM clientes_cuentas 
           WHERE superado = 0 AND elim = 0 AND tipoCuenta = 1 AND ML_id_vendedor = ?
         `;
@@ -129,6 +130,11 @@ export async function handleExternalFlex(
 
         const externalClientId = rowsCuentas[0].didCliente;
         const didcuenta_ext = rowsCuentas[0].did;
+
+        // traigo los clientes
+        const companyClientList = await getClientsByCompany(externalDbConnection, externalCompany.did);
+
+        cliente = companyClientList[externalClientId];
 
         const result = await insertEnvios(
           externalDbConnection,
@@ -151,6 +157,7 @@ export async function handleExternalFlex(
         [externalShipmentId, externalCompanyId],
       );
 
+
       if (internalShipmentId.length > 0 && internalShipmentId[0]?.didLocal) {
         internalShipmentId = internalShipmentId[0].didLocal;
       } else {
@@ -165,12 +172,13 @@ export async function handleExternalFlex(
           userId
         );
 
+
         await insertEnviosExteriores(
           dbConnection,
           internalShipmentId,
           externalShipmentId,
           1,
-          nombreFantasia,
+          cliente.nombre || "",
           externalCompanyId
         );
       }
