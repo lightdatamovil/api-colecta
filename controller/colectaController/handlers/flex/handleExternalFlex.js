@@ -1,4 +1,4 @@
-import { executeQuery, getClientsByCompany, getCompanyByCode } from "../../../../db.js";
+import { executeQuery, getCompanyByCode } from "../../../../db.js";
 import { assign } from "../../functions/assign.js";
 import { insertEnvios } from "../../functions/insertEnvios.js";
 import { insertEnviosExteriores } from "../../functions/insertEnviosExteriores.js";
@@ -100,7 +100,7 @@ export async function handleExternalFlex(
       let rowsEnvios = await executeQuery(externalDbConnection, sqlEnvios, [shipmentId, senderid]);
 
       let externalShipmentId;
-      let cliente;
+
 
       if (rowsEnvios.length > 0) {
         externalShipmentId = rowsEnvios[0].did;
@@ -163,7 +163,6 @@ export async function handleExternalFlex(
           userId
         );
 
-        console.log("Ingreso paquete externo con id interno: ", cliente);
 
         const queryDidCliente = `SELECT didCliente FROM clientes_cuentas WHERE ML_id_vendedor = ? LIMIT 1`;
         const didCliente = await executeQuery(
