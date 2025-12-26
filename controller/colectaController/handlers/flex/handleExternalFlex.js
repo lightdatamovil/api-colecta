@@ -104,14 +104,10 @@ export async function handleExternalFlex(
 
       if (rowsEnvios.length > 0) {
         externalShipmentId = rowsEnvios[0].did;
-        //! se reporta como error que el paquete haya sifodo colecta si apenas ingreso al sistema en la logística externa - no descomentar
-        // const check = await checkearEstadoEnvio(
-        //   externalDbConnection,
-        //   externalShipmentId
-        // );
-        //  if (check) return check;
 
       } else {
+
+
 
         const sqlCuentas = `
           SELECT did, didCliente,
@@ -130,11 +126,6 @@ export async function handleExternalFlex(
 
         const externalClientId = rowsCuentas[0].didCliente;
         const didcuenta_ext = rowsCuentas[0].did;
-
-        // traigo los clientes
-        const companyClientList = await getClientsByCompany(externalDbConnection, externalCompany.did);
-
-        cliente = companyClientList[externalClientId];
 
         const result = await insertEnvios(
           externalDbConnection,
@@ -172,16 +163,36 @@ export async function handleExternalFlex(
           userId
         );
 
+        console.log("Ingreso paquete externo con id interno: ", cliente);
+
+        const queryDidCliente = `SELECT didCliente FROM clientes_cuentas WHERE ML_id_vendedor = ? LIMIT 1`;
+        const didCliente = await executeQuery(
+          externalDbConnection,
+          queryDidCliente,
+          [dataQr.sender_id], true
+        );
+
+        const queryNombreClient = `SELECT nombre_fantasia FROM clientes WHERE did = ? LIMIT 1`;
+
+        const nombreCliente = await executeQuery(
+          externalDbConnection,
+          queryNombreClient,
+          [didCliente[0].didCliente], true
+        );
+
+
 
         await insertEnviosExteriores(
           dbConnection,
           internalShipmentId,
           externalShipmentId,
           1,
-          cliente.nombre || "",
+          nombreCliente[0].nombre_fantasia || "",
           externalCompanyId
         );
       }
+
+
       const check = "SELECT valor FROM envios_logisticainversa WHERE didEnvio = ?";
       const rows = await executeQuery(
         externalDbConnection,
